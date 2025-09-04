@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    },
-    "strict": true
+    "paths": { "@/*": ["src/*"] },
+    "strict": true,
+    "jsx": "react-jsx",
+    "types": ["vite/client"]
   }
 }
+
 
