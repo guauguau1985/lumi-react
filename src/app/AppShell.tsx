@@ -237,3 +237,39 @@ export const RayosOA2Screen: React.FC<{ onExit: () => void }> = ({ onExit }) => 
     </div>
   );
 };
+// ---------- Wrapper del juego OA8 ----------
+export const FraccionesOA8Screen: React.FC<{ onExit: () => void }> = ({ onExit }) => {
+  const { addXP, addCoins, awardBadge } = useGamification();
+  const handleComplete = (score: number) => {
+    addXP(score);
+    addCoins(Math.round(score / 5));
+    if (score >= 80) awardBadge({ id: "oa8_pizzamaster", label: "OA8 Pizza Master" });
+  };
+  return (
+    <div>
+      <div className="max-w-5xl mx-auto p-4 flex justify-between items-center">
+        <Btn onClick={onExit} variant="ghost">Volver al mapa</Btn>
+        <div className="text-sm text-slate-600">OA8 · Fracciones</div>
+      </div>
+      <GameFraccionesPizza onComplete={handleComplete} />
+    </div>
+  );
+};
+// ---------- Wrapper del juego OA9 ----------
+export const SumaFracOA9Screen: React.FC<{ onExit: () => void }> = ({ onExit }) => {
+  const { addXP, addCoins, awardBadge } = useGamification();
+  const handleComplete = (score: number) => {
+    addXP(score);
+    addCoins(Math.round(score / 5));
+    if (score >= 90) awardBadge({ id: "oa9_fractionpro", label: "OA9 Fraction Pro" });
+  };
+  return (
+    <div>
+      <div className="max-w-5xl mx-auto p-4 flex justify-between items-center">
+        <Btn onClick={onExit} variant="ghost">Volver al mapa</Btn>
+        <div className="text-sm text-slate-600">OA9 · Suma y resta</div>
+      </div>
+      <GameSumaFracciones onComplete={handleComplete} />
+    </div>
+  );
+};
