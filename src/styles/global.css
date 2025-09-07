@@ -1,6 +1,15 @@
-/* src/styles/global.css */
-body {
-  margin: 0;
-  font-family: sans-serif;
-  background-color: #f0f0f0;
+/* Carga Tailwind v4 */
+@import "tailwindcss";
+
+/* (Opcional) tokens de tema propios */
+@theme {
+  --color-lumi-green: #78c077;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
 }
+
+/* Estilos base de la app */
+html, body, #root { height: 100%; }
+body { @apply text-gray-800 font-sans; }
+
+
