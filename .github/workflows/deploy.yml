@@ -17,16 +17,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
-          check-latest: true # fuerza Node 22, no usa el cache de 18
+          check-latest: true # fuerza a descargar Node 22, ignora cache viejo
+
+      - name: Print Node version # <--- Este paso aparecerá en el log
+        run: node -v
 
       - name: Install deps (npm ci)
         if: hashFiles('**/package-lock.json') != ''
         run: npm ci
-
       - name: Install deps (npm install)
         if: hashFiles('**/package-lock.json') == ''
         run: npm install
