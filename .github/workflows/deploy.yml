@@ -19,9 +19,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: "22"
           cache: npm
-          check-latest: true
+          check-latest: true # fuerza Node 22, no usa el cache de 18
 
       - name: Install deps (npm ci)
         if: hashFiles('**/package-lock.json') != ''
