@@ -1,8 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { fileURLToPath, URL } from "node:url";
 
-// 👇 MUY IMPORTANTE para GitHub Pages de un repo llamado "lumi-react"
 export default defineConfig({
-  base: "/lumi-react/",       // <-- este es el fix
+  base: "/lumi-react/",               // necesario para GitHub Pages
   plugins: [react()],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "@components": fileURLToPath(new URL("./src/components", import.meta.url)),
+    },
+  },
 });
