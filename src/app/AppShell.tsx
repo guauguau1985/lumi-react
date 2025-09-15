@@ -4,6 +4,9 @@ import GameEscalera from "../games/GameEscaleraNumerica"; // <- ruta relativa a 
 import GameRayos from "../games/GameRayosMagicos";
 import GameFraccionesPizza from "../games/GameFraccionesPizza";
 import GameSumaFracciones from "../games/GameSumaFracciones";
+import GameAcuarioDecimal from "../games/GameAcuarioDecimal";
+import GameBarrasDatos from "../games/GameBarrasDatos";
+
 
 
 // ---------- Gamification Context ----------
@@ -78,7 +81,9 @@ export type Screen =
   | "RayosOA2"
   | "MercadoOA3"
   | "FraccionesOA8"
-  | "SumaFracOA9";
+  | "SumaFracOA9"
+  | "AcuarioOA10"
+  | "BarrasOA11";
 
 
 export const AppShell: React.FC = () => {
@@ -96,6 +101,8 @@ export const AppShell: React.FC = () => {
         {screen === "RayosOA2" && <RayosOA2Screen onExit={() => goto("WorldsMap")} />}
         {screen === "FraccionesOA8" && <FraccionesOA8Screen onExit={() => goto("WorldsMap")} />}
         {screen === "SumaFracOA9" && <SumaFracOA9Screen onExit={() => goto("WorldsMap")} />}  
+        {screen === "AcuarioOA10" && <AcuarioOA10Screen onExit={() => goto("WorldsMap")} />}
+        {screen === "BarrasOA11" && <BarrasOA11Screen onExit={() => goto("WorldsMap")} />}    
       </div>
     </GamificationProvider>
   );
@@ -170,7 +177,12 @@ export const WorldsMap: React.FC<{ onBack: () => void; onPlayOA1: () => void }> 
   ]}
 />
         <WorldCard title="Ciudad de las Figuras" locked />
-        <WorldCard title="Mar de los Decimales" locked />
+        <WorldCard title="Mar de los Decimales"
+        items={[
+            { label: "OA10: Acuario decimal", onClick: () => goto("AcuarioOA10") },
+            { label: "OA11: Gráficos de barras", onClick: () => goto("BarrasOA11") },
+   ]}
+/>
         <WorldCard title="Universo Medidas y Datos" locked />
       </div>
     </div>
@@ -273,3 +285,39 @@ export const SumaFracOA9Screen: React.FC<{ onExit: () => void }> = ({ onExit }) 
     </div>
   );
 };
+// ---------- Wrapper del juego OA10---------
+export const AcuarioOA10Screen: React.FC<{ onExit: () => void }> = ({ onExit }) => {
+  const { addXP, addCoins, awardBadge } = useGamification();
+  const handleComplete = (score: number) => {
+    addXP(score); addCoins(Math.round(score/5));
+    if (score >= 90) awardBadge({ id: "oa10_decimaster", label: "OA10 Deci-Master" });
+  };
+  return (
+    <div>
+      <TopBar title="OA10 · Acuario Decimal" onExit={onExit} />
+      <GameAcuarioDecimal onComplete={handleComplete} />
+    </div>
+  );
+};
+// ---------- Wrapper del juego OA11--------
+export const BarrasOA11Screen: React.FC<{ onExit: () => void }> = ({ onExit }) => {
+  const { addXP, addCoins, awardBadge } = useGamification();
+  const handleComplete = (score: number) => {
+    addXP(score); addCoins(Math.round(score/5));
+    if (score >= 80) awardBadge({ id: "oa11_datawiz", label: "OA11 Data Wiz" });
+  };
+  return (
+    <div>
+      <TopBar title="OA11 · Gráficos de Barras" onExit={onExit} />
+      <GameBarrasDatos onComplete={handleComplete} />
+    </div>
+  );
+};
+
+// helper opcional
+const TopBar: React.FC<{ title: string; onExit: () => void }> = ({ title, onExit }) => (
+  <div className="max-w-5xl mx-auto p-4 flex justify-between items-center">
+    <Btn onClick={onExit} variant="ghost">Volver al mapa</Btn>
+    <div className="text-sm text-slate-600">{title}</div>
+  </div>
+);

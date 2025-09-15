@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { LumiAvatar } from "@/components/LumiAvatar";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import lumiFeliz from "../assets/lumi_feliz.png";
+import { useNavigate } from "react-router-dom";
 
 
 // Variants del contenedor: fade-in general + stagger de hijos
@@ -18,7 +18,7 @@ const container = {
 
 // Variants de cada ítem: slide-up + spring suave
 const item = {
-  hidden: { opacity: 0, y: 12 },
+  hidden: { opacity: 0, y: 12 },  
   show: {
     opacity: 1,
     y: 0,
@@ -34,6 +34,7 @@ const buttonWhile = {
 
 export default function Home() {
   const [progress, setProgress] = useState(40);
+  const navigate = useNavigate(); // para navegar entre rutas
 
   return (
     <motion.div
@@ -44,11 +45,7 @@ export default function Home() {
     >
       <motion.div className="w-full max-w-xl space-y-6" variants={item}>
         <motion.div className="flex items-center gap-4" variants={item}>
-  <img
-    src={lumiFeliz}
-    alt="Lumi feliz"
-    className="w-20 h-20 object-contain"
-  />
+  <LumiAvatar size={96} /> {/* cambia de emoción en loop automático */}
   <div>
     <h1 className="text-2xl font-bold">¡Bienvenido a Lumi App!</h1>
     <p className="text-gray-600">Elige tu módulo para comenzar</p>
@@ -82,7 +79,7 @@ export default function Home() {
         <motion.div className="grid gap-3" variants={item}>
           <motion.div variants={item}>
             <motion.div {...buttonWhile}>
-              <Button onClick={() => (window.location.href = "/matematicas")} size="lg">
+              <Button onClick={() => navigate("/matematicas")} size="lg">
                 🧮 Matemáticas
               </Button>
             </motion.div>
@@ -90,11 +87,7 @@ export default function Home() {
 
           <motion.div variants={item}>
             <motion.div {...buttonWhile}>
-              <Button
-                onClick={() => (window.location.href = "/programacion")}
-                variant="secondary"
-                size="lg"
-              >
+              <<Button onClick={() => navigate("/programacion")} variant="secondary" size="lg">
                 💻 Programación
               </Button>
             </motion.div>
@@ -102,11 +95,7 @@ export default function Home() {
 
           <motion.div variants={item}>
             <motion.div {...buttonWhile}>
-              <Button
-                onClick={() => (window.location.href = "/ia")}
-                variant="ghost"
-                size="lg"
-              >
+               <Button onClick={() => navigate("/ia")} variant="ghost" size="lg">
                 🤖 Inteligencia Artificial
               </Button>
             </motion.div>
