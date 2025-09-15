@@ -4,6 +4,8 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { LumiAvatar } from "@/components/LumiAvatar";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import lumiFeliz from "../assets/lumi_feliz.png";
+
 
 // Variants del contenedor: fade-in general + stagger de hijos
 const container = {
@@ -42,12 +44,16 @@ export default function Home() {
     >
       <motion.div className="w-full max-w-xl space-y-6" variants={item}>
         <motion.div className="flex items-center gap-4" variants={item}>
-          <LumiAvatar mood="feliz" />
-          <div>
-            <h1 className="text-2xl font-bold">¡Bienvenido a Lumi App!</h1>
-            <p className="text-gray-600">Elige tu módulo para comenzar</p>
-          </div>
-        </motion.div>
+  <img
+    src={lumiFeliz}
+    alt="Lumi feliz"
+    className="w-20 h-20 object-contain"
+  />
+  <div>
+    <h1 className="text-2xl font-bold">¡Bienvenido a Lumi App!</h1>
+    <p className="text-gray-600">Elige tu módulo para comenzar</p>
+  </div>
+</motion.div>
 
         <motion.div variants={item}>
           <Card>
