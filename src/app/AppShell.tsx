@@ -103,8 +103,8 @@ export const AppShell: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-sky-50">
         {screen === "Home" && <HomeScreen onOpenMap={() => goto("WorldsMap")} />}
         {screen === "WorldsMap" && (
-          <WorldsMap onBack={() => goto("Home")} goto={goto} />  {/* ← pasamos goto */}
-          )}
+          <WorldsMap onBack={() => goto("Home")} goto={goto} />
+                    )}
         {screen === "EscaleraOA1" && <EscaleraOA1Screen onExit={() => goto("WorldsMap")} />}
         {screen === "RayosOA2" && <RayosOA2Screen onExit={() => goto("WorldsMap")} />}
         {screen === "FraccionesOA8" && <FraccionesOA8Screen onExit={() => goto("WorldsMap")} />}
