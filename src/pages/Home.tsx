@@ -87,7 +87,7 @@ export default function Home() {
 
           <motion.div variants={item}>
             <motion.div {...buttonWhile}>
-              <<Button onClick={() => navigate("/programacion")} variant="secondary" size="lg">
+              <Button onClick={() => navigate("/programacion")} variant="secondary" size="lg">
                 💻 Programación
               </Button>
             </motion.div>
