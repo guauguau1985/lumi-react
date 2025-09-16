@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useCallback, useEffect, useState } from "react";
 
-type OAKey = "OA1" | "OA2" | "OA3" | "OA8" | "OA9" | "OA10" | "OA11";
+type OAKey = "OA1" | "OA2" | "OA3" | "OA8" | "OA9" | "OA10" | "OA11"| "OA12";
 
 type ProgressState = {
   best: Partial<Record<OAKey, number>>;          // puntaje máximo por OA
@@ -14,6 +14,7 @@ type ProgressState = {
     OA9: boolean;   // req OA8 ≥ 70
     OA10: boolean;
     OA11: boolean;  // req OA10 ≥ 70
+    OA12: boolean;  // req OA11 ≥ 70
   };
 };
 
@@ -50,6 +51,7 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       OA9: b("OA8") >= 70,
       OA10: true,
       OA11: b("OA10") >= 70,
+      OA12: true,
     };
   }, [best]);
 

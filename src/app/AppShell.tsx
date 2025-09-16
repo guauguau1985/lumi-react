@@ -6,6 +6,11 @@ import GameFraccionesPizza from "../games/GameFraccionesPizza";
 import GameSumaFracciones from "../games/GameSumaFracciones";
 import GameAcuarioDecimal from "../games/GameAcuarioDecimal";
 import GameBarrasDatos from "../games/GameBarrasDatos";
+import { useProgress } from "@/state/progress";
+// NUEVO
+import GameRelojAventurero from "../games/GameRelojAventurero";
+import { ProgressProvider, useProgress } from "@/state/progress";
+import { MoodProvider, useMood } from "@/state/mood";
 
 
 
@@ -83,7 +88,8 @@ export type Screen =
   | "FraccionesOA8"
   | "SumaFracOA9"
   | "AcuarioOA10"
-  | "BarrasOA11";
+  | "BarrasOA11"
+  | "RelojOA12";
 
 
 export const AppShell: React.FC = () => {
@@ -91,20 +97,25 @@ export const AppShell: React.FC = () => {
   const goto = (s: Screen) => setScreen(s);
 
   return (
+  <ProgressProvider>
+   <MoodProvider>
     <GamificationProvider>
       <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-sky-50">
         {screen === "Home" && <HomeScreen onOpenMap={() => goto("WorldsMap")} />}
         {screen === "WorldsMap" && (
-          <WorldsMap onBack={() => goto("Home")} onPlayOA1={() => goto("EscaleraOA1")} />
-        )}
+          <WorldsMap onBack={() => goto("Home")} goto={goto} />  {/* ← pasamos goto */}
+          )}
         {screen === "EscaleraOA1" && <EscaleraOA1Screen onExit={() => goto("WorldsMap")} />}
         {screen === "RayosOA2" && <RayosOA2Screen onExit={() => goto("WorldsMap")} />}
         {screen === "FraccionesOA8" && <FraccionesOA8Screen onExit={() => goto("WorldsMap")} />}
         {screen === "SumaFracOA9" && <SumaFracOA9Screen onExit={() => goto("WorldsMap")} />}  
         {screen === "AcuarioOA10" && <AcuarioOA10Screen onExit={() => goto("WorldsMap")} />}
-        {screen === "BarrasOA11" && <BarrasOA11Screen onExit={() => goto("WorldsMap")} />}    
+        {screen === "BarrasOA11" && <BarrasOA11Screen onExit={() => goto("WorldsMap")} />}
+        {screen === "RelojOA12" && <RelojOA12Screen onExit={() => goto("WorldsMap")} />}     
       </div>
     </GamificationProvider>
+    </MoodProvider>
+  </ProgressProvider>
   );
 };
 
@@ -148,10 +159,11 @@ const ModuleCard: React.FC<{
 );
 
 // ---------- Worlds Map (Matemáticas) ----------
-export const WorldsMap: React.FC<{ onBack: () => void; onPlayOA1: () => void }> = ({
+export const WorldsMap: React.FC<{ onBack: () => void; goto: (s: Screen) => void }> = ({
   onBack,
-  onPlayOA1,
+  goto,
 }) => {
+  const { unlocked, best } = useProgress();
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="flex items-center justify-between">
@@ -160,30 +172,43 @@ export const WorldsMap: React.FC<{ onBack: () => void; onPlayOA1: () => void }> 
       </div>
 
       <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Reino de los Números */}
         <WorldCard
           title="Reino de los Números"
           items={[
-            { label: "OA1: Escalera numérica", onClick: onPlayOA1 },
-            { label: "OA2: Rayos mágicos", onClick: onPlayOA1 },
-            { label: "OA3: Mercado", locked: true },
+             { label: `OA1: Escalera numérica (best ${best.OA1 ?? 0})`, onClick: () => goto("EscaleraOA1"), locked: !unlocked.OA1 },
+            { label: `OA2: Rayos mágicos (best ${best.OA2 ?? 0})`, onClick: () => goto("RayosOA2"), locked: !unlocked.OA2 },
+            { label: `OA3: Mercado (best ${best.OA3 ?? 0})`, onClick: () => goto("MercadoOA3"), locked: !unlocked.OA3 },
           ]}
         />
-        <WorldCard title="Isla de Patrones y Tiempo" locked />
+       {/* Bosque de Fracciones */}
         <WorldCard 
         title="Bosque de Fracciones"
         items={[
-            { label: "OA8: Pizza de fracciones", onClick: () => goto("FraccionesOA8") },
-            { label: "OA9: Suma y resta", onClick: () => goto("SumaFracOA9") },
-  ]}
-/>
-        <WorldCard title="Ciudad de las Figuras" locked />
-        <WorldCard title="Mar de los Decimales"
-        items={[
-            { label: "OA10: Acuario decimal", onClick: () => goto("AcuarioOA10") },
-            { label: "OA11: Gráficos de barras", onClick: () => goto("BarrasOA11") },
-   ]}
-/>
+            { label: `OA8: Pizza de fracciones (best ${best.OA8 ?? 0})`, onClick: () => goto("FraccionesOA8"), locked: !unlocked.OA8 },
+            { label: `OA9: Suma y resta (best ${best.OA9 ?? 0})`, onClick: () => goto("SumaFracOA9"), locked: !unlocked.OA9 },
+          ]}
+        />
+         {/* Mar de los Decimales y Datos */}
+        <WorldCard
+          title="Mar de Decimales y Datos"
+          items={[
+            { label: `OA10: Acuario decimal (best ${best.OA10 ?? 0})`, onClick: () => goto("AcuarioOA10"), locked: !unlocked.OA10 },
+            { label: `OA11: Gráficos de barras (best ${best.OA11 ?? 0})`, onClick: () => goto("BarrasOA11"), locked: !unlocked.OA11 },
+          ]}
+        />
+           {/* Cronolandia */}
+        <WorldCard
+          title="Cronolandia"
+          items={[
+            { label: `OA12: Reloj aventurero (best ${best.OA12 ?? 0})`, onClick: () => goto("RelojOA12"), locked: !unlocked.OA12 },
+          ]}
+        />  
+        {/* Otros mundos */}
+        
+        <WorldCard title="Ciudad de las Figuras" locked />  
         <WorldCard title="Universo Medidas y Datos" locked />
+        <WorldCard title="Isla de Patrones y Tiempo" locked />
       </div>
     </div>
   );
@@ -203,7 +228,9 @@ const WorldCard: React.FC<{
       <ul className="mt-3 space-y-2">
         {items.map((it, i) => (
           <li key={i}>
-            <Btn onClick={it.onClick} variant="ghost">{it.label}</Btn>
+           <Btn onClick={it.onClick} variant="ghost" disabled={it.locked}>
+              {it.label} {it.locked ? "🔒" : ""}
+            </Btn>
           </li>
         ))}
       </ul>
@@ -321,3 +348,30 @@ const TopBar: React.FC<{ title: string; onExit: () => void }> = ({ title, onExit
     <div className="text-sm text-slate-600">{title}</div>
   </div>
 );
+// ---------- Wrapper del juego OA12--------
+export const RelojOA12Screen: React.FC<{ onExit: () => void }> = ({ onExit }) => {
+  const { addXP, addCoins, awardBadge } = useGamification();
+  const { recordResult } = useProgress();
+  const { flashMood } = useMood();
+
+  const handleComplete = (score: number) => {
+    addXP(score);
+    addCoins(Math.round(score / 5));
+
+    // Badge de OA12
+    if (score >= 85) awardBadge({ id: "oa12_timekeeper", label: "OA12 Timekeeper" });
+
+    // Guarda mejor puntaje de OA12
+    recordResult("OA12", score);
+
+    // Reacción de Lumi
+    flashMood(score >= 70 ? "feliz" : "preocupada", 1800);
+  };
+
+  return (
+    <div>
+      <TopBar title="OA12 · Reloj aventurero" onExit={onExit} />
+      <GameRelojAventurero onComplete={handleComplete} />
+    </div>
+  );
+};
