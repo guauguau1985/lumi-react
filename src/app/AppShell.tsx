@@ -6,7 +6,6 @@ import GameFraccionesPizza from "../games/GameFraccionesPizza";
 import GameSumaFracciones from "../games/GameSumaFracciones";
 import GameAcuarioDecimal from "../games/GameAcuarioDecimal";
 import GameBarrasDatos from "../games/GameBarrasDatos";
-import { useProgress } from "@/state/progress";
 // NUEVO
 import GameRelojAventurero from "../games/GameRelojAventurero";
 import { ProgressProvider, useProgress } from "@/state/progress";
