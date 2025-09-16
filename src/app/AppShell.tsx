@@ -90,6 +90,23 @@ export type Screen =
   | "BarrasOA11"
   | "RelojOA12";
 
+// *** debajo de tus types ***
+const hashByScreen: Record<Screen, string> = {
+  Home: "",
+  WorldsMap: "WorldsMap",
+  EscaleraOA1: "oa1",
+  RayosOA2: "oa2",
+  MercadoOA3: "oa3",
+  FraccionesOA8: "oa8",
+  SumaFracOA9: "oa9",
+  AcuarioOA10: "oa10",
+  BarrasOA11: "oa11",
+  RelojOA12: "oa12",
+};
+
+const screenByHash: Record<string, Screen> = Object.fromEntries(
+  Object.entries(hashByScreen).map(([scr, h]) => [`#/${h}`, scr as Screen]),
+) as Record<string, Screen>;
 
 export const AppShell: React.FC = () => {
   const [screen, setScreen] = useState<Screen>("Home");
