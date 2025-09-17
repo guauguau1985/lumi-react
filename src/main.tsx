@@ -6,6 +6,9 @@ import './styles/global.css'
 import { ProgressProvider } from "./state/progress";
 import { MoodProvider } from "./state/mood";
 
+
+console.log("[boot]", window.location.href);
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
