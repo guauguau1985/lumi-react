@@ -1,16 +1,14 @@
 // src/app/AppShell.tsx
-import React, { createContext, useContext, useMemo, useState } from "react";
-import GameEscalera from "../games/GameEscaleraNumerica"; // <- ruta relativa a tu repo
+import React, { createContext, useContext, useMemo, useState, useEffect } from "react";
+import GameEscalera from "../games/GameEscaleraNumerica";
 import GameRayos from "../games/GameRayosMagicos";
 import GameFraccionesPizza from "../games/GameFraccionesPizza";
 import GameSumaFracciones from "../games/GameSumaFracciones";
 import GameAcuarioDecimal from "../games/GameAcuarioDecimal";
 import GameBarrasDatos from "../games/GameBarrasDatos";
-// NUEVO
 import GameRelojAventurero from "../games/GameRelojAventurero";
 import { ProgressProvider, useProgress } from "@/state/progress";
 import { MoodProvider, useMood } from "@/state/mood";
-
 
 
 // ---------- Gamification Context ----------
@@ -90,10 +88,49 @@ export type Screen =
   | "BarrasOA11"
   | "RelojOA12";
 
+  // *** debajo de tus types ***
+const hashByScreen: Record<Screen, string> = {
+  Home: "",
+  WorldsMap: "WorldsMap",
+  EscaleraOA1: "oa1",
+  RayosOA2: "oa2",
+  MercadoOA3: "oa3",
+  FraccionesOA8: "oa8",
+  SumaFracOA9: "oa9",
+  AcuarioOA10: "oa10",
+  BarrasOA11: "oa11",
+  RelojOA12: "oa12",
+};
+
+const screenByHash: Record<string, Screen> = Object.fromEntries(
+  Object.entries(hashByScreen).map(([scr, h]) => [`#/${h}`, scr as Screen]),
+) as Record<string, Screen>;
+
 
 export const AppShell: React.FC = () => {
-  const [screen, setScreen] = useState<Screen>("Home");
-  const goto = (s: Screen) => setScreen(s);
+  // screen inicial desde el hash actual
+const [screen, setScreen] = useState<Screen>(() => {
+  const h = window.location.hash;
+  return screenByHash[h] ?? "Home";
+});
+
+// navegación que actualiza el hash y el estado
+const goto = (s: Screen) => {
+  const seg = hashByScreen[s];
+  window.location.hash = seg ? `#/${seg}` : "#/"; // escribe en la URL
+  setScreen(s);
+};
+
+// si el usuario cambia el hash manualmente, sincroniza la pantalla
+useEffect(() => {
+  const onHash = () => {
+    const h = window.location.hash;
+    setScreen(screenByHash[h] ?? "Home");
+  };
+  window.addEventListener("hashchange", onHash);
+  return () => window.removeEventListener("hashchange", onHash);
+}, []);
+
 
   return (
   <ProgressProvider>
