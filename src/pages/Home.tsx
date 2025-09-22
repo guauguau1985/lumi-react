@@ -59,7 +59,7 @@ export default function Home() {
         <motion.div className="grid gap-3" variants={item}>
           <motion.div variants={item}>
             <motion.div {...buttonWhile}>
-              <Button onClick={() => go("WorldsMap")} size="lg">
+              <Button onClick={() => (window.location.hash = "/WorldsMap")} size="lg">
                 🧮 Matemáticas
               </Button>
             </motion.div>
@@ -67,7 +67,7 @@ export default function Home() {
 
           <motion.div variants={item}>
             <motion.div {...buttonWhile}>
-              <Button onClick={() => alert("Pronto 😄")} variant="secondary" size="lg">
+              <Button onClick={() => alert("Pronto 😉")} variant="secondary" size="lg">
                 💻 Programación
               </Button>
             </motion.div>
@@ -75,7 +75,7 @@ export default function Home() {
 
           <motion.div variants={item}>
             <motion.div {...buttonWhile}>
-              <Button onClick={() => alert("Pronto 🤖")} variant="ghost" size="lg">
+              <Button onClick={() => alert("Pronto 😉")} variant="ghost" size="lg">
                 🤖 Inteligencia Artificial
               </Button>
             </motion.div>
