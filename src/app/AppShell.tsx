@@ -88,7 +88,10 @@ export type Screen =
   | "BarrasOA11"
   | "RelojOA12";
 
-  // *** debajo de tus types ***
+
+
+// *** debajo de tus types ***
+
 const hashByScreen: Record<Screen, string> = {
   Home: "",
   WorldsMap: "WorldsMap",
