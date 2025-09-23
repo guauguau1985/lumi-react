@@ -27,8 +27,8 @@ export default function Feedback({
       </p>
 
       <img
-        src={isOk ? lumiFeliz : lumiConfundida}
-        alt={isOk ? "Lumi feliz" : "Lumi confundida"}
+        src={isOk ? lumiFeliz : lumiConfundido}
+        alt={isOk ? "Lumi feliz" : "Lumi confundido"}
         className="w-28"
       />
 
