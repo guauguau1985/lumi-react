@@ -9,6 +9,9 @@ import GameBarrasDatos from "../games/GameBarrasDatos";
 import GameRelojAventurero from "../games/GameRelojAventurero";
 import { ProgressProvider, useProgress } from "@/state/progress";
 import { MoodProvider, useMood } from "@/state/mood";
+import Feedback from "@/components/Feedback";
+import { useFeedback } from "@/hooks/useFeedback";
+
 
 
 // ---------- Gamification Context ----------
@@ -123,6 +126,16 @@ const goto = (s: Screen) => {
   window.location.hash = seg ? `#/${seg}` : "#/"; // escribe en la URL
   setScreen(s);
 };
+
+useEffect(() => {
+  const onHash = () => {
+    const h = window.location.hash;
+    setScreen(screenByHash[h] ?? "Home");
+  };
+  window.addEventListener("hashchange", onHash);
+  return () => window.removeEventListener("hashchange", onHash);
+}, []);
+
 
 // si el usuario cambia el hash manualmente, sincroniza la pantalla
 useEffect(() => {
@@ -318,6 +331,10 @@ export const RayosOA2Screen: React.FC<{ onExit: () => void }> = ({ onExit }) => 
 // ---------- Wrapper del juego OA8 ----------
 export const FraccionesOA8Screen: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const { addXP, addCoins, awardBadge } = useGamification();
+
+    // hook de feedback (con o sin next). 1400 ms de muestra de feedback
+  const { feedback, markCorrect, markWrong } = useFeedback();
+
   const handleComplete = (score: number) => {
     addXP(score);
     addCoins(Math.round(score / 5));
@@ -331,6 +348,19 @@ export const FraccionesOA8Screen: React.FC<{ onExit: () => void }> = ({ onExit }
       </div>
       <GameFraccionesPizza onComplete={handleComplete} />
     </div>
+    {/* 👇 Pasamos markCorrect y markWrong como props al juego */}
+      <GameFraccionesPizza
+        onComplete={handleComplete}
+        onRight={markCorrect}
+        onWrong={markWrong}
+      />
+      {/* 👇 Mostramos el feedback visual */}
+      <div className="max-w-5xl mx-auto p-4">
+        <Feedback state={feedback} successText="¡Exacto!" errorText="Inténtalo de nuevo" />
+      </div>
+    </div>
+  );
+};
   );
 };
 // ---------- Wrapper del juego OA9 ----------
@@ -364,6 +394,7 @@ export const AcuarioOA10Screen: React.FC<{ onExit: () => void }> = ({ onExit }) 
       <GameAcuarioDecimal onComplete={handleComplete} />
     </div>
   );
+ 
 };
 // ---------- Wrapper del juego OA11--------
 export const BarrasOA11Screen: React.FC<{ onExit: () => void }> = ({ onExit }) => {

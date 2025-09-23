@@ -1,10 +1,11 @@
 //________Envolver App__________________
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App'
+import AppShell from "./AppShell";  
 import './styles/global.css'
 import { ProgressProvider } from "./state/progress";
 import { MoodProvider } from "./state/mood";
+import "./index.css";
 
 
 console.log("[boot]", window.location.href);

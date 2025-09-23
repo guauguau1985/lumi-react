@@ -77,7 +77,11 @@ const Pizza: React.FC<{ spec: PieSpec; onToggle?: (i: number) => void; editable?
   );
 };
 
-const GameFraccionesPizza: React.FC<{ onComplete?: (score: number) => void }> = ({ onComplete }) => {
+const GameFraccionesPizza: React.FC<{
+  onComplete?: (score: number) => void;  
+  onRight?: () => void;                       //Extender Props
+  onWrong?: () => void;                       //Extender Props
+}> = ({ onComplete, onRight, onWrong }) => {
   const [mode, setMode] = useState<Mode>("paint");
   const [parts, setParts] = useState(4);
   const [filled, setFilled] = useState(1);
@@ -134,11 +138,13 @@ const GameFraccionesPizza: React.FC<{ onComplete?: (score: number) => void }> = 
 
   function settle(correct: boolean) {
     if (correct) {
+      onRight?.();               // Settle modificado.👈 dispara feedback positivo
       const s = streak + 1;
       setStreak(s);
       setScore((x) => x + 10 + Math.max(0, s - 1) * 2);
       newRound(mode);
     } else {
+      onWrong?.();              // Settle modificado.👈 dispara feedback positivo
       setStreak(0);
       setLives((h) => Math.max(0, h - 1));
     }
