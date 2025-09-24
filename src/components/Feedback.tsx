@@ -1,7 +1,8 @@
 
 import type { FeedbackState } from "../hooks/useFeedback";
-import lumiFeliz from "../assets/lumi_feliz.png";
-import lumiConfundido from "../assets/lumi_confundido.png";
+import lumiFeliz       from "../assets/lumi_feliz.png";
+import lumiConfundido  from "../assets/lumi_confundido.png";
+
 
 
 export default function Feedback({
