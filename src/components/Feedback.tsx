@@ -1,4 +1,4 @@
-import Confetti from "react-confetti";
+
 import type { FeedbackState } from "../hooks/useFeedback";
 import lumiFeliz from "../assets/lumi_feliz.png";
 import lumiConfundido from "../assets/lumi_confundido.png";
