@@ -31,8 +31,6 @@ export default function Feedback({
         alt={isOk ? "Lumi feliz" : "Lumi confundido"}
         className="w-28"
       />
-
-      {isOk && <Confetti recycle={false} numberOfPieces={180} />}
     </div>
   );
 }

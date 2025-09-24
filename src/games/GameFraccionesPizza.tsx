@@ -1,6 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-
 // =============================================
 // GameFraccionesPizza – OA8 (4° básico)
 // Representar fracciones (unitarias y propias) como parte-todo en círculos/cuadrículas.
@@ -54,7 +52,11 @@ const FractionLabel: React.FC<{ n: number; d: number }> = ({ n, d }) => (
   </div>
 );
 
-const Pizza: React.FC<{ spec: PieSpec; onToggle?: (i: number) => void; editable?: boolean }>= ({ spec, onToggle, editable }) => {
+const Pizza: React.FC<{
+  spec: PieSpec;
+  onToggle?: (i: number) => void;
+  editable?: boolean;
+}> = ({ spec, onToggle, editable }) => {
   const { parts, filled } = spec;
   const wedges = Array.from({ length: parts }, (_, i) => i);
   return (
@@ -67,8 +69,16 @@ const Pizza: React.FC<{ spec: PieSpec; onToggle?: (i: number) => void; editable?
         const x2 = 40 * Math.cos(a1), y2 = 40 * Math.sin(a1);
         const filledHere = i < filled;
         return (
-          <g key={i} onClick={() => editable && onToggle?.(i)} className={editable ? "cursor-pointer" : ""}>
-            <path d={`M ${x0} ${y0} L ${x1} ${y1} A 40 40 0 0 1 ${x2} ${y2} Z`} fill={filledHere ? "#10b981" : "#f1f5f9"} stroke="#94a3b8" />
+          <g
+            key={i}
+            onClick={() => editable && onToggle?.(i)}
+            className={editable ? "cursor-pointer" : ""}
+          >
+            <path
+              d={`M ${x0} ${y0} L ${x1} ${y1} A 40 40 0 0 1 ${x2} ${y2} Z`}
+              fill={filledHere ? "#10b981" : "#f1f5f9"}
+              stroke="#94a3b8"
+            />
           </g>
         );
       })}
@@ -76,6 +86,7 @@ const Pizza: React.FC<{ spec: PieSpec; onToggle?: (i: number) => void; editable?
     </svg>
   );
 };
+
 
 const GameFraccionesPizza: React.FC<{
   onComplete?: (score: number) => void;  
@@ -144,7 +155,7 @@ const GameFraccionesPizza: React.FC<{
       setScore((x) => x + 10 + Math.max(0, s - 1) * 2);
       newRound(mode);
     } else {
-      onWrong?.();              // Settle modificado.👈 dispara feedback positivo
+      onWrong?.();              // 
       setStreak(0);
       setLives((h) => Math.max(0, h - 1));
     }
