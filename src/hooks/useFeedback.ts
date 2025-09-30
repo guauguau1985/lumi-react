@@ -1,11 +1,11 @@
 import { useState } from "react";
 
-export type FeedbackState = null | "correct" | "wrong";
+export type FeedbackState = "correct" | "wrong" | null;
 
 export function useFeedback(
-  onCorrect?: () => void,
-  delayMs: number = 1200
+  opts: { onCorrect?: () => void; delayMs?: number } = {}
 ) {
+  const { onCorrect, delayMs = 1200 } = opts;
   const [feedback, setFeedback] = useState<FeedbackState>(null);
 
   function markCorrect() {
