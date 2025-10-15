@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { LumiAvatar } from "@/components/LumiAvatar";
+import { Link } from "react-router-dom";
 
 // Variants del contenedor: fade-in + stagger
 
@@ -29,7 +30,7 @@ export default function Home() {
   };
 
   return (
-    <motion.div
+    <><motion.div
       className="min-h-dvh grid place-items-center p-6"
       variants={container}
       initial="hidden"
@@ -97,6 +98,10 @@ export default function Home() {
           </motion.div>
         </motion.div>
       </motion.div>
-    </motion.div>
+    </motion.div><div className="flex flex-wrap gap-3 mt-4">
+         <Link to="/eco" className="px-4 py-3 rounded-xl bg-emerald-600 text-white">Ecología ♻️</Link>
+         <Link to="/math" className="px-4 py-3 rounded-xl bg-indigo-600 text-white">Matemáticas ➗</Link>
+         {/* coder se mostrará cuando modules.coder sea true */}
+      </div></>
   );
 }

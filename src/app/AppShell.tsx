@@ -351,7 +351,6 @@ export const FraccionesOA8Screen: React.FC<{ onExit: () => void }> = ({ onExit }
 
       {/* Juego: pasamos onRight/onWrong para disparar el feedback */}
       <GameFraccionesPizza
-        onComplete={handleComplete}
         onRight={markCorrect}
         onWrong={markWrong}
       />
