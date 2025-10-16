@@ -1,12 +1,18 @@
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tsconfigPaths from "vite-tsconfig-paths";
+import tailwind from "@tailwindcss/vite";
+import { VitePWA } from "vite-plugin-pwa";
+
 export default defineConfig({
-  base: "/lumi-react/",   // <-- Debe coincidir con el nombre del repo
+  base: "/lumi-react/", // ¡importante para GH Pages!
   plugins: [
     react(),
     tsconfigPaths(),
     tailwind(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icons/icon-192.png","icons/icon-512.png"],
+      includeAssets: ["icons/icon-192.png", "icons/icon-512.png"],
       manifest: {
         name: "Lumi App",
         short_name: "Lumi",
@@ -24,6 +30,7 @@ export default defineConfig({
         navigateFallback: "/lumi-react/index.html",
         globPatterns: ["**/*.{js,css,html,svg,png,jpg,webp}"],
       },
-    })
+    }),
   ],
 });
+
