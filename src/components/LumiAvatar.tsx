@@ -3,19 +3,19 @@ import { useEffect, useState } from "react";
 
 import lumiFeliz from "../assets/lumi_feliz.png";
 import lumiConfundido from "../assets/lumi_confundido.png";
-import lumiPensativa from "../assets/lumi_pensativa.png";
-import lumiPreocupada from "../assets/lumi_preocupado.png";
+import lumiConfeti from "../assets/lumi_confeti.png";
+import lumiPensativo from "../assets/lumi_pensativo.png";
 
-type Mood = "feliz" | "confundido" | "pensativa" | "preocupada";
+type Mood = "feliz" | "confundido" | "confeti" | "pensativo";
 
 const srcByMood: Record<Mood, string> = {
   feliz: lumiFeliz,
   confundido: lumiConfundido,
-  pensativa: lumiPensativa,
-  preocupada: lumiPreocupada,
+  confeti: lumiConfeti,
+  pensativo: lumiPensativo,
 };
 
-const moods: Mood[] = ["feliz", "pensativa", "confundido", "preocupada"];
+const moods: Mood[] = ["feliz", "confundido", "confeti", "pensativo"];
 
 export function LumiAvatar({
   size = 96,
