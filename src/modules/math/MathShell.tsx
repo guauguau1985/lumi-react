@@ -1,6 +1,5 @@
-// src/modules/math/MathShell.tsx
 import { NavLink, Routes, Route } from "react-router-dom";
-import WorldsMap from "@/pages/WorldsMap";
+import WorldsMap from "@/modules/WorldsMap";
 
 export default function MathShell() {
   return (

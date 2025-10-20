@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import type { FeedbackState } from "@/hooks/useFeedback";
 import confetti from "canvas-confetti";
 import lumiFeliz from "../assets/lumi_feliz.png";
-import lumiConfundido from "../assets/lumi_confundido.png";
+import lumiPensativo from "../assets/lumi_pensativo.png";
 import { AnimatePresence, motion } from "framer-motion";
 
 type Props = {

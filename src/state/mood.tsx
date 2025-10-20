@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback } from "react";
 
-type Mood = "feliz" | "confundido" | "pensativa" | "preocupada";
+type Mood = "feliz" | "confundido" | "confeti" | "pensativo";
 
 type MoodState = {
   mood: Mood;

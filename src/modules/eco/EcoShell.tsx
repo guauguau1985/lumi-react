@@ -1,9 +1,9 @@
 // src/modules/eco/EcoShell.tsx
 import { NavLink, Routes, Route } from "react-router-dom";
-import EcoHome from "@/pages/eco/EcoHome";
-import EcoSorter from "@/pages/eco/EcoSorter";
-import FootprintQuiz from "@/pages/eco/FootprintQuiz";
-import CompostLab from "@/pages/eco/CompostLab";
+import EcoHome from "@/modules/eco/EcoHome";
+import EcoSorter from "@/modules/eco/EcoSorter";
+import FootprintQuiz from "@/modules/eco/FootprintQuiz";
+import CompostLab from "@/modules/eco/CompostLab";
 
 export default function EcoShell() {
   return (
