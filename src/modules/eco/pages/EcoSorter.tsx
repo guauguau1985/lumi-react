@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { BINS, SORTER_ITEMS, type EcoItem, type Bin } from "@/data/ecoData";
-import ProgressBar from "@/components/ui/ProgressBar";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import Feedback from "@/components/Feedback";
 import { useFeedback } from "@/hooks/useFeedback";
 

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useCallback, useEffect, useState } from "react";
 
-type OAKey = "OA1" | "OA2" | "OA3" | "OA8" | "OA9" | "OA10" | "OA11"| "OA12";
+export type OAKey = "OA1" | "OA2" | "OA3" | "OA8" | "OA9" | "OA10" | "OA11" | "OA12";
 
 type ProgressState = {
   best: Partial<Record<OAKey, number>>;          // puntaje máximo por OA

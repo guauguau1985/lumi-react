@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import Card from "@/components/ui/Card";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 
 export default function EcoHome() {
   const cards = [
@@ -16,11 +16,11 @@ export default function EcoHome() {
       <div className="grid gap-4 sm:grid-cols-3 mt-6">
         {cards.map((c) => (
           <Link key={c.to} to={c.to} className="focus:outline-none">
-            <Card>
-              <Card.Header>{c.title}</Card.Header>
-              <Card.Content>
+            <Card className="h-full">
+              <CardHeader title={c.title} />
+              <CardContent>
                 <p className="text-sm text-gray-600">{c.subtitle}</p>
-              </Card.Content>
+              </CardContent>
             </Card>
           </Link>
         ))}

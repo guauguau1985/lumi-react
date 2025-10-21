@@ -435,7 +435,7 @@ export const RelojOA12Screen: React.FC<{ onExit: () => void }> = ({ onExit }) =>
     recordResult("OA12", score);
 
     // Reacción de Lumi
-    flashMood(score >= 70 ? "feliz" : "preocupada", 1800);
+    flashMood(score >= 70 ? "feliz" : "confundido", 1800);
   };
 
   return (

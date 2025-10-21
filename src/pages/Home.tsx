@@ -1,21 +1,15 @@
 import { useState } from "react";
-import type { Variants } from "framer-motion";
-
-import { Button } from "@/components/ui/Button";
+import { motion, type Variants } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { LumiAvatar } from "@/components/LumiAvatar";
 import { Link } from "react-router-dom";
 
-// Variants del contenedor: fade-in + stagger
-
+// Animaciones
 const container: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
 };
-
-// Variants de cada ítem: slide-up + spring suave
-
 const item: Variants = {
   hidden: { opacity: 0, y: 12 },
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 220, damping: 18 } },
@@ -24,19 +18,14 @@ const item: Variants = {
 export default function Home() {
   const [progress, setProgress] = useState(40);
 
-  // Navegación por hash (coincide con tu AppShell)
-  const go = (seg: string) => {
-    window.location.hash = seg ? `#/${seg}` : "#/";
-  };
-
   return (
-    <><motion.div
-      className="min-h-dvh grid place-items-center p-6"
+    <motion.div
+      className="rounded-2xl bg-white border-4 border-indigo-300 shadow hover:shadow-md transition-transform hover:scale-[1.02] p-6"
       variants={container}
       initial="hidden"
       animate="show"
     >
-      <motion.div className="w-full max-w-xl space-y-6" variants={item}>
+      <motion.div className="w-full max-w-xl mx-auto space-y-6" variants={item}>
         {/* Header */}
         <motion.div className="flex items-center gap-4" variants={item}>
           <LumiAvatar size={96} />
@@ -53,55 +42,78 @@ export default function Home() {
             <CardContent>
               <ProgressBar value={progress} />
               <div className="mt-3 flex gap-2">
-                <Button
+                <button
                   onClick={() => setProgress((p) => Math.max(0, p - 10))}
-                  variant="secondary"
-                  size="sm"
+                  className="px-3 py-1 rounded-lg bg-gray-100"
                 >
                   −10%
-                </Button>
-                <Button
+                </button>
+                <button
                   onClick={() => setProgress((p) => Math.min(100, p + 10))}
-                  size="sm"
+                  className="px-3 py-1 rounded-lg bg-emerald-600 text-white"
                 >
                   +10%
-                </Button>
+                </button>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Módulos */}
+        {/* Módulos (tarjetas con borde grueso) */}
         <motion.div className="grid gap-3" variants={item}>
+          {/* Matemáticas */}
           <motion.div variants={item}>
-            <motion.div whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.96, y: 0 }}>
-              <Button onClick={() => go("WorldsMap")} size="lg">
-                🧮 Matemáticas
-              </Button>
-            </motion.div>
+            <Link
+              to="/math"
+              className="block rounded-2xl bg-white border-4 border-indigo-300 shadow hover:shadow-md transition-transform hover:scale-[1.02] px-4 py-3"
+            >
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-indigo-500" />
+                <span className="font-semibold text-indigo-700">🧮 Matemáticas</span>
+              </div>
+            </Link>
           </motion.div>
 
+          {/* Ecología */}
           <motion.div variants={item}>
-            <motion.div whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.96, y: 0 }}>
-              <Button onClick={() => alert("Pronto 😉")} variant="secondary" size="lg">
-                💻 Programación
-              </Button>
-            </motion.div>
+            <Link
+              to="/eco"
+              className="block rounded-2xl bg-white border-4 border-emerald-300 shadow hover:shadow-md transition-transform hover:scale-[1.02] px-4 py-3"
+            >
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="font-semibold text-emerald-700">🌿 Ecología</span>
+              </div>
+            </Link>
           </motion.div>
 
+          {/* Programación (puede quedar “Pronto”) */}
           <motion.div variants={item}>
-            <motion.div whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.96, y: 0 }}>
-              <Button onClick={() => alert("Pronto 😉")} variant="ghost" size="lg">
-                🤖 Inteligencia Artificial
-              </Button>
-            </motion.div>
+            <button
+              onClick={() => alert("Pronto 😉")}
+              className="w-full rounded-2xl bg-white border-4 border-amber-300 shadow hover:shadow-md transition-transform hover:scale-[1.02] px-4 py-3 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-amber-500" />
+                <span className="font-semibold text-amber-700">💻 Programación</span>
+              </div>
+            </button>
+          </motion.div>
+
+          {/* IA (Pronto) */}
+          <motion.div variants={item}>
+            <button
+              onClick={() => alert("Pronto 😉")}
+              className="w-full rounded-2xl bg-white border-4 border-fuchsia-300 shadow hover:shadow-md transition-transform hover:scale-[1.02] px-4 py-3 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-fuchsia-500" />
+                <span className="font-semibold text-fuchsia-700">🤖 Inteligencia Artificial</span>
+              </div>
+            </button>
           </motion.div>
         </motion.div>
       </motion.div>
-    </motion.div><div className="flex flex-wrap gap-3 mt-4">
-         <Link to="/eco" className="px-4 py-3 rounded-xl bg-emerald-600 text-white">Ecología ♻️</Link>
-         <Link to="/math" className="px-4 py-3 rounded-xl bg-indigo-600 text-white">Matemáticas ➗</Link>
-         {/* coder se mostrará cuando modules.coder sea true */}
-      </div></>
+    </motion.div>
   );
 }
