@@ -3,7 +3,7 @@ import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import WorldsMap from "@/modules/math/WorldsMap";
 import DivisionShell from "@/modules/math/games/divisiones/DivisionShell";
 
-// JUEGOS DIRECTO DESDE modules/math/games
+// IMPORTA JUEGOS DIRECTO DESDE modules/math/games
 import GameEscaleraNumerica from "@/modules/math/games/GameEscaleraNumerica";
 import GameRayosMagicos     from "@/modules/math/games/GameRayosMagicos";
 import GameFraccionesPizza  from "@/modules/math/games/GameFraccionesPizza";
