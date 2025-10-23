@@ -262,3 +262,4 @@ const GameFraccionesPizza: React.FC<{
 };
 
 export default GameFraccionesPizza;
+
