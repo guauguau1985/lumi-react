@@ -20,7 +20,7 @@ export default function Home() {
 
   return (
     <motion.div
-      className="rounded-2xl bg-white border-4 border-indigo-300 shadow hover:shadow-md transition-transform hover:scale-[1.02] p-6"
+      className="rounded-2xl bg-[#E8F3EC] min-h-screen border-4 border-indigo-300 shadow hover:shadow-md transition-transform hover:scale-[1.02] p-6"
       variants={container}
       initial="hidden"
       animate="show"
@@ -30,7 +30,7 @@ export default function Home() {
         <motion.div className="flex items-center gap-4" variants={item}>
           <LumiAvatar size={96} />
           <div>
-            <h1 className="text-2xl font-bold">¡Bienvenido a Lumi App!</h1>
+            <h1 className="text-2xl font-bold">¡Bienvenido a Lumi!</h1>
             <p className="text-gray-600">Elige tu módulo para comenzar</p>
           </div>
         </motion.div>
