@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+import Feedback from "@/components/Feedback";
+import { useFeedback } from "@/hooks/useFeedback";
 // =============================================
 // GameFraccionesPizza – OA8 (4° básico)
 // Representar fracciones (unitarias y propias) como parte-todo en círculos/cuadrículas.
@@ -129,6 +131,9 @@ const GameFraccionesPizza: React.FC<{
   useEffect(() => { if (lives === 0) setDone(true); }, [lives]);
   useEffect(() => { if (done) onComplete?.(score); }, [done, score, onComplete]);
 
+  // Feedback hook reutilizable
+  const { feedback, markCorrect, markWrong, clear } = useFeedback();
+
   const spec = useMemo(() => ({ parts, filled }), [parts, filled]);
 
   const isCorrect = useMemo(() => {
@@ -149,19 +154,22 @@ const GameFraccionesPizza: React.FC<{
 
   function settle(correct: boolean) {
     if (correct) {
-      onRight?.();               // Settle modificado.👈 dispara feedback positivo
+      onRight?.();
+      markCorrect(); // muestra feedback positivo y limpia luego
       const s = streak + 1;
       setStreak(s);
       setScore((x) => x + 10 + Math.max(0, s - 1) * 2);
       newRound(mode);
     } else {
-      onWrong?.();              // 
+      onWrong?.();
+      markWrong(); // muestra feedback de error y limpia luego
       setStreak(0);
       setLives((h) => Math.max(0, h - 1));
     }
   }
 
   function resetAll() {
+    clear();
     setMode("paint");
     setLives(3);
     setScore(0);
@@ -172,6 +180,7 @@ const GameFraccionesPizza: React.FC<{
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-pink-50 to-emerald-50 p-4 md:p-8">
+  <Feedback state={feedback} successText="¡Bien hecho!" errorText="Casi, intenta otra vez" />
       <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
         <h1 className="text-2xl md:text-3xl font-extrabold text-emerald-800">Pizza de Fracciones · OA8</h1>
         <div className="flex flex-wrap gap-2 text-sm">
@@ -185,9 +194,9 @@ const GameFraccionesPizza: React.FC<{
         <Card>
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-sm font-semibold text-slate-700">Modo</span>
-            <Btn variant={mode === "paint" ? "success" : "ghost"} onClick={() => { setMode("paint"); newRound("paint"); }}>Colorear</Btn>
-            <Btn variant={mode === "read" ? "success" : "ghost"} onClick={() => { setMode("read"); newRound("read"); }}>Leer</Btn>
-            <Btn variant={mode === "equiv" ? "success" : "ghost"} onClick={() => { setMode("equiv"); newRound("equiv"); }}>Equivalentes</Btn>
+            <Btn variant={mode === "paint" ? "success" : "ghost"} onClick={() => { clear(); setMode("paint"); newRound("paint"); }}>Colorear</Btn>
+            <Btn variant={mode === "read" ? "success" : "ghost"} onClick={() => { clear(); setMode("read"); newRound("read"); }}>Leer</Btn>
+            <Btn variant={mode === "equiv" ? "success" : "ghost"} onClick={() => { clear(); setMode("equiv"); newRound("equiv"); }}>Equivalentes</Btn>
           </div>
           <div className="mt-3 text-sm text-slate-600">
             {mode === "paint" && <span>Colorea <b>{goal.n}/{goal.d}</b> de la pizza.</span>}
@@ -199,7 +208,7 @@ const GameFraccionesPizza: React.FC<{
           <div className="flex items-center justify-between">
             <div className="text-sm text-slate-600">Objetivo</div>
             <FractionLabel n={goal.n} d={goal.d} />
-            <Btn onClick={() => newRound(mode)} variant="ghost">Nueva</Btn>
+            <Btn onClick={() => { clear(); newRound(mode); }} variant="ghost">Nueva</Btn>
           </div>
         </Card>
       </div>
