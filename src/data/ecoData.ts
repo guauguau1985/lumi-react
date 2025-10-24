@@ -7,20 +7,32 @@ export type EcoItem = {
   bin: Bin;
 };
 
+import bin_papel from "@/assets/eco/bin_papel.svg";
+import bin_plastico from "@/assets/eco/bin_plastico.svg";
+import bin_vidrio from "@/assets/eco/bin_vidrio.svg";
+import bin_organico from "@/assets/eco/bin_organico.svg";
+import bin_peligroso from "@/assets/eco/bin_peligroso.svg";
+
+import item_newspaper from "@/assets/eco/item_newspaper.svg";
+import item_bottle_plastic from "@/assets/eco/item_bottle_plastic.svg";
+import item_glass_jar from "@/assets/eco/item_glass_jar.svg";
+import item_apple_core from "@/assets/eco/item_apple_core.svg";
+import item_battery from "@/assets/eco/item_battery.svg";
+
 export const BINS: { key: Bin; label: string; img: string }[] = [
-  { key: "papel",     label: "Papel/Cartón", img: "/src/assets/eco/bin_papel.svg" },
-  { key: "plastico",  label: "Plástico",     img: "/src/assets/eco/bin_plastico.svg" },
-  { key: "vidrio",    label: "Vidrio",       img: "/src/assets/eco/bin_vidrio.svg" },
-  { key: "organico",  label: "Orgánico",     img: "/src/assets/eco/bin_organico.svg" },
-  { key: "peligroso", label: "Peligroso",    img: "/src/assets/eco/bin_peligroso.svg" },
+  { key: "papel",     label: "Papel/Cartón", img: bin_papel },
+  { key: "plastico",  label: "Plástico",     img: bin_plastico },
+  { key: "vidrio",    label: "Vidrio",       img: bin_vidrio },
+  { key: "organico",  label: "Orgánico",     img: bin_organico },
+  { key: "peligroso", label: "Peligroso",    img: bin_peligroso },
 ];
 
 export const SORTER_ITEMS: EcoItem[] = [
-  { id: "n1", name: "Diario",            img: "/src/assets/eco/item_newspaper.svg",     bin: "papel" },
-  { id: "p1", name: "Botella plástica",  img: "/src/assets/eco/item_bottle_plastic.svg",bin: "plastico" },
-  { id: "g1", name: "Frasco de vidrio",  img: "/src/assets/eco/item_glass_jar.svg",     bin: "vidrio" },
-  { id: "o1", name: "Cáscara de manzana",img: "/src/assets/eco/item_apple_core.svg",    bin: "organico" },
-  { id: "x1", name: "Pila",              img: "/src/assets/eco/item_battery.svg",       bin: "peligroso" },
+  { id: "n1", name: "Diario",            img: item_newspaper,     bin: "papel" },
+  { id: "p1", name: "Botella plástica",  img: item_bottle_plastic,bin: "plastico" },
+  { id: "g1", name: "Frasco de vidrio",  img: item_glass_jar,     bin: "vidrio" },
+  { id: "o1", name: "Cáscara de manzana",img: item_apple_core,    bin: "organico" },
+  { id: "x1", name: "Pila",              img: item_battery,       bin: "peligroso" },
 ];
 
 export type QuizQ = {

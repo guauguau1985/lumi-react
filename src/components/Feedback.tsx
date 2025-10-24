@@ -55,8 +55,8 @@ export default function Feedback({
           </div>
 
           <img
-            src={isOk ? lumiFeliz : lumiConfundido}
-            alt={isOk ? "Lumi feliz" : "Lumi confundido"}
+            src={isOk ? lumiFeliz : lumiPensativo}
+            alt={isOk ? "Lumi feliz" : "Lumi pensativo"}
             className="w-20 mx-auto mt-2"
           />
         </motion.div>
