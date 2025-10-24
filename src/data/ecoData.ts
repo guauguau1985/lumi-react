@@ -7,17 +7,17 @@ export type EcoItem = {
   bin: Bin;
 };
 
-import bin_papel from "@/assets/eco/bin_papel.svg";
-import bin_plastico from "@/assets/eco/bin_plastico.svg";
-import bin_vidrio from "@/assets/eco/bin_vidrio.svg";
-import bin_organico from "@/assets/eco/bin_organico.svg";
-import bin_peligroso from "@/assets/eco/bin_peligroso.svg";
+import bin_papel from "@/assets/eco/bin_papel.svg?url";
+import bin_plastico from "@/assets/eco/bin_plastico.svg?url";
+import bin_vidrio from "@/assets/eco/bin_vidrio.svg?url";
+import bin_organico from "@/assets/eco/bin_organico.svg?url";
+import bin_peligroso from "@/assets/eco/bin_peligroso.svg?url";
 
-import item_newspaper from "@/assets/eco/item_newspaper.svg";
-import item_bottle_plastic from "@/assets/eco/item_bottle_plastic.svg";
-import item_glass_jar from "@/assets/eco/item_glass_jar.svg";
-import item_apple_core from "@/assets/eco/item_apple_core.svg";
-import item_battery from "@/assets/eco/item_battery.svg";
+import item_newspaper from "@/assets/eco/item_newspaper.svg?url";
+import item_bottle_plastic from "@/assets/eco/item_bottle_plastic.svg?url";
+import item_glass_jar from "@/assets/eco/item_glass_jar.svg?url";
+import item_apple_core from "@/assets/eco/item_apple_core.svg?url";
+import item_battery from "@/assets/eco/item_battery.svg?url";
 
 export const BINS: { key: Bin; label: string; img: string }[] = [
   { key: "papel",     label: "Papel/Cartón", img: bin_papel },
