@@ -1,21 +1,19 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-import lumiFeliz from "../assets/lumi_feliz.png";
-import lumiConfundido from "../assets/lumi_confundido.png";
-import lumiConfeti from "../assets/lumi_confeti.png";
-import lumiPensativo from "../assets/lumi_pensativo.png";
+import lumiFeliz from "../assets/lumi_feliz.svg";
+import lumiContenta from "../assets/lumi_contenta.svg";
+import lumiPensativa from "../assets/lumi_pensativa.svg";
 
-type Mood = "feliz" | "confundido" | "confeti" | "pensativo";
+type Mood = "feliz" | "contenta" |  "pensativa";
 
 const srcByMood: Record<Mood, string> = {
   feliz: lumiFeliz,
-  confundido: lumiConfundido,
-  confeti: lumiConfeti,
-  pensativo: lumiPensativo,
+  contenta: lumiContenta,
+  pensativa: lumiPensativa,
 };
 
-const moods: Mood[] = ["feliz", "confundido", "confeti", "pensativo"];
+const moods: Mood[] = ["feliz", "contenta", "pensativa"];
 
 export function LumiAvatar({
   size = 96,

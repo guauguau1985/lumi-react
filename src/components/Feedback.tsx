@@ -1,9 +1,9 @@
 // src/components/Feedback.tsx
 import { useEffect } from "react";
 import type { FeedbackState } from "@/hooks/useFeedback";
-import confetti from "canvas-confetti";
-import lumiFeliz from "../assets/lumi_feliz.png";
-import lumiPensativo from "../assets/lumi_pensativo.png";
+import lumiFeliz from "../assets/lumi_feliz.svg";
+import contenta from "../assets/lumi_contenta.svg";
+import lumiPensativa from "../assets/lumi_pensativa.svg";
 import { AnimatePresence, motion } from "framer-motion";
 
 type Props = {
@@ -55,8 +55,8 @@ export default function Feedback({
           </div>
 
           <img
-            src={isOk ? lumiFeliz : lumiPensativo}
-            alt={isOk ? "Lumi feliz" : "Lumi pensativo"}
+            src={isOk ? lumiFeliz : lumiPensativa}
+            alt={isOk ? "Lumi feliz" : "Lumi pensativa"}
             className="w-20 mx-auto mt-2"
           />
         </motion.div>

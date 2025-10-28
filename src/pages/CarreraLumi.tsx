@@ -72,7 +72,7 @@ export default function CarreraLumi() {
             position: 'relative'
           }}>
             {i === posicion && (
-              <img src="/img/lumi_feliz.png" alt="Lumi" style={{ position: 'absolute', top: '-50px', width: '50px' }} />
+              <img src="/img/lumi_feliz.svg" alt="Lumi" style={{ position: 'absolute', top: '-50px', width: '50px' }} />
             )}
             {i + 1}
           </div>
