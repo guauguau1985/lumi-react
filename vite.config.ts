@@ -4,13 +4,14 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import tailwind from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
+
 export default defineConfig({
   base: "/lumi-react/", // ¡importante para GH Pages!
   plugins: [
     react(),
     tsconfigPaths(),
     tailwind(),
-    VitePWA({
+       VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["icons/icon-192.png", "icons/icon-512.png"],
       manifest: {
@@ -29,6 +30,9 @@ export default defineConfig({
       workbox: {
         navigateFallback: "/lumi-react/index.html",
         globPatterns: ["**/*.{js,css,html,svg,png,jpg,webp}"],
+        // Allow larger files (e.g. generated chunks or big SVGs) to be precached.
+        // Value is bytes; default is 2 * 1024 * 1024 (2 MiB).
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
     }),
   ],

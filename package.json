@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "svgr:build": "npx svgr --icon --typescript --out-dir src/icons src/assets"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.3",
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.1",
+    "@svgr/cli": "^8.1.0",
     "@tailwindcss/postcss": "^4.1.13",
     "@tailwindcss/vite": "^4.1.13",
     "@types/react": "^19.1.8",

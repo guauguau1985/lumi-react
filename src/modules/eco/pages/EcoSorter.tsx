@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { BINS, SORTER_ITEMS, type EcoItem, type Bin } from "@/data/ecoData";
+import BadgeReciclaje from "@/components/icons/BadgeReciclaje";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import Feedback from "@/components/Feedback";
 import { useFeedback } from "@/hooks/useFeedback";
@@ -15,7 +16,8 @@ function Draggable({ item, onDragStart }: { item: EcoItem; onDragStart: (id: str
       onTouchStart={() => onDragStart(item.id)}
       className="bg-white rounded-2xl shadow p-3 w-full flex items-center gap-3"
     >
-      <img src={item.img} alt={item.name} className="w-10 h-10" />
+      {/* SVG component provided by ecoData (SVGR) */}
+      <item.img className="w-10 h-10" aria-label={item.name} />
       <span className="font-medium text-gray-800">{item.name}</span>
     </button>
   );
@@ -70,7 +72,8 @@ export default function EcoSorter() {
               onTouchEnd={() => handleDrop(b.key)}
               className="rounded-2xl bg-white shadow p-3 text-center border border-transparent hover:border-emerald-300"
             >
-              <img src={b.img} alt={b.label} className="w-20 mx-auto" />
+              {/* Render bin SVG component */}
+              <b.img className="w-20 mx-auto" aria-label={b.label} />
               <p className="mt-1 font-semibold text-gray-700">{b.label}</p>
             </div>
           ))}
@@ -80,7 +83,7 @@ export default function EcoSorter() {
       {done && (
         <div className="mt-6 p-4 bg-white rounded-2xl shadow border text-center">
           <p className="font-bold text-emerald-700">¡Excelente! Clasificaste todo 🎉</p>
-          <img src="/src/assets/eco/badge_reciclaje.svg" alt="Insignia Reciclaje" className="w-24 mx-auto mt-2" />
+          <BadgeReciclaje className="w-24 mx-auto mt-2" aria-label="Insignia Reciclaje" />
         </div>
       )}
 

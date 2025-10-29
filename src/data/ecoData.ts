@@ -1,38 +1,41 @@
 export type Bin = "papel" | "plastico" | "vidrio" | "organico" | "peligroso";
 
+import React from "react";
+
 export type EcoItem = {
   id: string;
   name: string;
-  img: string; // ruta a SVG/PNG dentro de src/assets/eco
+  // SVG component generado por SVGR (componente React)
+  img: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   bin: Bin;
 };
 
-import bin_papel from "@/assets/eco/bin_papel.svg?url";
-import bin_plastico from "@/assets/eco/bin_plastico.svg?url";
-import bin_vidrio from "@/assets/eco/bin_vidrio.svg?url";
-import bin_organico from "@/assets/eco/bin_organico.svg?url";
-import bin_peligroso from "@/assets/eco/bin_peligroso.svg?url";
+import BinPapel from "@/components/icons/BinPapel";
+import BinPlastico from "@/components/icons/BinPlastico";
+import BinVidrio from "@/components/icons/BinVidrio";
+import BinOrganico from "@/components/icons/BinOrganico";
+import BinPeligroso from "@/components/icons/BinPeligroso";
 
-import item_newspaper from "@/assets/eco/item_newspaper.svg?url";
-import item_bottle_plastic from "@/assets/eco/item_bottle_plastic.svg?url";
-import item_glass_jar from "@/assets/eco/item_glass_jar.svg?url";
-import item_apple_core from "@/assets/eco/item_apple_core.svg?url";
-import item_battery from "@/assets/eco/item_battery.svg?url";
+import ItemNewspaper from "@/components/icons/ItemNewspaper";
+import ItemBottlePlastic from "@/components/icons/ItemBottlePlastic";
+import ItemGlassJar from "@/components/icons/ItemGlassJar";
+import ItemAppleCore from "@/components/icons/ItemAppleCore";
+import ItemBattery from "@/components/icons/ItemBattery";
 
-export const BINS: { key: Bin; label: string; img: string }[] = [
-  { key: "papel",     label: "Papel/Cartón", img: bin_papel },
-  { key: "plastico",  label: "Plástico",     img: bin_plastico },
-  { key: "vidrio",    label: "Vidrio",       img: bin_vidrio },
-  { key: "organico",  label: "Orgánico",     img: bin_organico },
-  { key: "peligroso", label: "Peligroso",    img: bin_peligroso },
+export const BINS: { key: Bin; label: string; img: React.ComponentType<React.SVGProps<SVGSVGElement>> }[] = [
+  { key: "papel",     label: "Papel/Cartón", img: BinPapel },
+  { key: "plastico",  label: "Plástico",     img: BinPlastico },
+  { key: "vidrio",    label: "Vidrio",       img: BinVidrio },
+  { key: "organico",  label: "Orgánico",     img: BinOrganico },
+  { key: "peligroso", label: "Peligroso",    img: BinPeligroso },
 ];
 
 export const SORTER_ITEMS: EcoItem[] = [
-  { id: "n1", name: "Diario",            img: item_newspaper,     bin: "papel" },
-  { id: "p1", name: "Botella plástica",  img: item_bottle_plastic,bin: "plastico" },
-  { id: "g1", name: "Frasco de vidrio",  img: item_glass_jar,     bin: "vidrio" },
-  { id: "o1", name: "Cáscara de manzana",img: item_apple_core,    bin: "organico" },
-  { id: "x1", name: "Pila",              img: item_battery,       bin: "peligroso" },
+  { id: "n1", name: "Diario",            img: ItemNewspaper,     bin: "papel" },
+  { id: "p1", name: "Botella plástica",  img: ItemBottlePlastic,bin: "plastico" },
+  { id: "g1", name: "Frasco de vidrio",  img: ItemGlassJar,     bin: "vidrio" },
+  { id: "o1", name: "Cáscara de manzana",img: ItemAppleCore,    bin: "organico" },
+  { id: "x1", name: "Pila",              img: ItemBattery,       bin: "peligroso" },
 ];
 
 export type QuizQ = {

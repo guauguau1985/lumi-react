@@ -1,0 +1,13 @@
+export { default as BadgeCompost } from "./BadgeCompost";
+export { default as BadgeHuella } from "./BadgeHuella";
+export { default as BadgeReciclaje } from "./BadgeReciclaje";
+export { default as BinOrganico } from "./BinOrganico";
+export { default as BinPapel } from "./BinPapel";
+export { default as BinPeligroso } from "./BinPeligroso";
+export { default as BinPlastico } from "./BinPlastico";
+export { default as BinVidrio } from "./BinVidrio";
+export { default as ItemAppleCore } from "./ItemAppleCore";
+export { default as ItemBattery } from "./ItemBattery";
+export { default as ItemBottlePlastic } from "./ItemBottlePlastic";
+export { default as ItemGlassJar } from "./ItemGlassJar";
+export { default as ItemNewspaper } from "./ItemNewspaper";
