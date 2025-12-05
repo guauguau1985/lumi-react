@@ -1,5 +1,5 @@
-// src/modules/math/MathShell.tsx
 import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
+
 import WorldsMap from "@/modules/math/WorldsMap";
 import DivisionShell from "@/modules/math/games/divisiones/DivisionShell";
 
@@ -12,17 +12,29 @@ import GameAcuarioDecimal   from "@/modules/math/games/GameAcuarioDecimal";
 import GameBarrasDatos      from "@/modules/math/games/GameBarrasDatos";
 import GameRelojAventurero  from "@/modules/math/games/GameRelojAventurero";
 
+
+// 👉 nuevo: juego Divi divi di
+import DividividiGame from "@/modules/math/games/divisiones/DividividiGame";
+
 export default function MathShell() {
   return (
     <div className="min-h-svh p-4 sm:p-6 bg-gradient-to-br from-indigo-50 to-sky-50">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold text-indigo-700">Módulo Matemáticas ➗</h1>
-        <NavLink to="/" className="px-3 py-1 rounded-lg bg-white">⬅️ Inicio</NavLink>
+        <h1 className="text-2xl font-extrabold text-indigo-700">
+          Módulo Matemáticas ➗
+        </h1>
+        <NavLink to="/" className="px-3 py-1 rounded-lg bg-white">
+          ⬅️ Inicio
+        </NavLink>
       </header>
 
       <nav className="mt-3 flex gap-2 text-sm">
-        <NavLink to="" end className="px-3 py-1 rounded-lg bg-white">Mapa</NavLink>
-        <NavLink to="divisiones" className="px-3 py-1 rounded-lg bg-white">Divisiones</NavLink>
+        <NavLink to="" end className="px-3 py-1 rounded-lg bg-white">
+          Mapa
+        </NavLink>
+        <NavLink to="divisiones" className="px-3 py-1 rounded-lg bg-white">
+          Divisiones
+        </NavLink>
       </nav>
 
       <Routes>
@@ -30,16 +42,78 @@ export default function MathShell() {
         <Route index element={<WorldsMap />} />
 
         {/* OA existentes */}
-        <Route path="oa1"  element={<BackWrap><GameEscaleraNumerica/></BackWrap>} />
-        <Route path="oa2"  element={<BackWrap><GameRayosMagicos/></BackWrap>} />
-        <Route path="oa3"  element={<ComingSoon title="OA3 · Mercado" />} />
-        <Route path="oa8"  element={<BackWrap><GameFraccionesPizza/></BackWrap>} />
-        <Route path="oa9"  element={<BackWrap><GameSumaFracciones/></BackWrap>} />
-        <Route path="oa10" element={<BackWrap><GameAcuarioDecimal/></BackWrap>} />
-        <Route path="oa11" element={<BackWrap><GameBarrasDatos/></BackWrap>} />
-        <Route path="oa12" element={<BackWrap><GameRelojAventurero/></BackWrap>} />
+        <Route
+          path="oa1"
+          element={
+            <BackWrap>
+              <GameEscaleraNumerica />
+            </BackWrap>
+          }
+        />
+        <Route
+          path="oa2"
+          element={
+            <BackWrap>
+              <GameRayosMagicos />
+            </BackWrap>
+          }
+        />
+        <Route
+          path="oa3"
+          element={<ComingSoon title="OA3 · Mercado" />}
+        />
+        <Route
+          path="oa8"
+          element={
+            <BackWrap>
+              <GameFraccionesPizza />
+            </BackWrap>
+          }
+        />
+        <Route
+          path="oa9"
+          element={
+            <BackWrap>
+              <GameSumaFracciones />
+            </BackWrap>
+          }
+        />
+        <Route
+          path="oa10"
+          element={
+            <BackWrap>
+              <GameAcuarioDecimal />
+            </BackWrap>
+          }
+        />
+        <Route
+          path="oa11"
+          element={
+            <BackWrap>
+              <GameBarrasDatos />
+            </BackWrap>
+          }
+        />
+        <Route
+          path="oa12"
+          element={
+            <BackWrap>
+              <GameRelojAventurero />
+            </BackWrap>
+          }
+        />
 
-        {/* Divisiones */}
+        {/* 👉 Nueva ruta directa al minijuego Divi divi di */}
+        <Route
+          path="divisiones/dividividi"
+          element={
+            <BackWrap>
+              <DividividiGame />
+            </BackWrap>
+          }
+        />
+
+        {/* Divisiones: shell general con otros juegos */}
         <Route path="divisiones/*" element={<DivisionShell />} />
       </Routes>
     </div>
@@ -68,8 +142,14 @@ function ComingSoon({ title }: { title: string }) {
   return (
     <div className="max-w-3xl mx-auto mt-10 text-center space-y-4">
       <h2 className="text-2xl font-bold text-indigo-700">{title}</h2>
-      <p className="text-slate-600">Estamos preparando esta actividad para ti. ¡Muy pronto podrás explorarla!</p>
-      <button onClick={() => n("/math")} className="px-4 py-2 rounded-lg bg-white shadow border">
+      <p className="text-slate-600">
+        Estamos preparando esta actividad para ti. ¡Muy pronto podrás
+        explorarla!
+      </p>
+      <button
+        onClick={() => n("/math")}
+        className="px-4 py-2 rounded-lg bg-white shadow border"
+      >
         Volver al mapa
       </button>
     </div>

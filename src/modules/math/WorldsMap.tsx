@@ -37,7 +37,12 @@ const MAP_ITEMS: {
   // Nueva sección
   {
     title: "El arte de dividir",
-    items: [{ route: "divisiones", title: "Aprende divisiones" }],
+    items: [
+      {
+        route: "divisiones/dividividi",
+        title: "Divi divi di · Aprende divisiones",
+      },
+    ],
   },
   { title: "Ciudad de las Figuras", locked: true },
   { title: "Universo Medidas y Datos", locked: true },
@@ -52,22 +57,30 @@ export default function WorldsMap() {
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-extrabold text-emerald-800">Mapa de Mundos · Matemáticas</h2>
+        <h2 className="text-2xl font-extrabold text-emerald-800">
+          Mapa de Mundos · Matemáticas
+        </h2>
         <Button variant="ghost" onClick={() => navigate("/")}>
           Volver al inicio
         </Button>
       </div>
 
-      <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => (
           <div
             key={card.title}
-            className={`rounded-2xl bg-white/80 p-5 shadow border ${card.locked ? "opacity-60" : ""}`}
+            className={`rounded-2xl bg-white/80 p-5 shadow border ${
+              card.locked ? "opacity-60" : ""
+            }`}
           >
             <div className="flex items-center justify-between">
-              <div className="text-lg font-bold text-slate-800">{card.title}</div>
+              <div className="text-lg font-bold text-slate-800">
+                {card.title}
+              </div>
               {card.locked ? (
-                <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-500">Bloqueado</span>
+                <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-500">
+                  Bloqueado
+                </span>
               ) : null}
             </div>
 
@@ -83,8 +96,8 @@ export default function WorldsMap() {
                   const status = !isAvailable
                     ? "Pronto"
                     : !isUnlocked
-                      ? "🔒"
-                      : suffix || "Listo";
+                    ? "🔒"
+                    : suffix || "Listo";
 
                   return (
                     <li key={`${card.title}-${idx}`}>
@@ -108,4 +121,3 @@ export default function WorldsMap() {
     </div>
   );
 }
-
