@@ -2,9 +2,13 @@
 import { useEffect } from "react";
 import type { FeedbackState } from "@/hooks/useFeedback";
 import confetti from "canvas-confetti";
-import lumiFeliz from "../assets/lumi_feliz.png";
-import lumiPensativo from "../assets/lumi_pensativo.png";
 import { AnimatePresence, motion } from "framer-motion";
+
+// Prefijo para imágenes públicas
+const ASSET_BASE = `${import.meta.env.BASE_URL}img/`;
+
+const LumiFeliz = `${ASSET_BASE}Lumi_feliz.png`;
+const LumiPensativa = `${ASSET_BASE}Lumi_pensativa.png`;
 
 type Props = {
   state: FeedbackState;
@@ -48,15 +52,16 @@ export default function Feedback({
         >
           <div
             className={
-              "text-lg font-bold " + (isOk ? "text-emerald-700" : "text-rose-700")
+              "text-lg font-bold " +
+              (isOk ? "text-emerald-700" : "text-rose-700")
             }
           >
             {isOk ? successText : errorText}
           </div>
 
           <img
-            src={isOk ? lumiFeliz : lumiPensativo}
-            alt={isOk ? "Lumi feliz" : "Lumi pensativo"}
+            src={isOk ? LumiFeliz : LumiPensativa}
+            alt={isOk ? "Lumi feliz" : "Lumi pensativa"}
             className="w-20 mx-auto mt-2"
           />
         </motion.div>

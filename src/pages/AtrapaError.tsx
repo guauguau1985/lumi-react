@@ -44,7 +44,7 @@ export default function AtrapaError() {
 
       <div style={{ padding: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '15px' }}>
-          <img src="/img/lumi_confundido.png" alt="Lumi confundido" style={{ width: '80px' }} />
+          <img src="/img/Lumi_confundida.png" alt="Lumi confundida" style={{ width: '80px' }} />
           <div style={{ background: '#d1fae5', padding: '10px 15px', borderRadius: '10px', maxWidth: '300px' }}>
             ¡Oh no! Algo no funciona. Toca el paso equivocado.
           </div>

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useGameRewards } from "../../../../gamification/useGameRewards";
 
 type Phase = "adding" | "answer" | "finished";
 
@@ -16,6 +17,12 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
   divisor = 6,
 }) => {
   const maxBags = dividend / divisor;
+
+  // 🔹 Gamificación: conectamos este juego al sistema global
+  const { profile, onCorrect, onWrong, onGameCompleted } = useGameRewards(
+    "matematicas",
+    "divi-divi-di"
+  );
 
   const [bags, setBags] = useState(0);
   const [phase, setPhase] = useState<Phase>("adding");
@@ -70,20 +77,53 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
     setIsCorrect(correct);
 
     if (correct) {
+      // ⭐ Aquí se dispara la gamificación
+      onCorrect();        // suma XP y monedas según config
+      onGameCompleted();  // bonus + posible insignia
       setPhase("finished");
+    } else {
+      onWrong();          // registra intento fallido
     }
   };
+
+  // Texto reaccionando al estado para Lumi
+  const feedbackLumi =
+    phase === "adding" && bags === 0
+      ? "Pulsa el botón para hacer bolsitas de 6."
+      : phase === "adding" && bags > 0
+      ? `Voy sumando de ${divisor} en ${divisor}. Ahora tengo ${currentTotal}.`
+      : phase !== "adding" && currentTotal === dividend
+      ? `Aquí me detengo: llegué al número grande (${dividend}).`
+      : "";
+
+  const textoEmocionFinal =
+    phase === "finished" && isCorrect
+      ? "🎉 ¡Muy bien! Ganaste experiencia para Lumi."
+      : phase === "finished"
+      ? "Lo importante es que lo intentaste, podemos practicar otra vez."
+      : "";
 
   return (
     <div className="flex justify-center px-4 py-6">
       <div className="w-full max-w-xl rounded-3xl bg-emerald-50/80 p-4 shadow-md md:p-6">
+        {/* barra de estado de Lumi / gamificación */}
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-emerald-900 md:text-xs">
+          <span className="font-semibold">
+            Lumi nivel {profile.nivel}
+          </span>
+          <span>XP: {profile.xpTotal}</span>
+          <span>Hojas: {profile.monedas}</span>
+          <span className="text-[10px] text-emerald-700 md:text-xs">
+            Racha: {profile.rachaDias} día{profile.rachaDias === 1 ? "" : "s"}
+          </span>
+        </div>
 
         {/* encabezado */}
         <div className="mb-4 flex items-start gap-3">
-          <div className="h-14 w-14 overflow-hidden rounded-2xl bg-emerald-200/70 flex items-center justify-center">
+          <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-emerald-200/70">
             {/* Cambia la ruta según tu proyecto */}
             <img
-              src="/assets/lumi_feliz.png"
+              src="/img/Lumi_feliz.png"
               alt="Lumi"
               className="h-full w-full object-contain"
             />
@@ -157,12 +197,7 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
           </div>
 
           <p className="mt-2 text-center text-xs text-slate-700 md:text-sm">
-            {phase === "adding" && bags === 0 && "Pulsa el botón para hacer bolsitas de 6."}
-            {phase === "adding" && bags > 0 &&
-              `Voy sumando de ${divisor} en ${divisor}. Ahora tengo ${currentTotal}.`}
-            {phase !== "adding" &&
-              currentTotal === dividend &&
-              `Aquí me detengo: llegué al número grande (${dividend}).`}
+            {feedbackLumi}
           </p>
         </div>
 
@@ -242,6 +277,11 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
             <p className="mt-1 text-lg font-bold text-emerald-900 md:text-xl">
               {dividend} ÷ {divisor} = {maxBags}
             </p>
+            {textoEmocionFinal && (
+              <p className="mt-1 text-xs text-emerald-800 md:text-sm">
+                {textoEmocionFinal}
+              </p>
+            )}
           </div>
         )}
       </div>

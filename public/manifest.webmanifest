@@ -1,0 +1,33 @@
+{
+  "name": "Lumi - Aprendo con la Tierra",
+  "short_name": "Lumi",
+  "description": "Juegos de matemáticas, programación y ecología para niños, con Lumi.",
+
+  "start_url": "/lumi-react/#/",
+  "scope": "/lumi-react/",
+
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#E8F3EC",
+  "theme_color": "#78c077",
+
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
