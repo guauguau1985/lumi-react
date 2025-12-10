@@ -48,4 +48,11 @@ export const gamificationConfig: GamificationConfig = {
   },
 
   // Aquí vas sumando tus otros módulos/juegos
+      // Juego de fracciones con pizzas
+    "pizza-fracciones": {
+      CORRECT_ANSWER: { xp: 9, coins: 1 },
+      WRONG_ANSWER: { xp: 0, coins: 0 },
+      GAME_COMPLETED: { xp: 35, coins: 4, badge: "mat_frac_pizza" },
+    },
+
 };
