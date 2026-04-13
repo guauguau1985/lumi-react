@@ -5,7 +5,7 @@ export function Card({
   children,
 }: React.PropsWithChildren<{ className?: string }>) {
   return (
-    <div className={`rounded-2xl bg-white shadow-sm border border-gray-100 ${className}`}>
+    <div className={`rounded-2xl bg-[#EEF8E3] shadow-sm border border-[#2FB861] ${className}`}>
       {children}
     </div>
   );
