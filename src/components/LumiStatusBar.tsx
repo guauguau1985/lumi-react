@@ -11,7 +11,7 @@ const LumiStatusBar: React.FC = () => {
     100;
 
   return (
-    <header className="sticky top-0 z-40 mb-3 bg-emerald-900/95 text-emerald-50 shadow-sm">
+    <header className="sticky top-0 z-40 mb-3 bg-emerald-600 text-emerald-50 shadow-sm">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2 text-xs md:text-sm">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 overflow-hidden rounded-2xl bg-emerald-300/90">
