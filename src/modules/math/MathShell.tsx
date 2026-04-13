@@ -18,7 +18,7 @@ import DividividiGame from "@/modules/math/games/divisiones/DividividiGame";
 
 export default function MathShell() {
   return (
-    <div className="min-h-svh p-4 sm:p-6 bg-gradient-to-br from-indigo-50 to-sky-50">
+    <div className="min-h-svh p-4 sm:p-6 " style={{ backgroundColor: "#F9FCF3" }}>
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-extrabold text-indigo-700">
           Módulo Matemáticas ➗
