@@ -1,5 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { useGameRewards } from "../../../../gamification/useGameRewards";
+import { useAdaptiveLearning } from "@/hooks/useAdaptiveLearning";
+import { useFeedback } from "@/hooks/useFeedback";
+import Feedback from "@/components/Feedback";
 
 type Phase = "adding" | "answer" | "finished";
 
@@ -16,7 +19,9 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
   dividend = 54,
   divisor = 6,
 }) => {
-  const maxBags = dividend / divisor;
+  const [currentDividend, setCurrentDividend] = useState(dividend);
+  const [currentDivisor, setCurrentDivisor] = useState(divisor);
+  const maxBags = currentDividend / currentDivisor;
 
   // 🔹 Gamificación: conectamos este juego al sistema global
   const { profile, onCorrect, onWrong, onGameCompleted } = useGameRewards(
@@ -29,6 +34,8 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const { state: adaptive, recordAnswer } = useAdaptiveLearning(1);
+  const { feedback, markCorrect, markWrong } = useFeedback();
 
   const options: number[] = useMemo(() => {
     const correct = maxBags;
@@ -40,23 +47,38 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
     return Array.from(set).sort(() => Math.random() - 0.5);
   }, [maxBags]);
 
-  const currentTotal = bags * divisor;
+  const currentTotal = bags * currentDivisor;
+
+  const reinforcementMessage =
+    adaptive.reinforcement === "review-short"
+      ? `💡 Pista: divide ${currentDividend} en grupos de ${currentDivisor}. Cuenta cuántos grupos completos hay.`
+      : adaptive.reinforcement === "review-simple"
+      ? `📘 Repaso: la división responde "cuántos grupos". ${currentDividend} ÷ ${currentDivisor} significa cuántos grupos de ${currentDivisor} puedes formar.`
+      : null;
+
+  const applyAdaptiveChallenge = (level: number) => {
+    const safeLevel = Math.max(1, level);
+    const nextDivisor = Math.min(9, Math.max(2, divisor + safeLevel - 1));
+    const nextMaxBags = Math.min(12, Math.max(4, 6 + safeLevel));
+    setCurrentDivisor(nextDivisor);
+    setCurrentDividend(nextDivisor * nextMaxBags);
+  };
 
   const handleAddBag = () => {
     if (phase !== "adding") return;
     setError(null);
 
     const nextBags = bags + 1;
-    const nextTotal = nextBags * divisor;
+    const nextTotal = nextBags * currentDivisor;
 
-    if (nextTotal > dividend) {
-      setError(`Ups, me pasé del ${dividend}. Probemos de nuevo.`);
+    if (nextTotal > currentDividend) {
+      setError(`Ups, me pasé del ${currentDividend}. Probemos de nuevo.`);
       return;
     }
 
     setBags(nextBags);
 
-    if (nextTotal === dividend) {
+    if (nextTotal === currentDividend) {
       setPhase("answer");
     }
   };
@@ -69,31 +91,39 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
     setIsCorrect(null);
   };
 
+  const handleNextRound = () => {
+    applyAdaptiveChallenge(adaptive.currentLevel);
+    handleReset();
+  };
+
   const handleAnswerClick = (option: number) => {
     if (phase !== "answer") return;
 
     setSelectedOption(option);
     const correct = option === maxBags;
     setIsCorrect(correct);
+    recordAnswer(correct);
 
     if (correct) {
       // ⭐ Aquí se dispara la gamificación
       onCorrect();        // suma XP y monedas según config
       onGameCompleted();  // bonus + posible insignia
+      markCorrect();
       setPhase("finished");
     } else {
       onWrong();          // registra intento fallido
+      markWrong();
     }
   };
 
   // Texto reaccionando al estado para Lumi
   const feedbackLumi =
     phase === "adding" && bags === 0
-      ? "Pulsa el botón para hacer bolsitas de 6."
+      ? `Pulsa el botón para hacer bolsitas de ${currentDivisor}.`
       : phase === "adding" && bags > 0
-      ? `Voy sumando de ${divisor} en ${divisor}. Ahora tengo ${currentTotal}.`
-      : phase !== "adding" && currentTotal === dividend
-      ? `Aquí me detengo: llegué al número grande (${dividend}).`
+      ? `Voy sumando de ${currentDivisor} en ${currentDivisor}. Ahora tengo ${currentTotal}.`
+      : phase !== "adding" && currentTotal === currentDividend
+      ? `Aquí me detengo: llegué al número grande (${currentDividend}).`
       : "";
 
   const textoEmocionFinal =
@@ -110,6 +140,9 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-emerald-900 md:text-xs">
           <span className="font-semibold">
             Lumi nivel {profile.nivel}
+          </span>
+          <span className="font-semibold text-indigo-700">
+            Nivel adaptativo: {adaptive.currentLevel}
           </span>
           <span>XP: {profile.xpTotal}</span>
           <span>Hojas: {profile.monedas}</span>
@@ -141,10 +174,10 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
         {/* expresión principal */}
         <div className="mb-4 rounded-2xl bg-white/80 px-4 py-3 text-center">
           <p className="text-xl font-semibold text-slate-900 md:text-2xl">
-            {dividend} ÷ {divisor} = ?
+            {currentDividend} ÷ {currentDivisor} = ?
           </p>
           <p className="mt-1 text-xs text-slate-600 md:text-sm">
-            Cada bolsita tendrá <span className="font-semibold">{divisor}</span>.
+            Cada bolsita tendrá <span className="font-semibold">{currentDivisor}</span>.
           </p>
         </div>
 
@@ -153,9 +186,9 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
           <div className="mb-1 flex justify-between gap-1">
             {Array.from({ length: maxBags }, (_, i) => {
               const index = i + 1;
-              const value = index * divisor;
+              const value = index * currentDivisor;
               const isFilled = index <= bags;
-              const isTarget = isFilled && value === dividend;
+              const isTarget = isFilled && value === currentDividend;
 
               return (
                 <div
@@ -230,7 +263,7 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
         {phase !== "adding" && (
           <div className="mt-3 rounded-2xl bg-white/90 px-3 py-3">
             <p className="text-center text-sm font-medium text-slate-800 md:text-base">
-              ¿Cuántas bolsitas hice para llegar a {dividend}?
+              ¿Cuántas bolsitas hice para llegar a {currentDividend}?
             </p>
             <div className="mt-2 flex flex-wrap justify-center gap-2">
               {options.map((option) => {
@@ -275,15 +308,44 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
               🎉 ¡Muy bien! Hiciste {maxBags} bolsitas.
             </p>
             <p className="mt-1 text-lg font-bold text-emerald-900 md:text-xl">
-              {dividend} ÷ {divisor} = {maxBags}
+              {currentDividend} ÷ {currentDivisor} = {maxBags}
             </p>
             {textoEmocionFinal && (
               <p className="mt-1 text-xs text-emerald-800 md:text-sm">
                 {textoEmocionFinal}
               </p>
             )}
+            <p className="mt-1 text-xs text-indigo-700 md:text-sm">
+              Resultado adaptativo:{" "}
+              {adaptive.levelAction === "up"
+                ? "Subes de nivel 🚀"
+                : adaptive.levelAction === "down"
+                ? "Bajamos un nivel para reforzar 🌱"
+                : "Mantienes tu nivel actual ✅"}
+            </p>
+            <button
+              type="button"
+              onClick={handleNextRound}
+              className="mt-3 rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+            >
+              Siguiente ronda
+            </button>
           </div>
         )}
+
+        {reinforcementMessage && phase !== "finished" && (
+          <div className="mt-3 rounded-2xl bg-amber-100/80 px-3 py-3">
+            <p className="text-center text-xs font-medium text-amber-900 md:text-sm">
+              {reinforcementMessage}
+            </p>
+          </div>
+        )}
+
+        <Feedback
+          state={feedback}
+          successText="¡Excelente respuesta!"
+          errorText="Casi, intenta otra opción"
+        />
       </div>
     </div>
   );

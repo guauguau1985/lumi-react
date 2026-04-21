@@ -16,7 +16,7 @@ const LumiStatusBar: React.FC = () => {
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 overflow-hidden rounded-2xl bg-[var(--color-statusbar-avatar-bg)]">
             <img
-              src={`${import.meta.env.BASE_URL}img/feliz.png`}
+              src={`${import.meta.env.BASE_URL}img/lumi/feliz.png`}
               alt="Lumi"
               className="h-full w-full object-contain"
             />

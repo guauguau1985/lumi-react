@@ -5,7 +5,7 @@ import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "framer-motion";
 
 // Prefijo para imágenes públicas
-const ASSET_BASE = `${import.meta.env.BASE_URL}img/`;
+const ASSET_BASE = `${import.meta.env.BASE_URL}img/lumi/`;
 
 const LumiFeliz = `${ASSET_BASE}feliz.png`;
 const LumiPensativa = `${ASSET_BASE}pensativa.png`;
@@ -45,8 +45,8 @@ export default function Feedback({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -10, scale: 0.98 }}
           transition={{ type: "spring", stiffness: 260, damping: 22 }}
-          className="pointer-events-auto rounded-2xl border px-5 py-4 text-center backdrop-blur bg-[color:rgba(255,255,255,0.92)] border-[var(--color-card-border)]"
-          style={{ boxShadow: "var(--shadow-card)" }}
+          className="pointer-events-auto px-5 py-4 text-center"
+          style={{}}
         >
           <div
             className={

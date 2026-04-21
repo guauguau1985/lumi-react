@@ -127,6 +127,24 @@ export default function Home() {
             </Link>
           </motion.div>
 
+          {/* Ciencias Naturales */}
+          <motion.div variants={item}>
+            <Link
+              to="/naturales"
+              className="
+                block rounded-2xl px-4 py-3 shadow transition-transform hover:scale-[1.02] hover:shadow-md
+                bg-[var(--color-surface)] border-4 border-sky-300
+              "
+            >
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-sky-500" />
+                <span className="font-semibold text-sky-700">
+                  🔬 Ciencias Naturales
+                </span>
+              </div>
+            </Link>
+          </motion.div>
+
           {/* Programación */}
           <motion.div variants={item}>
             <Link
