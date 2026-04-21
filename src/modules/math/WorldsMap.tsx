@@ -13,7 +13,7 @@ const MAP_ITEMS: {
     items: [
       { oa: "OA1", route: "oa1", title: "OA1 · Escalera numérica" },
       { oa: "OA2", route: "oa2", title: "OA2 · Rayos mágicos" },
-      { oa: "OA3", title: "OA3 · Mercado" }, // pronto
+      { oa: "OA3", title: "OA3 · Mercado" },
     ],
   },
   {
@@ -34,7 +34,6 @@ const MAP_ITEMS: {
     title: "Cronolandia",
     items: [{ oa: "OA12", route: "oa12", title: "OA12 · Reloj aventurero" }],
   },
-  // Nueva sección
   {
     title: "El arte de dividir",
     items: [
@@ -57,9 +56,10 @@ export default function WorldsMap() {
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-extrabold text-emerald-800">
+        <h2 className="text-2xl font-extrabold text-[var(--color-math-text)]">
           Mapa de Mundos · Matemáticas
         </h2>
+
         <Button variant="ghost" onClick={() => navigate("/")}>
           Volver al inicio
         </Button>
@@ -69,16 +69,18 @@ export default function WorldsMap() {
         {cards.map((card) => (
           <div
             key={card.title}
-            className={`rounded-2xl bg-white/80 p-5 shadow border ${
+            className={`rounded-2xl p-5 border bg-[color:rgba(255,255,255,0.82)] border-[var(--color-card-border)] ${
               card.locked ? "opacity-60" : ""
             }`}
+            style={{ boxShadow: "var(--shadow-card)" }}
           >
-            <div className="flex items-center justify-between">
-              <div className="text-lg font-bold text-slate-800">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-lg font-bold text-[var(--color-text-primary)]">
                 {card.title}
               </div>
+
               {card.locked ? (
-                <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-500">
+                <span className="rounded-full px-2 py-1 text-xs bg-[var(--color-muted)] text-[var(--color-text-secondary)]">
                   Bloqueado
                 </span>
               ) : null}
@@ -108,7 +110,9 @@ export default function WorldsMap() {
                         disabled={disabled}
                       >
                         <span>{item.title}</span>
-                        <span className="text-sm text-slate-500">{status}</span>
+                        <span className="text-sm text-[var(--color-text-secondary)]">
+                          {status}
+                        </span>
                       </Button>
                     </li>
                   );

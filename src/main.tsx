@@ -5,7 +5,7 @@ import App from "./App";
 import AppProviders from "@/app/AppShell";
 import { GamificationProvider } from "./gamification/GamificationContext";
 
-import "./styles/global.css";
+import "./styles/index.css";
 
 const rootElement = document.getElementById("root") as HTMLElement;
 

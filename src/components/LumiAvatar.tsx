@@ -3,11 +3,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 // Prefijo correcto para assets públicos
-const ASSET_BASE = `${import.meta.env.BASE_URL}img/`;
+const ASSET_BASE = `${import.meta.env.BASE_URL}img/lumi/`;
 
-const LumiFeliz = `${ASSET_BASE}Lumi_feliz.png`;
-const LumiConfundida = `${ASSET_BASE}Lumi_confundida.png`;
-const LumiPensativa = `${ASSET_BASE}Lumi_pensativa.png`;
+const LumiFeliz = `${ASSET_BASE}feliz.png`;
+const LumiConfundida = `${ASSET_BASE}confundida.png`;
+const LumiPensativa = `${ASSET_BASE}pensativa.png`;
 
 type Mood = "feliz" | "confundida" | "pensativa";
 

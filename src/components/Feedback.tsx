@@ -7,8 +7,8 @@ import { AnimatePresence, motion } from "framer-motion";
 // Prefijo para imágenes públicas
 const ASSET_BASE = `${import.meta.env.BASE_URL}img/`;
 
-const LumiFeliz = `${ASSET_BASE}Lumi_feliz.png`;
-const LumiPensativa = `${ASSET_BASE}Lumi_pensativa.png`;
+const LumiFeliz = `${ASSET_BASE}feliz.png`;
+const LumiPensativa = `${ASSET_BASE}pensativa.png`;
 
 type Props = {
   state: FeedbackState;
@@ -21,12 +21,10 @@ export default function Feedback({
   successText = "¡Muy bien!",
   errorText = "Ups, inténtalo de nuevo",
 }: Props) {
-  // No renderices nada si no hay feedback
   if (!state) return null;
 
   const isOk = state === "correct";
 
-  // Dispara confetti SOLO al acertar
   useEffect(() => {
     if (state === "correct") {
       confetti({
@@ -39,21 +37,23 @@ export default function Feedback({
   }, [state]);
 
   return (
-    // Capa fija que no intercepta clics (solo el cuadro)
     <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-12">
       <AnimatePresence mode="wait">
         <motion.div
-          key={state} // fuerza animación en cada cambio
+          key={state}
           initial={{ opacity: 0, y: -10, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -10, scale: 0.98 }}
           transition={{ type: "spring", stiffness: 260, damping: 22 }}
-          className="pointer-events-auto rounded-2xl border shadow-lg px-5 py-4 bg-white/90 backdrop-blur text-center"
+          className="pointer-events-auto rounded-2xl border px-5 py-4 text-center backdrop-blur bg-[color:rgba(255,255,255,0.92)] border-[var(--color-card-border)]"
+          style={{ boxShadow: "var(--shadow-card)" }}
         >
           <div
             className={
               "text-lg font-bold " +
-              (isOk ? "text-emerald-700" : "text-rose-700")
+              (isOk
+                ? "text-[var(--color-success-text)]"
+                : "text-[var(--color-error-text)]")
             }
           >
             {isOk ? successText : errorText}

@@ -85,7 +85,7 @@ export default function Tablas() {
           }}>
             {i === posicion && (
               <img
-                src="/img/Lumi_feliz.png"
+                src="/img/lumi/feliz.png"
                 alt="Lumi"
                 style={{ position: 'absolute', top: '-55px', width: '45px' }}
               />

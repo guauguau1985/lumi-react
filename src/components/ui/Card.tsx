@@ -5,7 +5,10 @@ export function Card({
   children,
 }: React.PropsWithChildren<{ className?: string }>) {
   return (
-    <div className={`rounded-2xl bg-[#EEF8E3] shadow-sm border border-[#2FB861] ${className}`}>
+    <div
+      className={`rounded-2xl border bg-[var(--color-card)] border-[var(--color-card-border)] ${className}`}
+      style={{ boxShadow: "var(--shadow-card)" }}
+    >
       {children}
     </div>
   );
@@ -26,9 +29,15 @@ export function CardHeader({
   subtitle?: string;
 }) {
   return (
-    <div className="p-5 border-b border-gray-100">
-      <h3 className="text-lg font-semibold">{title}</h3>
-      {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+    <div className="p-5 border-b border-[var(--color-divider)]">
+      <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+          {subtitle}
+        </p>
+      )}
     </div>
   );
 }
