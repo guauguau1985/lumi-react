@@ -156,7 +156,7 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
           <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-emerald-200/70">
             {/* Cambia la ruta según tu proyecto */}
             <img
-              src="/img/lumi/feliz.png"
+              src={`${import.meta.env.BASE_URL}img/lumi/feliz.png`}
               alt="Lumi"
               className="h-full w-full object-contain"
             />
