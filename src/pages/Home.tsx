@@ -133,12 +133,12 @@ export default function Home() {
               to="/naturales"
               className="
                 block rounded-2xl px-4 py-3 shadow transition-transform hover:scale-[1.02] hover:shadow-md
-                bg-[var(--color-surface)] border-4 border-sky-300
+                bg-[var(--color-surface)] border-4 border-[var(--color-naturales-border)]
               "
             >
               <div className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-sky-500" />
-                <span className="font-semibold text-sky-700">
+                <span className="inline-block w-2 h-2 rounded-full bg-[var(--color-naturales-dot)]" />
+                <span className="font-semibold text-[var(--color-naturales-text)]">
                   🔬 Ciencias Naturales
                 </span>
               </div>

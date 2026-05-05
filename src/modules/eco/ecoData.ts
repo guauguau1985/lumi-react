@@ -32,7 +32,7 @@ export const SORTER_ITEMS: EcoItem[] = [
   { id: "p1", name: "Botella plástica",  img: item_bottle_plastic,bin: "plastico" },
   { id: "g1", name: "Frasco de vidrio",  img: item_glass_jar,     bin: "vidrio" },
   { id: "o1", name: "Cáscara de manzana",img: item_apple_core,    bin: "organico" },
-  { id: "x1", name: "Pila",              img: item_battery,       bin: "peligroso" },
+  { id: "x1", name: "Pila",             img: item_battery,       bin: "peligroso" },
 ];
 
 export type QuizQ = {
