@@ -16,7 +16,7 @@ export default defineConfig({
       registerType: "autoUpdate",
 
       workbox: {
-        navigateFallback: "/lumi-react/index.html",
+        navigateFallback: "/index.html",
         globPatterns: ["**/*.{js,css,html,svg,png,jpg,jpeg,webp}"],
       },
 
@@ -33,8 +33,8 @@ export default defineConfig({
         short_name: "Lumi App",
         description:
           "Juegos de matemáticas, programación y ecología para niños, con Lumi.",
-        start_url: "/lumi-react/#/",
-        scope: "/lumi-react/",
+        start_url: "/",
+        scope: "/",
         display: "standalone",
         orientation: "landscape",
 
