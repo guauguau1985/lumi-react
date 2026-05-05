@@ -1,6 +1,6 @@
 import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 
-import WorldsMap from "@/modules/math/WorldsMap";
+import WorldsMap from "@/modules/math/pages/WorldsMap";
 import DivisionShell from "@/modules/math/games/divisiones/DivisionShell";
 
 // Juegos

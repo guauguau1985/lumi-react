@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Confetti from "react-confetti";
-import { useGamification } from "../gamification/GamificationContext";
+import { useGamification } from "@/features/gamification/GamificationContext";
 
 const LumiCelebrationOverlay: React.FC = () => {
   const { celebration, clearCelebration } = useGamification();

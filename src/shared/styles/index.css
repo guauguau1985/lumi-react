@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+@import "tailwindcss";
+
+/* Tokens globales */
+@theme {
+  /* Base app */
+  --color-background: hsl(80 60% 97%);
+  --color-foreground: hsl(220 30% 20%);
+  --color-muted-foreground: hsl(220 15% 45%);
+
+  /* Superficies */
+  --color-surface: #ffffff;
+  --color-muted: hsl(210 20% 96%);
+  --color-card-border: hsl(220 20% 88%);
+  --color-shell-border: hsl(230 70% 78%);
+
+  /* Acción principal */
+  --color-primary: hsl(145 75% 38%);
+  --color-primary-foreground: #ffffff;
+
+  /* Módulo Matemáticas */
+  --color-math-border: hsl(231 85% 79%);
+  --color-math-dot: hsl(238 85% 65%);
+  --color-math-text: hsl(236 65% 48%);
+
+  /* Módulo Ecología */
+  --color-eco-border: hsl(156 70% 63%);
+  --color-eco-dot: hsl(158 80% 41%);
+  --color-eco-text: hsl(153 75% 30%);
+
+  /* Módulo Programación */
+  --color-coder-border: hsl(45 95% 55%);
+  --color-coder-dot: hsl(39 95% 50%);
+  --color-coder-text: hsl(28 85% 42%);
+
+  /* Módulo IA */
+  --color-ai-border: hsl(295 75% 76%);
+  --color-ai-dot: hsl(287 85% 58%);
+  --color-ai-text: hsl(288 75% 45%);
+
+  /* Radios y fuente */
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --font-sans: "Nunito", sans-serif;
+
+  --color-card: #ffffff;
+  --color-card-border: hsl(220 20% 90%);
+  --color-card-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+
+  --color-text-primary: hsl(220 30% 20%);
+  --color-text-secondary: hsl(220 15% 45%);
+
+  --color-progress-track: hsl(90 20% 90%);
+  --color-progress-fill: hsl(160 55% 48%);
+
+  --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.08);
+
+    /* Feedback */
+  --color-success-text: hsl(153 75% 30%);
+  --color-error-text: hsl(347 75% 45%);
+
+  /* Status bar */
+  --color-statusbar-bg: hsl(145 75% 38%);
+  --color-statusbar-foreground: hsl(145 100% 97%);
+  --color-statusbar-border: hsl(145 65% 32%);
+  --color-statusbar-avatar-bg: hsla(145, 70%, 75%, 0.9);
+  --color-statusbar-track: hsla(145, 50%, 15%, 0.35);
+  --color-statusbar-fill: hsl(145 70% 78%);
+
+    --color-english-border: hsl(210 85% 78%);
+  --color-english-dot: hsl(215 85% 58%);
+  --color-english-text: hsl(220 70% 42%);
+}
+
+/* Base */
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}

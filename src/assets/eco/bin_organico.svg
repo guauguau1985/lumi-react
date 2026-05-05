@@ -1,0 +1,6 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect x="20" y="30" width="60" height="50" fill="#8BC34A" stroke="#689F38" stroke-width="2" rx="5"/>
+  <rect x="30" y="40" width="40" height="30" fill="#9CCC65" rx="3"/>
+  <path d="M40 20 L40 30 M60 20 L60 30" stroke="#689F38" stroke-width="3" stroke-linecap="round"/>
+  <text x="50" y="60" text-anchor="middle" fill="white" font-family="Arial" font-size="10" font-weight="bold">ORGÁNICO</text>
+</svg>

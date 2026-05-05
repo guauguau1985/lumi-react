@@ -3,9 +3,9 @@ import { HashRouter } from "react-router-dom";
 
 import App from "./App";
 import AppProviders from "@/app/AppShell";
-import { GamificationProvider } from "./gamification/GamificationContext";
+import { GamificationProvider } from "@/features/gamification/GamificationContext";
 
-import "./styles/index.css";
+import "@/shared/styles/index.css";
 
 const rootElement = document.getElementById("root") as HTMLElement;
 

@@ -1,6 +1,6 @@
 import { type FormEvent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signIn, signUp, supabase } from '@/lib/supabaseClient'
+import { signIn, signUp, supabase } from '@/shared/lib/supabaseClient'
 
 const Login = () => {
   const navigate = useNavigate()
