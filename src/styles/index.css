@@ -70,6 +70,11 @@
     --color-english-border: hsl(210 85% 78%);
   --color-english-dot: hsl(215 85% 58%);
   --color-english-text: hsl(220 70% 42%);
+
+  /* Módulo Ciencias Naturales */
+  --color-naturales-border: hsl(199 85% 70%);
+  --color-naturales-dot:    hsl(201 85% 50%);
+  --color-naturales-text:   hsl(203 75% 35%);
 }
 
 /* Base */

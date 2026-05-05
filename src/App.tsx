@@ -8,10 +8,11 @@ import { modules } from "@/config/modules";
 import LumiCelebrationOverlay from "@/components/LumiCelebrationOverlay";
 import LumiStatusBar from "@/components/LumiStatusBar";
 
-const EcoModule = lazy(() => import("@/modules/eco/EcoShell"));
-const MathModule = lazy(() => import("@/modules/math/MathShell"));
-const NaturalesModule = lazy(() => import("@/modules/naturales/NaturalesShell"));
-const CoderModule = lazy(() => import("@/modules/coder/CoderShell"));
+const EcoModule      = lazy(() => import("@/modules/eco/EcoShell"));
+const MathModule     = lazy(() => import("@/modules/math/MathShell"));
+const NaturalesModule= lazy(() => import("@/modules/naturales/NaturalesShell"));
+const CoderModule    = lazy(() => import("@/modules/coder/CoderShell"));
+const AIModule       = lazy(() => import("@/modules/ai/AIShell"));
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/naturales/*" element={<NaturalesModule />} />
           )}
           {modules.coder && <Route path="/coder/*" element={<CoderModule />} />}
+          {modules.ai    && <Route path="/ai/*"    element={<AIModule />}    />}
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

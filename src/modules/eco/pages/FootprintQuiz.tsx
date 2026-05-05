@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FOOTPRINT_QUIZ } from "@/data/ecoData";
+import { FOOTPRINT_QUIZ } from "@/modules/eco/ecoData";
 import Feedback from "@/components/Feedback";
 import { useFeedback } from "@/hooks/useFeedback";
 
