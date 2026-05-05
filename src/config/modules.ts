@@ -69,11 +69,11 @@ export const MODULE_LIST: ModuleConfig[] = [
   {
     id: "ai",
     name: "Inteligencia Artificial",
-    description: "Aprende qué es la IA y cómo funciona",
+    description: "Tu tutora Lumi responde tus dudas de estudio",
     path: "/ai",
     emoji: "🤖",
     variant: "ai",
-    enabled: false,
+    enabled: true,
   },
 ];
 
