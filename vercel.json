@@ -1,5 +1,13 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
   "routes": [
-    { "src": "/(.*)", "dest": "/" }
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/icons/(.*)", "dest": "/icons/$1" },
+    { "src": "/sw.js", "dest": "/sw.js" },
+    { "src": "/offline.html", "dest": "/offline.html" },
+    { "src": "/manifest.webmanifest", "dest": "/manifest.webmanifest" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
