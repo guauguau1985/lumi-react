@@ -12,6 +12,7 @@ const EcoModule = lazy(() => import("@/modules/eco/pages/EcoHome"));
 const MathModule = lazy(() => import("@/modules/math/pages/MathShell"));
 const NaturalesModule = lazy(() => import("@/modules/naturales/NaturalesShell"));
 const CoderModule = lazy(() => import("@/modules/coder/pages/Home"));
+const AIModule = lazy(() => import("@/modules/ai/AIShell"));
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/naturales/*" element={<NaturalesModule />} />
           )}
           {modules.coder && <Route path="/coder/*" element={<CoderModule />} />}
+          {modules.ai && <Route path="/ai/*" element={<AIModule />} />}
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
