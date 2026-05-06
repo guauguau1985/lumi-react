@@ -183,20 +183,20 @@ export default function Home() {
 
           {/* IA */}
           <motion.div variants={item}>
-            <button
-              onClick={() => alert("Pronto 😉")}
+            <Link
+              to="/ai"
               className="
-                w-full rounded-2xl px-4 py-3 text-left shadow transition-transform hover:scale-[1.02] hover:shadow-md
+                block rounded-2xl px-4 py-3 shadow transition-transform hover:scale-[1.02] hover:shadow-md
                 bg-[var(--color-surface)] border-4 border-[var(--color-ai-border)]
               "
             >
               <div className="flex items-center gap-2">
                 <span className="inline-block w-2 h-2 rounded-full bg-[var(--color-ai-dot)]" />
                 <span className="font-semibold text-[var(--color-ai-text)]">
-                  🤖 Inteligencia Artificial
+                  🤖 Lumi Tutora IA
                 </span>
               </div>
-            </button>
+            </Link>
           </motion.div>
         </motion.div>
       </motion.div>
