@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion, type Variants } from "framer-motion";
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-import { LumiAvatar } from "@/components/LumiAvatar";
+import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
+import { ProgressBar } from "@/shared/components/ui/ProgressBar";
+import { LumiAvatar } from "@/shared/components/lumi/LumiAvatar";
 import { Link } from "react-router-dom";
 
 // Animaciones

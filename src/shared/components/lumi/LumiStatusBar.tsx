@@ -1,5 +1,5 @@
 import React from "react";
-import { useGamification } from "@/features/gamification/GamificationContext";
+import { useGamification } from "@/gamification/GamificationContext";
 
 const LumiStatusBar: React.FC = () => {
   const { profile } = useGamification();

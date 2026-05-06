@@ -8,10 +8,10 @@ import { modules } from "@/shared/config/modules";
 import LumiCelebrationOverlay from "@/shared/components/lumi/LumiCelebrationOverlay";
 import LumiStatusBar from "@/shared/components/lumi/LumiStatusBar";
 
-const EcoModule = lazy(() => import("@/features/eco/pages/EcoHome"));
-const MathModule = lazy(() => import("@/features/math/pages/MathHome"));
-const NaturalesModule = lazy(() => import("@/features/math/pages/NaturalesHome"));
-const CoderModule = lazy(() => import("@/features/coder/pages/CoderHome"));
+const EcoModule = lazy(() => import("@/modules/eco/pages/EcoHome"));
+const MathModule = lazy(() => import("@/modules/math/pages/MathHome"));
+const NaturalesModule = lazy(() => import("@/modules/math/pages/NaturalesHome"));
+const CoderModule = lazy(() => import("@/modules/coder/pages/CoderHome"));
 
 export default function App() {
   return (

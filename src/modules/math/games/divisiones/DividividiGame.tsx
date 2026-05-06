@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { useGameRewards } from "../../../../gamification/useGameRewards";
-import { useAdaptiveLearning } from "@/hooks/useAdaptiveLearning";
-import { useFeedback } from "@/hooks/useFeedback";
-import Feedback from "@/components/Feedback";
+import { useAdaptiveLearning } from "@/adaptiveLearning/hook/useAdaptiveLearning";
+import { useFeedback } from "@/adaptiveLearning/hook/useFeedback";
+import Feedback from "@/shared/components/feedback/Feedback";
 
 type Phase = "adding" | "answer" | "finished";
 
