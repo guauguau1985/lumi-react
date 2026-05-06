@@ -1,17 +1,17 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
 
-import Home from "@/pages/Home";
-import { modules } from "@/config/modules";
+import Home from "@/app/routes/Home";
+import { modules } from "@/shared/config/modules";
 
 // Gamificación global
-import LumiCelebrationOverlay from "@/components/LumiCelebrationOverlay";
-import LumiStatusBar from "@/components/LumiStatusBar";
+import LumiCelebrationOverlay from "@/shared/components/lumi/LumiCelebrationOverlay";
+import LumiStatusBar from "@/shared/components/lumi/LumiStatusBar";
 
-const EcoModule      = lazy(() => import("@/modules/eco/EcoShell"));
-const MathModule     = lazy(() => import("@/modules/math/MathShell"));
+const EcoModule      = lazy(() => import("@/modules/eco/pages/EcoHome"));
+const MathModule     = lazy(() => import("@/modules/math/pages/MathShell"));
 const NaturalesModule= lazy(() => import("@/modules/naturales/NaturalesShell"));
-const CoderModule    = lazy(() => import("@/modules/coder/CoderShell"));
+const CoderModule    = lazy(() => import("@/modules/coder/pages/Home"));
 const AIModule       = lazy(() => import("@/modules/ai/AIShell"));
 
 export default function App() {
