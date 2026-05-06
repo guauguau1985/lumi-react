@@ -9,9 +9,9 @@ import LumiCelebrationOverlay from "@/shared/components/lumi/LumiCelebrationOver
 import LumiStatusBar from "@/shared/components/lumi/LumiStatusBar";
 
 const EcoModule = lazy(() => import("@/modules/eco/pages/EcoHome"));
-const MathModule = lazy(() => import("@/modules/math/pages/MathHome"));
-const NaturalesModule = lazy(() => import("@/modules/math/pages/NaturalesHome"));
-const CoderModule = lazy(() => import("@/modules/coder/pages/CoderHome"));
+const MathModule = lazy(() => import("@/modules/math/pages/MathShell"));
+const NaturalesModule = lazy(() => import("@/modules/naturales/NaturalesShell"));
+const CoderModule = lazy(() => import("@/modules/coder/pages/Home"));
 
 export default function App() {
   return (
