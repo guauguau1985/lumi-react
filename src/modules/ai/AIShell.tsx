@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
-import { LumiAvatar } from "@/components/LumiAvatar";
+import { LumiAvatar } from "@/shared/components/lumi/LumiAvatar";
 
 type Role = "user" | "model";
 

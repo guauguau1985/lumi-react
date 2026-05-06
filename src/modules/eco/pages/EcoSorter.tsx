@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { BINS, SORTER_ITEMS, type EcoItem, type Bin } from "@/modules/eco/ecoData";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-import Feedback from "@/components/Feedback";
-import { useFeedback } from "@/hooks/useFeedback";
+import { ProgressBar } from "@/shared/components/ui/ProgressBar";
+import Feedback from "@/shared/components/feedback/Feedback";
+import { useFeedback } from "@/adaptiveLearning/hook/useFeedback";
 
 function Draggable({ item, onDragStart }: { item: EcoItem; onDragStart: (id: string) => void }) {
   return (

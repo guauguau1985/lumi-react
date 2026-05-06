@@ -3,7 +3,7 @@ import { HashRouter } from "react-router-dom";
 
 import App from "./App";
 import AppProviders from "@/app/AppShell";
-import { GamificationProvider } from "@/features/gamification/GamificationContext";
+import { GamificationProvider } from "@/gamification/GamificationContext";
 
 import "@/shared/styles/index.css";
 

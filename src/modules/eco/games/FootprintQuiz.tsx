@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FOOTPRINT_QUIZ } from "@/data/ecoData";
-import Feedback from "@/components/Feedback";
-import { useFeedback } from "@/hooks/useFeedback";
+import Feedback from "@/shared/components/feedback/Feedback";
+import { useFeedback } from "@/adaptiveLearning/hook/useFeedback";
 
 export default function FootprintQuiz() {
   const [idx, setIdx] = useState(0);

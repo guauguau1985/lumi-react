@@ -1,6 +1,6 @@
 // src/components/Feedback.tsx
 import { useEffect } from "react";
-import type { FeedbackState } from "@/hooks/useFeedback";
+import type { FeedbackState } from "@/adaptiveLearning/hook/useFeedback";
 import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "framer-motion";
 

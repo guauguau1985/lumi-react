@@ -1,9 +1,9 @@
 import { type ReactNode, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { useAdaptiveLearning } from "@/hooks/useAdaptiveLearning";
+import { useAdaptiveLearning } from "@/adaptiveLearning/hook/useAdaptiveLearning";
 import { useGameRewards } from "@/gamification/useGameRewards";
-import { useFeedback } from "@/hooks/useFeedback";
-import Feedback from "@/components/Feedback";
+import { useFeedback } from "@/adaptiveLearning/hook/useFeedback";
+import Feedback from "@/shared/components/feedback/Feedback";
 
 type LessonId = "agua" | "estados" | "ciclo";
 type LessonPhase = "intro" | "section" | "quiz";

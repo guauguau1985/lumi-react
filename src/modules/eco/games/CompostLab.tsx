@@ -1,6 +1,6 @@
 import { useState } from "react";
-import Feedback from "@/components/Feedback";
-import { useFeedback } from "@/hooks/useFeedback";
+import Feedback from "@/shared/components/feedback/Feedback";
+import { useFeedback } from "@/adaptiveLearning/hook/useFeedback";
 
 const GOOD = ["Cáscaras de verduras", "Hojas secas", "Yerba usada", "Café molido"];
 const BAD  = ["Pilas", "Vidrios", "Plástico", "Aceite usado"];

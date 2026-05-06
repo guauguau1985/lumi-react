@@ -5,8 +5,8 @@ import Home from "@/pages/Home";
 import { modules } from "@/config/modules";
 
 // Gamificación global
-import LumiCelebrationOverlay from "@/components/LumiCelebrationOverlay";
-import LumiStatusBar from "@/components/LumiStatusBar";
+import LumiCelebrationOverlay from "@/shared/components/lumi/LumiCelebrationOverlay";
+import LumiStatusBar from "@/shared/components/lumi/LumiStatusBar";
 
 const EcoModule      = lazy(() => import("@/modules/eco/EcoShell"));
 const MathModule     = lazy(() => import("@/modules/math/MathShell"));
