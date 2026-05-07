@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from "react";
 import { useGameRewards } from "../../../../gamification/useGameRewards";
-import { useAdaptiveLearning } from "@/adaptiveLearning/hook/useAdaptiveLearning";
+import { useLearningTracker } from "@/shared/hooks/useLearningTracker";
 import { useFeedback } from "@/adaptiveLearning/hook/useFeedback";
 import Feedback from "@/shared/components/feedback/Feedback";
+import TutorWidget from "@/shared/components/tutor/TutorWidget";
 
 type Phase = "adding" | "answer" | "finished";
 
@@ -34,7 +35,8 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const { state: adaptive, recordAnswer } = useAdaptiveLearning(1);
+  const { state: adaptive, trackAnswer, trackComplete, resetTracker } =
+    useLearningTracker({ modulo: "math", tipoEjercicio: "interactivo" });
   const { feedback, markCorrect, markWrong } = useFeedback();
 
   const options: number[] = useMemo(() => {
@@ -94,6 +96,7 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
   const handleNextRound = () => {
     applyAdaptiveChallenge(adaptive.currentLevel);
     handleReset();
+    resetTracker(); // nueva ronda = nueva sesión de tracking (preserva adaptive state)
   };
 
   const handleAnswerClick = (option: number) => {
@@ -102,16 +105,16 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
     setSelectedOption(option);
     const correct = option === maxBags;
     setIsCorrect(correct);
-    recordAnswer(correct);
+    trackAnswer(correct);
 
     if (correct) {
-      // ⭐ Aquí se dispara la gamificación
-      onCorrect();        // suma XP y monedas según config
-      onGameCompleted();  // bonus + posible insignia
+      trackComplete();
+      onCorrect();
+      onGameCompleted();
       markCorrect();
       setPhase("finished");
     } else {
-      onWrong();          // registra intento fallido
+      onWrong();
       markWrong();
     }
   };
@@ -347,6 +350,13 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
           errorText="Casi, intenta otra opción"
         />
       </div>
+
+      <TutorWidget
+        topic="división"
+        level={adaptive.currentLevel}
+        errorStreak={adaptive.errorStreak}
+        attempts={adaptive.totalAnswers}
+      />
     </div>
   );
 };

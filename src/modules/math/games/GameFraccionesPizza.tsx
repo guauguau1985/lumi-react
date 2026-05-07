@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Feedback from "@/shared/components/feedback/Feedback";
 import { useFeedback } from "@/adaptiveLearning/hook/useFeedback";
+import TutorWidget from "@/shared/components/tutor/TutorWidget";
 // =============================================
 // GameFraccionesPizza – OA8 (4° básico)
 // Representar fracciones (unitarias y propias) como parte-todo en círculos/cuadrículas.
@@ -429,6 +430,8 @@ const GameFraccionesPizza: React.FC<{
           </Card>
         </div>
       )}
+
+      <TutorWidget topic="fracciones" />
     </div>
   );
 };

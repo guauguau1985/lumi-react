@@ -199,6 +199,25 @@ export default function Home() {
             </Link>
           </motion.div>
         </motion.div>
+
+        {/* Reporte de padres */}
+        <motion.div variants={item}>
+          <Link
+            to="/reporte-padres"
+            className="
+              flex items-center justify-between rounded-2xl px-4 py-3 shadow
+              bg-[var(--color-surface)] border border-[var(--color-card-border)]
+              text-[var(--color-muted-foreground)]
+              transition-colors hover:border-[var(--color-ai-border)]
+            "
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📊</span>
+              <span className="text-sm font-medium">Reporte de aprendizaje</span>
+            </div>
+            <span className="text-xs opacity-60">Para padres →</span>
+          </Link>
+        </motion.div>
       </motion.div>
     </motion.div>
   );

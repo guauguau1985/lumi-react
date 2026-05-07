@@ -1,6 +1,6 @@
 import { type ReactNode, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { useAdaptiveLearning } from "@/adaptiveLearning/hook/useAdaptiveLearning";
+import { useLearningTracker } from "@/shared/hooks/useLearningTracker";
 import { useGameRewards } from "@/gamification/useGameRewards";
 import { useFeedback } from "@/adaptiveLearning/hook/useFeedback";
 import Feedback from "@/shared/components/feedback/Feedback";
@@ -266,7 +266,8 @@ function AguaDulceSaladaLesson({
     "educacionAmbiental",
     "naturales-agua-dulce-salada"
   );
-  const { state: adaptive, recordAnswer } = useAdaptiveLearning(1);
+  const { state: adaptive, trackAnswer, trackComplete } =
+    useLearningTracker({ modulo: "naturales", tipoEjercicio: "texto" });
   const { feedback, markCorrect, markWrong } = useFeedback();
 
   const current = QUESTIONS[step];
@@ -286,7 +287,7 @@ function AguaDulceSaladaLesson({
     setSelected(optionIndex);
     setShowFeedback(true);
     const isCorrect = optionIndex === current.correct;
-    recordAnswer(isCorrect);
+    trackAnswer(isCorrect);
 
     if (isCorrect) {
       setScore((prev) => prev + 1);
@@ -301,6 +302,7 @@ function AguaDulceSaladaLesson({
   const handleNext = () => {
     if (isLast) {
       const finalScore = selected === current.correct ? score : score;
+      trackComplete();
       onGameCompleted();
       onComplete(finalScore);
       return;
