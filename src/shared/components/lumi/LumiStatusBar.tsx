@@ -14,7 +14,7 @@ const LumiStatusBar: React.FC = () => {
     <header className="sticky top-0 z-40 mb-3 border-b bg-[var(--color-statusbar-bg)] text-[var(--color-statusbar-foreground)] border-[var(--color-statusbar-border)]">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2 text-xs md:text-sm">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 overflow-hidden rounded-2xl bg-[var(--color-statusbar-avatar-bg)]">
+          <div className="h-8 w-8 overflow-hidden rounded-full bg-white flex-shrink-0">
             <img
               src={`${import.meta.env.BASE_URL}img/lumi/logo.png`}
               alt="Lumi"

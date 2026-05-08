@@ -37,7 +37,7 @@ export function LumiAvatar({ size = 110, interval = 5000 }: Props) {
           key={mood}
           src={srcByMood[mood]}
           alt={`Lumi ${mood}`}
-          className="absolute inset-0 w-full h-full object-cover object-top pointer-events-none select-none"
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 1.03 }}
