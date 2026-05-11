@@ -29,7 +29,7 @@ export default function Home() {
       {/* Banner */}
       <motion.div variants={item} className="w-full">
         <img
-          src="/img/banner/Banner.png"
+          src="/img/banner/banner.png"
           alt="Lumi - Ciudad Ecofuturista"
           className="w-full h-auto block"
         />
