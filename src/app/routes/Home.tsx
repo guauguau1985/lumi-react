@@ -27,12 +27,17 @@ export default function Home() {
       animate="show"
     >
       {/* Banner */}
-      <motion.div variants={item} className="w-full overflow-hidden md:max-h-72">
+      <motion.div variants={item} className="relative w-full h-48 md:h-56 overflow-hidden">
         <img
           src="/img/banner/banner.png"
-          alt="Lumi - Ciudad Ecofuturista"
-          className="w-full h-auto block md:h-72 md:object-cover md:object-center"
+          alt=""
+          className="w-full h-full object-cover object-[center_30%]"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+        <div className="absolute bottom-4 left-4">
+          <h2 className="text-white text-xl md:text-2xl font-semibold drop-shadow">¡Bienvenido a Lumi!</h2>
+          <p className="text-white/80 text-sm">Elige tu módulo para comenzar</p>
+        </div>
       </motion.div>
 
       <div className="w-full max-w-2xl mx-auto px-4 py-5 space-y-3">
