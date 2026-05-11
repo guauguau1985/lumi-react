@@ -27,17 +27,17 @@ export default function Home() {
       animate="show"
     >
       {/* Banner */}
-      <motion.div variants={item} className="w-full">
+      <motion.div variants={item} className="w-full overflow-hidden md:max-h-72">
         <img
           src="/img/banner/banner.png"
           alt="Lumi - Ciudad Ecofuturista"
-          className="w-full h-auto block"
+          className="w-full h-auto block md:h-72 md:object-cover md:object-center"
         />
       </motion.div>
 
-      <div className="w-full max-w-xl mx-auto px-4 py-5 space-y-3">
+      <div className="w-full max-w-2xl mx-auto px-4 py-5 space-y-3">
         {/* Módulos */}
-        <motion.div className="grid gap-3" variants={item}>
+        <motion.div className="grid gap-3 md:grid-cols-2" variants={item}>
           {/* Matemáticas */}
           <motion.div variants={item}>
             <Link
