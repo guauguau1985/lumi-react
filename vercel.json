@@ -4,6 +4,7 @@
   "framework": "vite",
   "routes": [
     { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/img/(.*)", "dest": "/img/$1" },
     { "src": "/icons/(.*)", "dest": "/icons/$1" },
     { "src": "/sw.js", "dest": "/sw.js" },
     { "src": "/offline.html", "dest": "/offline.html" },
