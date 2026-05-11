@@ -1,11 +1,6 @@
-import { useState } from "react";
 import { motion, type Variants } from "framer-motion";
-import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
-import { ProgressBar } from "@/shared/components/ui/ProgressBar";
-import { LumiAvatar } from "@/shared/components/lumi/LumiAvatar";
 import { Link } from "react-router-dom";
 
-// Animaciones
 const container: Variants = {
   hidden: { opacity: 0 },
   show: {
@@ -24,71 +19,23 @@ const item: Variants = {
 };
 
 export default function Home() {
-  const [progress, setProgress] = useState(40);
-
   return (
     <motion.div
-      className="
-        min-h-screen p-6 rounded-2xl shadow transition-transform hover:scale-[1.02] hover:shadow-md
-        bg-[var(--color-background)] text-[var(--color-foreground)]
-        border-4 border-[var(--color-shell-border)]
-      "
+      className="min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)]"
       variants={container}
       initial="hidden"
       animate="show"
     >
-      <motion.div className="w-full max-w-xl mx-auto space-y-6" variants={item}>
-        {/* Header */}
-        <motion.div className="flex items-center gap-4" variants={item}>
-          <LumiAvatar size={96} />
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--color-foreground)]">
-              ¡Bienvenido a Lumi!
-            </h1>
-            <p className="text-[var(--color-muted-foreground)]">
-              Elige tu módulo para comenzar
-            </p>
-          </div>
-        </motion.div>
+      {/* Banner */}
+      <motion.div variants={item} className="w-full">
+        <img
+          src="/img/banner/Banner.png"
+          alt="Lumi - Ciudad Ecofuturista"
+          className="w-full h-auto block"
+        />
+      </motion.div>
 
-        {/* Progreso */}
-        <motion.div variants={item}>
-          <Card>
-            <CardHeader
-              title="Progreso de hoy"
-              subtitle="Sigue practicando 💪"
-            />
-            <CardContent>
-              <ProgressBar value={progress} />
-
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => setProgress((p) => Math.max(0, p - 10))}
-                  className="
-                    px-3 py-1 rounded-lg transition
-                    bg-[var(--color-muted)]
-                    text-[var(--color-foreground)]
-                    border border-[var(--color-card-border)]
-                  "
-                >
-                  −10%
-                </button>
-
-                <button
-                  onClick={() => setProgress((p) => Math.min(100, p + 10))}
-                  className="
-                    px-3 py-1 rounded-lg transition
-                    bg-[var(--color-primary)]
-                    text-[var(--color-primary-foreground)]
-                  "
-                >
-                  +10%
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
+      <div className="w-full max-w-xl mx-auto px-4 py-5 space-y-3">
         {/* Módulos */}
         <motion.div className="grid gap-3" variants={item}>
           {/* Matemáticas */}
@@ -218,7 +165,7 @@ export default function Home() {
             <span className="text-xs opacity-60">Para padres →</span>
           </Link>
         </motion.div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 }

@@ -18,6 +18,7 @@ export default defineConfig({
       workbox: {
         navigateFallback: "/index.html",
         globPatterns: ["**/*.{js,css,html,svg,png,jpg,jpeg,webp}"],
+        globIgnores: ["img/banner/**"],
       },
 
       includeAssets: [
