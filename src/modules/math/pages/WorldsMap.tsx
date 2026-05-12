@@ -11,35 +11,34 @@ const MAP_ITEMS: {
   {
     title: "Reino de los Números",
     items: [
-      { oa: "OA1", route: "oa1", title: "OA1 · Escalera numérica" },
-      { oa: "OA2", route: "oa2", title: "OA2 · Rayos mágicos" },
-      { oa: "OA3", title: "OA3 · Mercado" },
+      { oa: "OA1", route: "oa1", title: "Números y orden" },
+      { oa: "OA2", route: "oa2", title: "Recta numérica" },
     ],
   },
   {
     title: "Bosque de Fracciones",
     items: [
-      { oa: "OA8", route: "oa8", title: "OA8 · Pizza de fracciones" },
-      { oa: "OA9", route: "oa9", title: "OA9 · Suma y resta" },
+      { oa: "OA8", route: "oa8", title: "Fracciones" },
+      { oa: "OA9", route: "oa9", title: "Suma y resta de fracciones" },
     ],
   },
   {
     title: "Mar de Decimales y Datos",
     items: [
-      { oa: "OA10", route: "oa10", title: "OA10 · Acuario decimal" },
-      { oa: "OA11", route: "oa11", title: "OA11 · Gráficos de barras" },
+      { oa: "OA10", route: "oa10", title: "Decimales" },
+      { oa: "OA11", route: "oa11", title: "Gráficos y datos" },
     ],
   },
   {
     title: "Cronolandia",
-    items: [{ oa: "OA12", route: "oa12", title: "OA12 · Reloj aventurero" }],
+    items: [{ oa: "OA12", route: "oa12", title: "Medición del tiempo" }],
   },
   {
     title: "El arte de dividir",
     items: [
       {
         route: "divisiones/dividividi",
-        title: "Divi divi di · Aprende divisiones",
+        title: "División",
       },
     ],
   },
