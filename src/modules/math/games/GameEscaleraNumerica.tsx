@@ -1,5 +1,6 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useGamification } from "@/gamification/GamificationContext";
 
 // =============================================
 // GameEscaleraNumerica – OA1 (4° básico)
@@ -99,6 +100,9 @@ const MiniConfetti: React.FC<{ show: boolean }> = ({ show }) => {
 
 // ---------- Componente principal ----------
 const GameEscaleraNumerica: React.FC<{ onComplete?: (score: number) => void }> = ({ onComplete }) => {
+  const { dispatchEvent } = useGamification();
+  const completedFired = useRef(false);
+
   const [step, setStep] = useState<StepUnit>(10);
   const [length, setLength] = useState(8);
   const [start, setStart] = useState(0);
@@ -123,6 +127,7 @@ const GameEscaleraNumerica: React.FC<{ onComplete?: (score: number) => void }> =
     setLives(3);
     setScore(0);
     setLevelDone(false);
+    completedFired.current = false;
   }, [step, length, start, maxStart]);
 
   // Generar opciones por paso
@@ -149,9 +154,11 @@ const GameEscaleraNumerica: React.FC<{ onComplete?: (score: number) => void }> =
   function handleAnswer(n: number) {
     if (levelDone) return;
     if (n === target) {
+      dispatchEvent({ module: "matematicas", gameId: "escalera-numerica", type: "CORRECT_ANSWER" });
       setCurrentIndex((i) => i + 1);
       setScore((s) => s + 10);
     } else {
+      dispatchEvent({ module: "matematicas", gameId: "escalera-numerica", type: "WRONG_ANSWER" });
       setLives((h) => Math.max(0, h - 1));
     }
   }
@@ -165,8 +172,12 @@ const GameEscaleraNumerica: React.FC<{ onComplete?: (score: number) => void }> =
   }, [levelDone, score]);
 
   useEffect(() => {
-    if (levelDone && lives > 0) onComplete?.(score);
-  }, [levelDone, lives, score, onComplete]);
+    if (levelDone && lives > 0 && !completedFired.current) {
+      completedFired.current = true;
+      dispatchEvent({ module: "matematicas", gameId: "escalera-numerica", type: "GAME_COMPLETED" });
+      onComplete?.(score);
+    }
+  }, [levelDone, lives, score, onComplete, dispatchEvent]);
 
   const progress = Math.min(100, Math.round((currentIndex / length) * 100));
 
