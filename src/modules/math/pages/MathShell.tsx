@@ -30,37 +30,6 @@ export default function MathShell() {
         </NavLink>
       </header>
 
-      <nav className="mt-3 flex gap-2 text-sm">
-        <NavLink
-          to=""
-          end
-          className={({ isActive }) =>
-            [
-              "px-3 py-1 rounded-lg border shadow-sm transition",
-              isActive
-                ? "bg-[var(--color-math-border)] border-[var(--color-math-border)] text-[var(--color-math-text)]"
-                : "bg-[var(--color-card)] border-[var(--color-card-border)] text-[var(--color-foreground)]",
-            ].join(" ")
-          }
-        >
-          Mapa
-        </NavLink>
-
-        <NavLink
-          to="divisiones"
-          className={({ isActive }) =>
-            [
-              "px-3 py-1 rounded-lg border shadow-sm transition",
-              isActive
-                ? "bg-[var(--color-math-border)] border-[var(--color-math-border)] text-[var(--color-math-text)]"
-                : "bg-[var(--color-card)] border-[var(--color-card-border)] text-[var(--color-foreground)]",
-            ].join(" ")
-          }
-        >
-          Divisiones
-        </NavLink>
-      </nav>
-
       <Routes>
         <Route index element={<WorldsMap />} />
 

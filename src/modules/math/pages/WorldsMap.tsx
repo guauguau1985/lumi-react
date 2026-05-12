@@ -1,125 +1,130 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/shared/components/ui/Button";
 import { useProgress, type OAKey } from "@/state/progress";
 
-const MAP_ITEMS: {
+const MAX_STARS = 9;
+
+const TOPICS: {
+  icon: string;
   title: string;
-  items?: { oa?: OAKey; route?: string; title: string }[];
-  locked?: boolean;
+  description: string;
+  oa?: OAKey;
+  route?: string;
 }[] = [
   {
-    title: "Reino de los Números",
-    items: [
-      { oa: "OA1", route: "oa1", title: "Números y orden" },
-      { oa: "OA2", route: "oa2", title: "Recta numérica" },
-    ],
+    icon: "🔢",
+    title: "Números y orden",
+    description: "Ordena, compara y ubica números",
+    oa: "OA1",
+    route: "oa1",
   },
   {
-    title: "Bosque de Fracciones",
-    items: [
-      { oa: "OA8", route: "oa8", title: "Fracciones" },
-      { oa: "OA9", route: "oa9", title: "Suma y resta de fracciones" },
-    ],
+    icon: "📏",
+    title: "Recta numérica",
+    description: "Representa números en la recta",
+    oa: "OA2",
+    route: "oa2",
   },
   {
-    title: "Mar de Decimales y Datos",
-    items: [
-      { oa: "OA10", route: "oa10", title: "Decimales" },
-      { oa: "OA11", route: "oa11", title: "Gráficos y datos" },
-    ],
+    icon: "🍕",
+    title: "Fracciones",
+    description: "Partes de un todo",
+    oa: "OA8",
+    route: "oa8",
   },
   {
-    title: "Cronolandia",
-    items: [{ oa: "OA12", route: "oa12", title: "Medición del tiempo" }],
+    icon: "➕",
+    title: "Suma y resta de fracciones",
+    description: "Opera con fracciones",
+    oa: "OA9",
+    route: "oa9",
   },
   {
-    title: "El arte de dividir",
-    items: [
-      {
-        route: "divisiones/dividividi",
-        title: "División",
-      },
-    ],
+    icon: "💧",
+    title: "Decimales",
+    description: "Números con coma",
+    oa: "OA10",
+    route: "oa10",
   },
-  { title: "Ciudad de las Figuras", locked: true },
-  { title: "Universo Medidas y Datos", locked: true },
-  { title: "Isla de Patrones y Tiempo", locked: true },
+  {
+    icon: "📊",
+    title: "Gráficos y datos",
+    description: "Lee e interpreta gráficos",
+    oa: "OA11",
+    route: "oa11",
+  },
+  {
+    icon: "🕐",
+    title: "Medición del tiempo",
+    description: "Horas, minutos y calendarios",
+    oa: "OA12",
+    route: "oa12",
+  },
+  {
+    icon: "➗",
+    title: "División",
+    description: "Reparte y divide",
+    route: "divisiones/dividividi",
+  },
 ];
 
 export default function WorldsMap() {
   const navigate = useNavigate();
   const { unlocked, best } = useProgress();
-  const cards = useMemo(() => MAP_ITEMS, []);
+  const topics = useMemo(() => TOPICS, []);
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-extrabold text-[var(--color-math-text)]">
-          Mapa de Mundos · Matemáticas
-        </h2>
+    <div className="max-w-2xl mx-auto p-4">
+      <h2 className="text-2xl font-extrabold text-[var(--color-math-text)] mb-6">
+        ¿Hoy qué vamos a aprender?
+      </h2>
 
-        <Button variant="ghost" onClick={() => navigate("/")}>
-          Volver al inicio
-        </Button>
-      </div>
+      <div className="grid grid-cols-2 gap-4">
+        {topics.map((topic) => {
+          const isUnlocked = topic.oa ? Boolean(unlocked[topic.oa]) : true;
+          const score = topic.oa ? (best[topic.oa] ?? 0) : 0;
+          const stars = Math.round((score / 100) * MAX_STARS);
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {cards.map((card) => (
-          <div
-            key={card.title}
-            className={`rounded-2xl p-5 border bg-[color:rgba(255,255,255,0.82)] border-[var(--color-card-border)] ${
-              card.locked ? "opacity-60" : ""
-            }`}
-            style={{ boxShadow: "var(--shadow-card)" }}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-lg font-bold text-[var(--color-text-primary)]">
-                {card.title}
+          return (
+            <button
+              key={topic.title}
+              onClick={() => isUnlocked && topic.route && navigate(topic.route)}
+              disabled={!isUnlocked || !topic.route}
+              className={[
+                "rounded-2xl p-5 border text-left transition-all",
+                isUnlocked
+                  ? "bg-[var(--color-card)] border-[var(--color-card-border)] hover:shadow-md cursor-pointer"
+                  : "bg-[var(--color-muted)] border-[var(--color-card-border)] opacity-60 cursor-default",
+              ].join(" ")}
+              style={
+                isUnlocked ? { boxShadow: "var(--shadow-card)" } : undefined
+              }
+            >
+              <div className="text-3xl text-center mb-2">
+                {isUnlocked ? topic.icon : "🔒"}
               </div>
 
-              {card.locked ? (
-                <span className="rounded-full px-2 py-1 text-xs bg-[var(--color-muted)] text-[var(--color-text-secondary)]">
-                  Bloqueado
-                </span>
-              ) : null}
-            </div>
+              <div className="text-sm font-bold text-[var(--color-text-primary)] text-center leading-tight mb-1">
+                {topic.title}
+              </div>
 
-            {!card.locked && card.items ? (
-              <ul className="mt-3 space-y-2">
-                {card.items.map((item, idx) => {
-                  const isAvailable = Boolean(item.route);
-                  const isUnlocked = item.oa ? Boolean(unlocked[item.oa]) : true;
-                  const disabled = !isUnlocked || !isAvailable;
+              <div className="text-xs text-[var(--color-text-secondary)] text-center mb-3">
+                {topic.description}
+              </div>
 
-                  const bestScore = item.oa ? best[item.oa] ?? 0 : 0;
-                  const suffix = bestScore > 0 ? ` · Mejor ${bestScore}` : "";
-                  const status = !isAvailable
-                    ? "Pronto"
-                    : !isUnlocked
-                    ? "🔒"
-                    : suffix || "Listo";
+              <div className="w-full bg-[var(--color-muted)] rounded-full h-1.5 mb-2">
+                <div
+                  className="bg-[var(--color-math-text)] h-1.5 rounded-full transition-all"
+                  style={{ width: `${score}%` }}
+                />
+              </div>
 
-                  return (
-                    <li key={`${card.title}-${idx}`}>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-between"
-                        onClick={() => item.route && navigate(item.route)}
-                        disabled={disabled}
-                      >
-                        <span>{item.title}</span>
-                        <span className="text-sm text-[var(--color-text-secondary)]">
-                          {status}
-                        </span>
-                      </Button>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : null}
-          </div>
-        ))}
+              <div className="text-xs text-[var(--color-text-secondary)] text-center">
+                ★ {stars}/{MAX_STARS}
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
