@@ -29,7 +29,7 @@ export default function Home() {
       {/* Banner — imagen completa, responsiva, sin recortes */}
       <motion.div variants={item} className="w-full" style={{ backgroundColor: "#1a7a3c" }}>
         <img
-          src="/img/banner/banner_VF.png"
+          src="/img/banner/banner.png"
           alt="Banner Lumi"
           className="w-full block object-contain h-auto md:max-h-[300px] lg:max-h-[400px] mx-auto"
           style={{ backgroundColor: "#1a7a3c" }}
