@@ -26,18 +26,14 @@ export default function Home() {
       initial="hidden"
       animate="show"
     >
-      {/* Banner */}
-      <motion.div variants={item} className="relative w-full h-48 md:h-56 overflow-hidden">
+      {/* Banner — imagen completa, responsiva, sin recortes */}
+      <motion.div variants={item} className="w-full" style={{ backgroundColor: "#1a7a3c" }}>
         <img
-          src="/img/banner/banner.png"
-          alt=""
-          className="w-full h-full object-cover object-[center_30%]"
+          src="/img/banner/banner_VF.png"
+          alt="Banner Lumi"
+          className="w-full block object-contain h-auto md:max-h-[300px] lg:max-h-[400px] mx-auto"
+          style={{ backgroundColor: "#1a7a3c" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-        <div className="absolute bottom-4 left-4">
-          <h2 className="text-white text-xl md:text-2xl font-semibold drop-shadow">¡Bienvenido a Lumi!</h2>
-          <p className="text-white/80 text-sm">Elige tu módulo para comenzar</p>
-        </div>
       </motion.div>
 
       <div className="w-full max-w-2xl mx-auto px-4 py-5 space-y-3">
