@@ -18,12 +18,11 @@ const TOPIC_GRADIENT: Record<string, string> = {
 const FALLBACK_GRADIENT = "linear-gradient(145deg, #a0b4c8, #5a7080)";
 const MAX_STARS = 9;
 
-// ─── Fondo suave degradado (igual a la referencia) ────────────────────────────
+// ─── Fondo degradado suave ─────────────────────────────────────────────────────
 const pageBg: React.CSSProperties = {
   minHeight: "100%",
   background:
     "linear-gradient(135deg, #b6f0e4 0%, #d8eef8 40%, #e4d2f4 80%, #fce4ec 100%)",
-  padding: "32px 20px 52px",
 };
 
 // ─── Vista de detalle: lista de lecciones ─────────────────────────────────────
@@ -33,30 +32,30 @@ function LessonList({ topic, onBack }: { topic: MathTopic; onBack: () => void })
   const available = topic.lessons.filter((l) => l.status === "available").length;
 
   return (
-    <div style={pageBg}>
+    <div style={pageBg} className="px-4 py-6 sm:px-6 sm:py-8 pb-16">
       <div className="max-w-lg mx-auto">
         {/* Encabezado con gradiente del tema */}
         <div
-          className="rounded-3xl p-6 mb-6 overflow-hidden"
+          className="rounded-3xl p-5 sm:p-6 mb-6 overflow-hidden"
           style={{ background: gradient, boxShadow: "0 6px 24px rgba(0,0,0,0.18)" }}
         >
           <button
             onClick={onBack}
-            className="flex items-center gap-1 text-sm font-medium mb-5 transition"
+            className="flex items-center gap-1 text-sm font-medium mb-4 sm:mb-5 transition"
             style={{ color: "rgba(255,255,255,0.85)" }}
           >
             ← Todos los temas
           </button>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <span
-              className="text-4xl flex items-center justify-center rounded-2xl shrink-0"
-              style={{ width: 58, height: 58, background: "rgba(255,255,255,0.22)" }}
+              className="text-3xl sm:text-4xl flex items-center justify-center rounded-2xl shrink-0"
+              style={{ width: 52, height: 52, background: "rgba(255,255,255,0.22)" }}
             >
               {topic.emoji}
             </span>
             <div>
-              <h2 className="text-xl font-extrabold text-white leading-snug">
+              <h2 className="text-lg sm:text-xl font-extrabold text-white leading-snug">
                 {topic.title}
               </h2>
               <p className="text-sm mt-0.5" style={{ color: "rgba(255,255,255,0.8)" }}>
@@ -65,7 +64,7 @@ function LessonList({ topic, onBack }: { topic: MathTopic; onBack: () => void })
             </div>
           </div>
 
-          <p className="text-xs mt-4" style={{ color: "rgba(255,255,255,0.7)" }}>
+          <p className="text-xs mt-3 sm:mt-4" style={{ color: "rgba(255,255,255,0.7)" }}>
             {available} de {topic.lessons.length} lecciones disponibles
           </p>
         </div>
@@ -125,29 +124,33 @@ export default function WorldsMap() {
   }
 
   const filtered = search.trim()
-    ? mathTopics.filter((t) =>
-        t.title.toLowerCase().includes(search.toLowerCase()) ||
-        t.description.toLowerCase().includes(search.toLowerCase())
+    ? mathTopics.filter(
+        (t) =>
+          t.title.toLowerCase().includes(search.toLowerCase()) ||
+          t.description.toLowerCase().includes(search.toLowerCase())
       )
     : mathTopics;
 
   return (
-    <div style={pageBg}>
+    <div style={pageBg} className="px-4 py-6 sm:px-6 sm:py-8 pb-16">
       {/* ── Header ── */}
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-extrabold" style={{ color: "#1a2f4a" }}>
+      <div className="text-center mb-5 sm:mb-6">
+        <h2
+          className="text-2xl sm:text-3xl font-extrabold"
+          style={{ color: "#1a2f4a" }}
+        >
           ¿Qué vamos a aprender hoy?
         </h2>
-        <p className="text-base mt-1" style={{ color: "#4a6a88" }}>
+        <p className="text-sm sm:text-base mt-1" style={{ color: "#4a6a88" }}>
           Elige un tema y comienza tu aventura matemática
         </p>
       </div>
 
       {/* ── Buscador ── */}
-      <div className="max-w-md mx-auto mb-8">
+      <div className="max-w-md mx-auto mb-6 sm:mb-8">
         <div className="relative">
           <span
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-base select-none"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-base select-none pointer-events-none"
             style={{ color: "#9ab" }}
           >
             🔍
@@ -159,7 +162,7 @@ export default function WorldsMap() {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full outline-none text-sm"
             style={{
-              padding: "13px 18px 13px 42px",
+              padding: "12px 18px 12px 42px",
               borderRadius: 99,
               border: "none",
               background: "rgba(255,255,255,0.88)",
@@ -170,18 +173,17 @@ export default function WorldsMap() {
         </div>
       </div>
 
-      {/* ── Grid de tarjetas ── */}
-      <div
-        className="grid gap-4 mx-auto"
-        style={{
-          maxWidth: 680,
-          gridTemplateColumns: "repeat(3, 1fr)",
-        }}
-      >
+      {/* ── Grid responsivo ──
+           móvil  (<640px) : 1 columna
+           tablet (≥640px) : 2 columnas
+           desktop(≥1024px): 3 columnas   ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
         {filtered.map((topic) => {
           const gradient = TOPIC_GRADIENT[topic.id] ?? FALLBACK_GRADIENT;
           const total = topic.lessons.length;
-          const available = topic.lessons.filter((l) => l.status === "available").length;
+          const available = topic.lessons.filter(
+            (l) => l.status === "available"
+          ).length;
           const progressPct = total > 0 ? (available / total) * 100 : 0;
           const stars = Math.round((available / Math.max(total, 1)) * MAX_STARS);
 
@@ -189,13 +191,13 @@ export default function WorldsMap() {
             <button
               key={topic.id}
               onClick={() => setSelected(topic)}
-              className="text-left transition-all duration-200 hover:-translate-y-1 active:scale-[.97]"
+              className="text-left transition-all duration-200 hover:-translate-y-1 active:scale-[.97] w-full"
               style={{
                 background: gradient,
                 borderRadius: 22,
-                padding: "16px 14px 14px",
+                padding: "16px 16px 14px",
                 boxShadow: "0 6px 20px rgba(0,0,0,0.18)",
-                minHeight: 170,
+                minHeight: 160,
                 display: "flex",
                 flexDirection: "column",
               }}
@@ -203,12 +205,11 @@ export default function WorldsMap() {
               {/* Ícono + badge estrellas */}
               <div className="flex items-start justify-between mb-auto">
                 <span
-                  className="text-2xl flex items-center justify-center rounded-xl"
+                  className="flex items-center justify-center rounded-xl shrink-0"
                   style={{
                     width: 46,
                     height: 46,
                     background: "rgba(255,255,255,0.25)",
-                    flexShrink: 0,
                     fontSize: 22,
                   }}
                 >
@@ -258,10 +259,7 @@ export default function WorldsMap() {
 
               {/* Footer */}
               <div className="flex items-center justify-between mt-1">
-                <span
-                  className="text-xs"
-                  style={{ color: "rgba(255,255,255,0.72)" }}
-                >
+                <span className="text-xs" style={{ color: "rgba(255,255,255,0.72)" }}>
                   {total} lecciones
                 </span>
                 <span
@@ -283,10 +281,10 @@ export default function WorldsMap() {
         {/* Sin resultados */}
         {filtered.length === 0 && (
           <div
-            className="col-span-3 text-center py-12"
+            className="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-12"
             style={{ color: "#6a8a9a" }}
           >
-            No se encontraron temas para "{search}"
+            No se encontraron temas para &ldquo;{search}&rdquo;
           </div>
         )}
       </div>

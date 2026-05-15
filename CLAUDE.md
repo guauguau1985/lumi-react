@@ -159,6 +159,27 @@ recordResult(oa, score)  // OA1–OA12, puntaje 0–100
 - Tokens de color por módulo como CSS custom properties: `var(--color-math-text)`, `var(--color-ai-dot)`, etc.
 - Alias `@/` → `src/` (configurado con `vite-tsconfig-paths`).
 
+### Responsividad obligatoria
+
+**Lumi se usa en PC, tablet y celular.** Todo componente nuevo o modificado debe funcionar en los tres tamaños.
+
+```
+✅ Usar siempre clases responsivas de Tailwind: grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
+✅ Texto: text-base sm:text-lg (nunca tamaño fijo que se vea mal en móvil)
+✅ Padding: px-4 py-4 sm:px-6 sm:py-8 (más aire en pantallas grandes)
+✅ Imágenes/íconos: tamaños relativos o con clases sm:/lg:
+❌ No uses inline style con width/height fijos sin contraparte responsiva
+❌ No uses grid-cols-3 sin un fallback de 1 o 2 columnas en móvil
+```
+
+Breakpoints de referencia (Tailwind v4 por defecto):
+| Prefijo | Ancho mínimo | Dispositivo |
+|---|---|---|
+| (sin prefijo) | 0px | Móvil (prioridad base) |
+| `sm:` | 640px | Tablet chica / landscape móvil |
+| `md:` | 768px | Tablet |
+| `lg:` | 1024px | Desktop |
+
 ---
 
 ## Tabla de decisiones
