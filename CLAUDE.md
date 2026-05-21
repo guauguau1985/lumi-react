@@ -36,6 +36,7 @@ npx tsc --noEmit   # Solo verificar tipos (no hay test runner)
 
 ```
 ✅ Antes de crear algo, verifica que no exista ya.
+✅ Antes de agregar código nuevo, un archivo nuevo o una carpeta nueva, buscar si ya existe algo equivalente en el proyecto — nunca duplicar.
 ✅ Al terminar, confirma: sin imports rotos, App.tsx y AppShell.tsx intactos, rutas únicas.
 ```
 
