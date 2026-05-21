@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { defaultProfile } from "./defaultProfile";
 import { gamificationConfig } from "./config";
-import type { GameEvent, GamificationProfile, ModuleId } from "./types";
+import type { GameEvent, GamificationProfile, LessonSessionData, ModuleId } from "./types";
 
 const STORAGE_KEY = "lumi-gamification-profile-v1";
 
@@ -19,6 +19,9 @@ interface GamificationContextValue {
   registrarIngresoHoy: () => void;
   celebration: CelebrationType;
   clearCelebration: () => void;
+  lessonCompleteVisible: boolean;
+  lastLessonData: LessonSessionData | null;
+  closeLessonComplete: () => void;
 }
 
 const GamificationContext = createContext<GamificationContextValue | null>(
@@ -60,6 +63,8 @@ function sumarDias(fechaISO: string, dias: number): string {
 export function GamificationProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<GamificationProfile>(() => loadProfile());
   const [celebration, setCelebration] = useState<CelebrationType>("none");
+  const [lessonCompleteVisible, setLessonCompleteVisible] = useState(false);
+  const [lastLessonData, setLastLessonData] = useState<LessonSessionData | null>(null);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
@@ -94,6 +99,10 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     setCelebration("none");
   };
 
+  const closeLessonComplete = () => {
+    setLessonCompleteVisible(false);
+  };
+
   const dispatchEvent = (event: GameEvent) => {
     const { module, gameId, type } = event;
 
@@ -110,7 +119,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       const newLevel = calcularNivel(newXpTotal);
       const leveledUp = newLevel > prevLevel;
 
-      const prevModule = prev.modulos[module] || {};
+      const prevModule = prev.modulos[module as ModuleId] || {};
       const moduleProgress = {
         ...prevModule,
         xp: (prevModule.xp || 0) + xpEarned,
@@ -123,19 +132,24 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
 
       let nuevasInsignias = [...prev.insignias];
       let ganoInsignia = false;
-
       if (rule?.badge && !nuevasInsignias.includes(rule.badge)) {
         nuevasInsignias.push(rule.badge);
         ganoInsignia = true;
       }
 
-      // 🔹 disparar celebraciones según el tipo de evento
-      if (type === "GAME_COMPLETED" || ganoInsignia || leveledUp) {
-        // celebración grande: terminó juego / ganó insignia / subió de nivel
-        triggerCelebration("big");
-      } else if (type === "CORRECT_ANSWER" && xpEarned > 0) {
-        // celebración pequeña por acierto
-        triggerCelebration("small");
+      // Tracking XP diario (resetea si cambió el día)
+      const today = new Date().toISOString().slice(0, 10);
+      const newXpHoy =
+        prev.fechaXpHoy === today ? prev.xpHoy + xpEarned : xpEarned;
+
+      // Celebraciones para eventos que NO son GAME_COMPLETED
+      // (GAME_COMPLETED muestra LessonComplete en su lugar)
+      if (type !== "GAME_COMPLETED") {
+        if (ganoInsignia || leveledUp) {
+          triggerCelebration("big");
+        } else if (type === "CORRECT_ANSWER" && xpEarned > 0) {
+          triggerCelebration("small");
+        }
       }
 
       return {
@@ -144,12 +158,28 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         nivel: newLevel,
         monedas: prev.monedas + coinsEarned,
         insignias: nuevasInsignias,
+        xpHoy: newXpHoy,
+        fechaXpHoy: today,
         modulos: {
           ...prev.modulos,
           [module]: moduleProgress,
         },
       };
     });
+
+    // Mostrar LessonComplete al terminar un juego
+    if (type === "GAME_COMPLETED") {
+      const rule = gamificationConfig[module]?.[gameId]?.[type];
+      const xpGanado = rule?.xp ?? 0;
+      setLastLessonData({
+        ejercicios: (event.payload?.ejercicios as number) ?? 0,
+        coinsGanados: xpGanado,
+        precision: (event.payload?.accuracy as number) ?? 0,
+        modulo: module,
+        gameId,
+      });
+      setLessonCompleteVisible(true);
+    }
   };
 
   return (
@@ -160,6 +190,9 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         registrarIngresoHoy,
         celebration,
         clearCelebration,
+        lessonCompleteVisible,
+        lastLessonData,
+        closeLessonComplete,
       }}
     >
       {children}

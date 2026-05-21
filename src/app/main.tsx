@@ -4,6 +4,7 @@ import { HashRouter } from "react-router-dom";
 import App from "@/App";
 import AppProviders from "@/app/AppShell";
 import { GamificationProvider } from "@/gamification/GamificationContext";
+import { LessonComplete } from "@/components/gamification/LessonComplete";
 
 import "@/shared/styles/index.css";
 
@@ -15,6 +16,7 @@ createRoot(rootElement).render(
       <AppProviders>
         <App />
       </AppProviders>
+      <LessonComplete />
     </GamificationProvider>
   </HashRouter>
 );

@@ -9,6 +9,8 @@ export const defaultProfile: GamificationProfile = {
   rachaDias: 0,
   ultimoIngreso: null,
   insignias: [],
+  xpHoy: 0,
+  fechaXpHoy: null,
   modulos: {
     matematicas: {},
     programacion: {},

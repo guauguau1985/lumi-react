@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Feedback from "@/shared/components/feedback/Feedback";
 import { useFeedback } from "@/adaptiveLearning/hook/useFeedback";
+import { useGamification } from "@/gamification/GamificationContext";
 import TutorWidget from "@/shared/components/tutor/TutorWidget";
 // =============================================
 // GameFraccionesPizza – OA8 (4° básico)
@@ -124,6 +125,10 @@ const GameFraccionesPizza: React.FC<{
   onRight?: () => void;
   onWrong?: () => void;
 }> = ({ onComplete, onRight, onWrong }) => {
+  const { dispatchEvent } = useGamification();
+  const correctCount = useRef(0);
+  const completedFired = useRef(false);
+
   const [mode, setMode] = useState<Mode>("paint");
   const [parts, setParts] = useState(4);
   const [filled, setFilled] = useState(1);
@@ -168,8 +173,20 @@ const GameFraccionesPizza: React.FC<{
   }, [lives]);
 
   useEffect(() => {
-    if (done) onComplete?.(score);
-  }, [done, score, onComplete]);
+    if (done && !completedFired.current) {
+      completedFired.current = true;
+      const correct = correctCount.current;
+      const total = correct + 3;
+      const accuracy = Math.round((correct / Math.max(1, total)) * 100);
+      dispatchEvent({
+        module: "matematicas",
+        gameId: "pizza-fracciones",
+        type: "GAME_COMPLETED",
+        payload: { ejercicios: total, correctas: correct, accuracy },
+      });
+      onComplete?.(score);
+    }
+  }, [done, score, onComplete, dispatchEvent]);
 
   // 🔹 limpiar animación después de un rato
   useEffect(() => {
@@ -203,6 +220,7 @@ const GameFraccionesPizza: React.FC<{
 
   function settle(correct: boolean) {
     if (correct) {
+      correctCount.current++;
       setPizzaAnim("correct");
       onRight?.();
       markCorrect();
@@ -220,6 +238,8 @@ const GameFraccionesPizza: React.FC<{
   }
 
   function resetAll() {
+    correctCount.current = 0;
+    completedFired.current = false;
     clear();
     setMode("paint");
     setLives(3);
@@ -239,7 +259,7 @@ const GameFraccionesPizza: React.FC<{
 
       <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
         <h1 className="text-2xl md:text-3xl font-extrabold text-emerald-800">
-          Pizza de Fracciones · OA8
+          Pizza de Fracciones
         </h1>
         <div className="flex flex-wrap gap-2 text-sm">
           <span className="px-3 py-1 rounded-full bg-white/80 shadow">

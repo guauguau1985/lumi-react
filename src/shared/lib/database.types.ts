@@ -179,6 +179,47 @@ export type Database = {
           user_id?: string | null
         }
       }
+      lesson_sessions: {
+        Row: {
+          coins_ganados: number
+          created_at: string
+          device_id: string
+          ejercicios: number
+          fecha: string
+          game_id: string
+          id: string
+          modulo: string
+          precision: number
+          user_id: string | null
+          xp_ganado: number
+        }
+        Insert: {
+          coins_ganados?: number
+          created_at?: string
+          device_id: string
+          ejercicios?: number
+          fecha?: string
+          game_id: string
+          id?: string
+          modulo: string
+          precision?: number
+          user_id?: string | null
+          xp_ganado?: number
+        }
+        Update: {
+          coins_ganados?: number
+          created_at?: string
+          device_id?: string
+          ejercicios?: number
+          fecha?: string
+          game_id?: string
+          id?: string
+          modulo?: string
+          precision?: number
+          user_id?: string | null
+          xp_ganado?: number
+        }
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -197,6 +238,134 @@ export type Database = {
           email?: string
           id?: string
           nombre?: string | null
+        }
+      }
+      store_items: {
+        Row: {
+          activo: boolean
+          asset_key: string | null
+          created_at: string
+          descripcion: string | null
+          id: string
+          nombre: string
+          precio_coins: number
+          tipo: 'tema' | 'marco' | 'freeze' | 'titulo'
+        }
+        Insert: {
+          activo?: boolean
+          asset_key?: string | null
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          precio_coins?: number
+          tipo: 'tema' | 'marco' | 'freeze' | 'titulo'
+        }
+        Update: {
+          activo?: boolean
+          asset_key?: string | null
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          precio_coins?: number
+          tipo?: 'tema' | 'marco' | 'freeze' | 'titulo'
+        }
+      }
+      user_purchases: {
+        Row: {
+          device_id: string
+          id: string
+          item_id: string
+          purchased_at: string
+          user_id: string | null
+        }
+        Insert: {
+          device_id: string
+          id?: string
+          item_id: string
+          purchased_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          device_id?: string
+          id?: string
+          item_id?: string
+          purchased_at?: string
+          user_id?: string | null
+        }
+      }
+      user_streaks: {
+        Row: {
+          alias: string | null
+          created_at: string
+          device_id: string
+          dias_meta: number
+          freeze_disponibles: number
+          habito_configurado: boolean
+          id: string
+          racha_actual: number
+          racha_maxima: number
+          ultimo_dia_activo: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          alias?: string | null
+          created_at?: string
+          device_id: string
+          dias_meta?: number
+          freeze_disponibles?: number
+          habito_configurado?: boolean
+          id?: string
+          racha_actual?: number
+          racha_maxima?: number
+          ultimo_dia_activo?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          alias?: string | null
+          created_at?: string
+          device_id?: string
+          dias_meta?: number
+          freeze_disponibles?: number
+          habito_configurado?: boolean
+          id?: string
+          racha_actual?: number
+          racha_maxima?: number
+          ultimo_dia_activo?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+      }
+      weekly_league: {
+        Row: {
+          alias: string
+          created_at: string
+          device_id: string
+          id: string
+          semana: string
+          user_id: string | null
+          xp_semanal: number
+        }
+        Insert: {
+          alias: string
+          created_at?: string
+          device_id: string
+          id?: string
+          semana: string
+          user_id?: string | null
+          xp_semanal?: number
+        }
+        Update: {
+          alias?: string
+          created_at?: string
+          device_id?: string
+          id?: string
+          semana?: string
+          user_id?: string | null
+          xp_semanal?: number
         }
       }
     }

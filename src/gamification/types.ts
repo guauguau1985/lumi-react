@@ -34,4 +34,14 @@ export interface GamificationProfile {
   ultimoIngreso: string | null;  // "YYYY-MM-DD"
   insignias: string[];
   modulos: Record<ModuleId, ModuleProgress>;
+  xpHoy: number;
+  fechaXpHoy: string | null;  // "YYYY-MM-DD"
+}
+
+export interface LessonSessionData {
+  ejercicios: number;
+  coinsGanados: number;  // XP ganado en esta lección (se muestra como LumiCoins)
+  precision: number;     // 0–100
+  modulo: string;
+  gameId: string;
 }

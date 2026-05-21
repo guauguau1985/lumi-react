@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { useGamification } from "@/gamification/GamificationContext";
 
 // =============================================
 // GameBarrasDatos – OA11 (4° básico)
@@ -66,6 +67,10 @@ const Bars: React.FC<{ data: Dataset; onPick?: (label: string)=>void }>= ({ data
 };
 
 const GameBarrasDatos: React.FC<{ onComplete?: (score:number)=>void }> = ({ onComplete }) => {
+  const { dispatchEvent } = useGamification();
+  const correctCount = useRef(0);
+  const completedFired = useRef(false);
+
   const [mode,setMode] = useState<Mode>("read");
   const [lives,setLives] = useState(3);
   const [score,setScore] = useState(0);
@@ -76,7 +81,21 @@ const GameBarrasDatos: React.FC<{ onComplete?: (score:number)=>void }> = ({ onCo
   const [answer,setAnswer] = useState<string>("");
 
   useEffect(()=>{ newRound("read"); },[]);
-  useEffect(()=>{ if(lives===0) onComplete?.(score); },[lives,score,onComplete]);
+  useEffect(()=>{
+    if(lives===0 && !completedFired.current) {
+      completedFired.current = true;
+      const correct = correctCount.current;
+      const total = correct + 3;
+      const accuracy = Math.round((correct / Math.max(1, total)) * 100);
+      dispatchEvent({
+        module: "matematicas",
+        gameId: "barras-datos",
+        type: "GAME_COMPLETED",
+        payload: { ejercicios: total, correctas: correct, accuracy },
+      });
+      onComplete?.(score);
+    }
+  },[lives,score,onComplete,dispatchEvent]);
 
   function newRound(m:Mode){
     const d = makeDataset(); setDs(d); setMode(m);
@@ -114,7 +133,7 @@ const GameBarrasDatos: React.FC<{ onComplete?: (score:number)=>void }> = ({ onCo
       correct = input === answer;
     }
 
-    if(correct){ const s=streak+1; setStreak(s); setScore(x=> x+10+Math.max(0,s-1)*2); }
+    if(correct){ correctCount.current++; const s=streak+1; setStreak(s); setScore(x=> x+10+Math.max(0,s-1)*2); }
     else { setStreak(0); setLives(h=> Math.max(0,h-1)); }
     newRound(mode);
   }
@@ -122,7 +141,7 @@ const GameBarrasDatos: React.FC<{ onComplete?: (score:number)=>void }> = ({ onCo
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-amber-50 to-sky-50 p-4 md:p-8">
       <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
-        <h1 className="text-2xl md:text-3xl font-extrabold text-emerald-800">Gráficos de Barras · OA11</h1>
+        <h1 className="text-2xl md:text-3xl font-extrabold text-emerald-800">Gráficos de Barras</h1>
         <div className="flex flex-wrap gap-2 text-sm">
           <span className="px-3 py-1 rounded-full bg-white/80 shadow">Vidas {"❤️".repeat(lives)}{"🤍".repeat(3-lives)}</span>
           <span className="px-3 py-1 rounded-full bg-white/80 shadow">Racha {streak}</span>

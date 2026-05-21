@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useGamification } from "@/gamification/GamificationContext";
 
 // =============================================
 // OA12 · Tiempo y Duraciones (4° básico)
@@ -128,6 +129,9 @@ const Btn: React.FC<{
 
 // ===== Juego principal =====
 const GameRelojAventurero: React.FC<{ onComplete?: (score: number) => void }> = ({ onComplete }) => {
+  const { dispatchEvent } = useGamification();
+  const correctCount = useRef(0);
+  const completedFired = useRef(false);
   const [mode, setMode] = useState<Mode>("read");
   const [level, setLevel] = useState(3); // 1..8
   const [lives, setLives] = useState(3);
@@ -139,7 +143,21 @@ const GameRelojAventurero: React.FC<{ onComplete?: (score: number) => void }> = 
   const [target, setTarget] = useState<T>({ h: 8, m: 45 });
 
   useEffect(() => { newRound("read"); }, []);
-  useEffect(() => { if (lives === 0) onComplete?.(score); }, [lives, score, onComplete]);
+  useEffect(() => {
+    if (lives === 0 && !completedFired.current) {
+      completedFired.current = true;
+      const correct = correctCount.current;
+      const total = correct + 3;
+      const accuracy = Math.round((correct / Math.max(1, total)) * 100);
+      dispatchEvent({
+        module: "matematicas",
+        gameId: "reloj-aventurero",
+        type: "GAME_COMPLETED",
+        payload: { ejercicios: total, correctas: correct, accuracy },
+      });
+      onComplete?.(score);
+    }
+  }, [lives, score, onComplete, dispatchEvent]);
 
   function stepMinutes() { return level <= 2 ? 15 : level <= 4 ? 5 : 1; }
 
@@ -169,6 +187,7 @@ const GameRelojAventurero: React.FC<{ onComplete?: (score: number) => void }> = 
 
   function settle(correct: boolean) {
     if (correct) {
+      correctCount.current++;
       const s = streak + 1;
       setStreak(s);
       setScore((x) => x + 10 + Math.max(0, s - 1) * 2);
@@ -221,7 +240,7 @@ const GameRelojAventurero: React.FC<{ onComplete?: (score: number) => void }> = 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-sky-50 to-emerald-50 p-4 md:p-8">
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-emerald-800">Reloj Aventurero · OA12</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-emerald-800">Reloj Aventurero</h1>
         <div className="flex flex-wrap gap-2 text-sm">
           <span className="px-3 py-1 rounded-full bg-white/80 shadow">Vidas {"❤️".repeat(lives)}{"🤍".repeat(3 - lives)}</span>
           <span className="px-3 py-1 rounded-full bg-white/80 shadow">Racha {streak}</span>

@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useGamification } from "@/gamification/GamificationContext";
 
 // =============================================
 // GameSumaFracciones – OA9 (4° básico)
@@ -67,6 +68,10 @@ const FractionLabel: React.FC<{ n:number; d:number }> = ({ n, d }) => (
 );
 
 const GameSumaFracciones: React.FC<{ onComplete?: (score:number)=>void }> = ({ onComplete }) => {
+  const { dispatchEvent } = useGamification();
+  const correctCount = useRef(0);
+  const completedFired = useRef(false);
+
   const [level, setLevel] = useState(3);
   const [lives, setLives] = useState(3);
   const [score, setScore] = useState(0);
@@ -79,13 +84,28 @@ const GameSumaFracciones: React.FC<{ onComplete?: (score:number)=>void }> = ({ o
 
   useEffect(()=>{ setTask(makeTask(level)); },[level]);
   useEffect(()=>{ if(lives===0) setDone(true); },[lives]);
-  useEffect(()=>{ if(done) onComplete?.(score); },[done, score, onComplete]);
+  useEffect(()=>{
+    if(done && !completedFired.current) {
+      completedFired.current = true;
+      const correct = correctCount.current;
+      const total = correct + 3;
+      const accuracy = Math.round((correct / Math.max(1, total)) * 100);
+      dispatchEvent({
+        module: "matematicas",
+        gameId: "suma-fracciones",
+        type: "GAME_COMPLETED",
+        payload: { ejercicios: total, correctas: correct, accuracy },
+      });
+      onComplete?.(score);
+    }
+  },[done, score, onComplete, dispatchEvent]);
 
   function submit(){
     const n = Number(nAns||0), d = Number(dAns||1);
     const simp = simplify(n,d);
     const ok = simp.n === task.solution.n && simp.d === task.solution.d;
     if (ok){
+      correctCount.current++;
       const s = streak + 1; setStreak(s);
       setScore((x)=> x + 10 + Math.max(0, s-1)*2);
       if (s%3===0) setLevel((lv)=> Math.min(8, lv+1));
@@ -97,6 +117,8 @@ const GameSumaFracciones: React.FC<{ onComplete?: (score:number)=>void }> = ({ o
   }
 
   function reset(){
+    correctCount.current = 0;
+    completedFired.current = false;
     setLevel(3); setLives(3); setScore(0); setStreak(0);
     setTask(makeTask(3)); setNAns(""); setDAns(""); setDone(false);
   }
@@ -104,7 +126,7 @@ const GameSumaFracciones: React.FC<{ onComplete?: (score:number)=>void }> = ({ o
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-violet-50 to-emerald-50 p-4 md:p-8">
       <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
-        <h1 className="text-2xl md:text-3xl font-extrabold text-emerald-800">Sumar y Restar Fracciones · OA9</h1>
+        <h1 className="text-2xl md:text-3xl font-extrabold text-emerald-800">Sumar y Restar Fracciones</h1>
         <div className="flex flex-wrap gap-2 text-sm">
           <span className="px-3 py-1 rounded-full bg-white/80 shadow">Vidas {"❤️".repeat(lives)}{"🤍".repeat(3-lives)}</span>
           <span className="px-3 py-1 rounded-full bg-white/80 shadow">Racha {streak}</span>

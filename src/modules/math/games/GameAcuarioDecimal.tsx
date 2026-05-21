@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useGamification } from "@/gamification/GamificationContext";
 
 // =============================================
 // GameAcuarioDecimal – OA10 (4° básico)
@@ -79,6 +80,10 @@ const NumberLine: React.FC<{ value:number; step: 0.1 | 0.01; onPick?: (v:number)
 };
 
 const GameAcuarioDecimal: React.FC<{ onComplete?: (score:number)=>void }> = ({ onComplete }) => {
+  const { dispatchEvent } = useGamification();
+  const correctCount = useRef(0);
+  const completedFired = useRef(false);
+
   const [mode,setMode] = useState<Mode>("grid");
   const [lives,setLives] = useState(3);
   const [score,setScore] = useState(0);
@@ -98,7 +103,21 @@ const GameAcuarioDecimal: React.FC<{ onComplete?: (score:number)=>void }> = ({ o
   const goalCompose = useMemo(()=> Number((tens/10 + cents/100).toFixed(2)),[tens,cents]);
 
   useEffect(()=>{ newRound("grid"); },[]);
-  useEffect(()=>{ if(lives===0) onComplete?.(score); },[lives,score,onComplete]);
+  useEffect(()=>{
+    if(lives===0 && !completedFired.current) {
+      completedFired.current = true;
+      const correct = correctCount.current;
+      const total = correct + 3;
+      const accuracy = Math.round((correct / Math.max(1, total)) * 100);
+      dispatchEvent({
+        module: "matematicas",
+        gameId: "acuario-decimal",
+        type: "GAME_COMPLETED",
+        payload: { ejercicios: total, correctas: correct, accuracy },
+      });
+      onComplete?.(score);
+    }
+  },[lives,score,onComplete,dispatchEvent]);
 
   function newRound(m:Mode){
     if(m==="grid"){
@@ -114,6 +133,7 @@ const GameAcuarioDecimal: React.FC<{ onComplete?: (score:number)=>void }> = ({ o
 
   function settle(correct:boolean){
     if(correct){
+      correctCount.current++;
       const s = streak+1; setStreak(s); setScore(x=> x+10+Math.max(0,s-1)*2);
     } else { setStreak(0); setLives(h=> Math.max(0,h-1)); }
     newRound(mode);
@@ -127,7 +147,7 @@ const GameAcuarioDecimal: React.FC<{ onComplete?: (score:number)=>void }> = ({ o
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-cyan-50 to-emerald-50 p-4 md:p-8">
       <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
-        <h1 className="text-2xl md:text-3xl font-extrabold text-emerald-800">Acuario Decimal · OA10</h1>
+        <h1 className="text-2xl md:text-3xl font-extrabold text-emerald-800">Acuario Decimal</h1>
         <div className="flex flex-wrap gap-2 text-sm">
           <span className="px-3 py-1 rounded-full bg-white/80 shadow">Vidas {"❤️".repeat(lives)}{"🤍".repeat(3-lives)}</span>
           <span className="px-3 py-1 rounded-full bg-white/80 shadow">Racha {streak}</span>

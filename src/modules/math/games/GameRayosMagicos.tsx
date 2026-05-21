@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useGamification } from "@/gamification/GamificationContext";
 
 // =============================================
 // GameRayosMagicos – OA2 (4° básico)
@@ -112,6 +113,10 @@ const Btn: React.FC<{
 );
 
 const GameRayosMagicos: React.FC<{ onComplete?: (score: number) => void }> = ({ onComplete }) => {
+  const { dispatchEvent } = useGamification();
+  const correctCount = useRef(0);
+  const completedFired = useRef(false);
+
   const [level, setLevel] = useState(1);
   const [lives, setLives] = useState(3);
   const [score, setScore] = useState(0);
@@ -123,6 +128,7 @@ const GameRayosMagicos: React.FC<{ onComplete?: (score: number) => void }> = ({ 
   // genera nuevo problema
   function nextProblem(correct: boolean) {
     if (correct) {
+      correctCount.current++;
       const s = streak + 1;
       setStreak(s);
       const lvlUp = s % 3 === 0 ? 1 : 0; // cada 3 aciertos sube dificultad
@@ -140,8 +146,20 @@ const GameRayosMagicos: React.FC<{ onComplete?: (score: number) => void }> = ({ 
   }, [lives]);
 
   useEffect(() => {
-    if (done) onComplete?.(score);
-  }, [done, score, onComplete]);
+    if (done && !completedFired.current) {
+      completedFired.current = true;
+      const correct = correctCount.current;
+      const total = correct + 3; // siempre pierden 3 vidas al terminar
+      const accuracy = Math.round((correct / Math.max(1, total)) * 100);
+      dispatchEvent({
+        module: "matematicas",
+        gameId: "rayos-magicos",
+        type: "GAME_COMPLETED",
+        payload: { ejercicios: total, correctas: correct, accuracy },
+      });
+      onComplete?.(score);
+    }
+  }, [done, score, onComplete, dispatchEvent]);
 
   const question = useMemo(() => `${problem.a} ${problem.op} ${problem.b} = ?`, [problem]);
 
@@ -154,6 +172,8 @@ const GameRayosMagicos: React.FC<{ onComplete?: (score: number) => void }> = ({ 
   }
 
   function resetAll() {
+    correctCount.current = 0;
+    completedFired.current = false;
     setLevel(1);
     setLives(3);
     setScore(0);
@@ -165,7 +185,7 @@ const GameRayosMagicos: React.FC<{ onComplete?: (score: number) => void }> = ({ 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-indigo-50 to-sky-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
-        <h1 className="text-2xl md:text-3xl font-extrabold text-indigo-800">Rayos mágicos · OA2</h1>
+        <h1 className="text-2xl md:text-3xl font-extrabold text-indigo-800">Rayos mágicos</h1>
         <div className="flex gap-2 text-sm">
           <span className="px-3 py-1 rounded-full bg-white/80 shadow">Nivel {level}</span>
           <span className="px-3 py-1 rounded-full bg-white/80 shadow">Vidas {"❤️".repeat(lives)}{"🤍".repeat(3-lives)}</span>

@@ -174,10 +174,18 @@ const GameEscaleraNumerica: React.FC<{ onComplete?: (score: number) => void }> =
   useEffect(() => {
     if (levelDone && lives > 0 && !completedFired.current) {
       completedFired.current = true;
-      dispatchEvent({ module: "matematicas", gameId: "escalera-numerica", type: "GAME_COMPLETED" });
+      const wrong = 3 - lives;
+      const total = currentIndex + wrong;
+      const accuracy = Math.round((currentIndex / Math.max(1, total)) * 100);
+      dispatchEvent({
+        module: "matematicas",
+        gameId: "escalera-numerica",
+        type: "GAME_COMPLETED",
+        payload: { ejercicios: total, correctas: currentIndex, accuracy },
+      });
       onComplete?.(score);
     }
-  }, [levelDone, lives, score, onComplete, dispatchEvent]);
+  }, [levelDone, lives, score, currentIndex, onComplete, dispatchEvent]);
 
   const progress = Math.min(100, Math.round((currentIndex / length) * 100));
 
@@ -189,7 +197,7 @@ const GameEscaleraNumerica: React.FC<{ onComplete?: (score: number) => void }> =
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-end gap-4">
         <div className="flex-1">
           <h1 className="text-2xl md:text-3xl font-extrabold text-emerald-800 tracking-tight">
-            Escalera numérica · OA1
+            Escalera numérica
           </h1>
           <p className="text-slate-600 mt-1">
             Avanza de {step} en {step} hasta {WORLD_LIMIT}. Practica conteo y números vecinos.
