@@ -8,6 +8,14 @@ import React, {
 import { defaultProfile } from "./defaultProfile";
 import { gamificationConfig } from "./config";
 import type { GameEvent, GamificationProfile, LessonSessionData, ModuleId } from "./types";
+import {
+  type StreakState,
+  defaultStreak,
+  loadStreak,
+  saveStreak,
+  actualizarRachaHoy,
+  syncStreakToSupabase,
+} from "./streakStorage";
 
 const STORAGE_KEY = "lumi-gamification-profile-v1";
 
@@ -22,6 +30,10 @@ interface GamificationContextValue {
   lessonCompleteVisible: boolean;
   lastLessonData: LessonSessionData | null;
   closeLessonComplete: () => void;
+  streak: StreakState;
+  streakFlowVisible: boolean;
+  closeStreakFlow: () => void;
+  configurarHabito: (dias: number) => void;
 }
 
 const GamificationContext = createContext<GamificationContextValue | null>(
@@ -65,6 +77,13 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
   const [celebration, setCelebration] = useState<CelebrationType>("none");
   const [lessonCompleteVisible, setLessonCompleteVisible] = useState(false);
   const [lastLessonData, setLastLessonData] = useState<LessonSessionData | null>(null);
+  const [streak, setStreak] = useState<StreakState>(() => loadStreak());
+  const [streakFlowVisible, setStreakFlowVisible] = useState(false);
+
+  // Persistir racha en localStorage cuando cambia
+  useEffect(() => {
+    saveStreak(streak);
+  }, [streak]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
@@ -101,6 +120,25 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
 
   const closeLessonComplete = () => {
     setLessonCompleteVisible(false);
+    // Actualizar racha y mostrar el flujo de racha
+    setStreak((prev) => {
+      const updated = actualizarRachaHoy(prev);
+      syncStreakToSupabase(updated);
+      return updated;
+    });
+    setStreakFlowVisible(true);
+  };
+
+  const closeStreakFlow = () => {
+    setStreakFlowVisible(false);
+  };
+
+  const configurarHabito = (dias: number) => {
+    setStreak((prev) => {
+      const updated = { ...prev, diasMeta: dias, habitoConfigurado: true };
+      syncStreakToSupabase(updated);
+      return updated;
+    });
   };
 
   const dispatchEvent = (event: GameEvent) => {
@@ -193,6 +231,10 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         lessonCompleteVisible,
         lastLessonData,
         closeLessonComplete,
+        streak,
+        streakFlowVisible,
+        closeStreakFlow,
+        configurarHabito,
       }}
     >
       {children}
