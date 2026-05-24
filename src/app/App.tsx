@@ -13,6 +13,7 @@ const MathModule = lazy(() => import("@/modules/math/pages/MathShell"));
 const NaturalesModule = lazy(() => import("@/modules/naturales/NaturalesShell"));
 const CoderModule = lazy(() => import("@/modules/coder/pages/CoderHome"));
 const AIModule = lazy(() => import("@/modules/ai/AIShell"));
+const TareaModule = lazy(() => import("@/modules/tarea/pages/TareaShell"));
 const ParentReport = lazy(() => import("@/modules/ai/pages/ParentReportPage"));
 
 export default function App() {
@@ -36,6 +37,7 @@ export default function App() {
           )}
           {modules.coder && <Route path="/coder/*" element={<CoderModule />} />}
           {modules.ai && <Route path="/ai/*" element={<AIModule />} />}
+          {modules.tarea && <Route path="/tarea/*" element={<TareaModule />} />}
           <Route path="/reporte-padres" element={<ParentReport />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />

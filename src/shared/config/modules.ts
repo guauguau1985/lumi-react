@@ -5,4 +5,5 @@ export const modules = {
   naturales: true,
   coder: true,
   ai: true,
+  tarea: true,
 } as const;

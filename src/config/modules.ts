@@ -8,7 +8,8 @@ export type ModuleVariant =
   | "naturales"
   | "coder"
   | "english"
-  | "ai";
+  | "ai"
+  | "tarea";
 
 export interface ModuleConfig {
   id: string;
@@ -73,6 +74,15 @@ export const MODULE_LIST: ModuleConfig[] = [
     path: "/ai",
     emoji: "🤖",
     variant: "ai",
+    enabled: true,
+  },
+  {
+    id: "tarea",
+    name: "Ayúdame con mi tarea",
+    description: "Resuelve dudas y recibe apoyo con tus tareas escolares",
+    path: "/tarea",
+    emoji: "📖",
+    variant: "tarea",
     enabled: true,
   },
 ];
