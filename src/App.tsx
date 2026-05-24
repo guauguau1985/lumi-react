@@ -11,7 +11,7 @@ import LumiStatusBar from "@/shared/components/lumi/LumiStatusBar";
 const EcoModule      = lazy(() => import("@/modules/eco/pages/EcoHome"));
 const MathModule     = lazy(() => import("@/modules/math/pages/MathShell"));
 const NaturalesModule= lazy(() => import("@/modules/naturales/NaturalesShell"));
-const CoderModule    = lazy(() => import("@/modules/coder/pages/Home"));
+const CoderModule    = lazy(() => import("@/modules/coder/pages/CoderHome"));
 const AIModule       = lazy(() => import("@/modules/ai/AIShell"));
 
 export default function App() {
