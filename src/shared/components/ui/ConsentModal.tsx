@@ -1,13 +1,17 @@
 // src/shared/components/ui/ConsentModal.tsx
 import { setProfileEnabled } from '@/shared/lib/deviceId'
+import { useLearningProfile } from '@/shared/hooks/useLearningProfile'
 
 interface ConsentModalProps {
   onClose: () => void
 }
 
 export function ConsentModal({ onClose }: ConsentModalProps) {
-  function handleAccept() {
-    setProfileEnabled(true)
+  const { enable, compute } = useLearningProfile()
+
+  async function handleAccept() {
+    await enable()
+    await compute()
     onClose()
   }
 
