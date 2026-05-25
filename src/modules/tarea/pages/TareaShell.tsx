@@ -1,52 +1,30 @@
-// src/modules/tarea/pages/TareaShell.tsx
-// Página placeholder del módulo "Ayúdame con mi tarea".
-// Contenido completo viene próximamente.
-
-import { Link } from "react-router-dom";
-
 export default function TareaShell() {
   return (
-    <div className="min-h-screen bg-[var(--color-background)] flex flex-col items-center justify-center px-4 py-12 text-center">
-      <div
-        className="
-          w-full max-w-sm rounded-3xl px-8 py-10 shadow-lg
-          bg-[var(--color-surface)] border-4 border-[var(--color-tarea-border)]
-          flex flex-col items-center gap-5
-        "
-      >
-        <span className="text-6xl sm:text-7xl">📖</span>
+    <div className="flex flex-col h-screen bg-white font-sans">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-100 px-6 py-4 flex-shrink-0 shadow-sm">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Ayúdame con mi tarea</h1>
+        <p className="text-sm text-gray-500 mt-1">Sube la tarea y Lumy te ayuda paso a paso</p>
+      </header>
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-tarea-text)]">
-          Ayúdame con mi tarea
-        </h1>
+      {/* Sección central */}
+      <main className="flex-1 overflow-y-auto bg-gray-100 flex items-center justify-center px-4 py-8">
+        <div className="text-center text-gray-400">
+          <div className="text-5xl mb-4">🌱</div>
+          <p className="text-base sm:text-lg font-medium">
+            Chat con Lumy — Próximamente funcionalidad completa
+          </p>
+        </div>
+      </main>
 
-        <p className="text-base sm:text-lg font-semibold text-[var(--color-muted-foreground)]">
-          ¡Próximamente!
-        </p>
-
-        <p className="text-sm text-[var(--color-muted-foreground)] leading-relaxed">
-          Estamos preparando algo genial para ayudarte con tus tareas escolares.
-          ¡Vuelve pronto!
-        </p>
-
-        <span
-          className="
-            inline-block w-3 h-3 rounded-full
-            bg-[var(--color-tarea-dot)]
-            animate-pulse
-          "
+      {/* Input inferior */}
+      <div className="flex-shrink-0 bg-white border-t border-gray-100 px-4 py-3">
+        <input
+          type="text"
+          placeholder="Escribe tu mensaje..."
+          className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
         />
       </div>
-
-      <Link
-        to="/"
-        className="
-          mt-8 text-sm font-semibold text-[var(--color-tarea-text)]
-          underline underline-offset-2 hover:opacity-70 transition-opacity
-        "
-      >
-        ← Volver al menú
-      </Link>
     </div>
   );
 }
