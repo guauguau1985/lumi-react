@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 
 interface Message {
   id: string;
-  role: 'user' | 'lumy';
+  role: 'user' | 'lumi';
   text: string;
   time: string;
   cards?: { icon: string; title: string; text: string; color: string }[];
@@ -10,12 +10,12 @@ interface Message {
 
 const INITIAL_MESSAGES: Message[] = [
   {
-    id: '1', role: 'lumy', time: '16:28',
-    text: '¡Hola! Soy Lumy 🌱 Estoy aquí para ayudarte paso a paso.\n\nTu trabajo debe incluir:\n1. Portada\n2. Introducción\n3. Mapa de rutas de exploración\n4. Avances tecnológicos\n5. Conclusiones\n\n¿Empezamos?',
+    id: '1', role: 'lumi', time: '16:28',
+    text: '¡Hola! Soy Lumi 🌱 Estoy aquí para ayudarte paso a paso.\n\nTu trabajo debe incluir:\n1. Portada\n2. Introducción\n3. Mapa de rutas de exploración\n4. Avances tecnológicos\n5. Conclusiones\n\n¿Empezamos?',
   },
   { id: '2', role: 'user', time: '16:29', text: 'Explícame primero el tema, por favor' },
   {
-    id: '3', role: 'lumy', time: '16:30',
+    id: '3', role: 'lumi', time: '16:30',
     text: '¡Claro! 🌍 Los viajes de exploración fueron expediciones marítimas entre los siglos XV y XVI para descubrir nuevas tierras y rutas comerciales.\n\nOcurrieron por estas causas:',
     cards: [
       { icon: '💰', title: 'Económicas', text: 'Buscaban nuevas rutas comerciales para traer especias y productos.', color: 'bg-amber-50 border-amber-200' },
@@ -48,7 +48,7 @@ export default function TareaShell() {
     setTimeout(() => {
       setMessages(p => [...p, {
         id: (Date.now() + 1).toString(),
-        role: 'lumy',
+        role: 'lumi',
         text: '¡Buena pregunta! 🌱 Déjame explicarte eso paso a paso...',
         time: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
       }]);
@@ -61,7 +61,7 @@ export default function TareaShell() {
       <header className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4 flex-shrink-0 shadow-sm flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-violet-100 flex items-center justify-center text-xl">🌱</div>
         <div>
-          <h1 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">Lumy — Ayúdame con mi tarea</h1>
+          <h1 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">Lumi — Ayúdame con mi tarea</h1>
           <p className="text-xs text-green-500 font-medium">● En línea</p>
         </div>
       </header>
@@ -70,10 +70,10 @@ export default function TareaShell() {
       <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 space-y-4">
         {messages.map(msg => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            {msg.role === 'lumy' && (
+            {msg.role === 'lumi' && (
               <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-base mr-2 flex-shrink-0 self-end">🌱</div>
             )}
-            <div className={`max-w-[80%] sm:max-w-[70%] ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+            <div className={`max-w[80%] sm:max-w[70%] ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
               <div className={`rounded-2xl px-4 py-3 text-sm whitespace-pre-line leading-relaxed shadow-sm ${
                 msg.role === 'user'
                   ? 'bg-violet-600 text-white rounded-br-sm'
@@ -98,7 +98,7 @@ export default function TareaShell() {
               <span className="text-[10px] text-gray-400 px-1">{msg.time}</span>
             </div>
             {msg.role === 'user' && (
-              <div className="w-8 h-8 rounded-full bg-violet-200 flex items-center justify-center text-base ml-2 flex-shrink-0 self-end">👤</div>
+              <div className="w-8 h-8 rounded-full bg-violet-200 flex items-center justify-center text-base ml-2 flex-shrink-0 self-end">👤🏻</div>
             )}
           </div>
         ))}
