@@ -56,6 +56,7 @@ serve(async (req) => {
     const nivelAlMomento: number | undefined = body?.level;
     const temaAlMomento: string | undefined = body?.topic;
     const erroresAlMomento: number | undefined = body?.mistakes;
+    const cursoAlMomento: string | undefined = body?.grade;
 
     // Filtro de entrada
     if (BANNED.some((w) => clean.toLowerCase().includes(w))) {
@@ -64,8 +65,9 @@ serve(async (req) => {
 
     // Construir system prompt con contexto del ejercicio cuando está disponible
     let activeSystemPrompt = SYSTEM_PROMPT;
-    if (temaAlMomento || triggerType === "error_seguido") {
+    if (temaAlMomento || cursoAlMomento || triggerType === "error_seguido") {
       const ctx: string[] = [];
+      if (cursoAlMomento) ctx.push(`El niño está en ${cursoAlMomento}. Adapta tu vocabulario y la complejidad de tus explicaciones a ese curso.`);
       if (temaAlMomento) ctx.push(`El niño está practicando: ${temaAlMomento}.`);
       if (nivelAlMomento !== undefined) ctx.push(`Nivel actual: ${nivelAlMomento}.`);
       if (erroresAlMomento !== undefined && erroresAlMomento >= 2) {
@@ -79,8 +81,8 @@ serve(async (req) => {
       }
     }
 
-    // Historial reciente solo si hay sesión activa
-    const histContents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+    // Historial reciente solo si hay sesión activa (roles OpenAI: user/assistant)
+    const histMessages: Array<{ role: string; content: string }> = [];
     if (user) {
       const { data: hist } = await supabase
         .from("chat_history")
@@ -89,48 +91,47 @@ serve(async (req) => {
         .order("created_at", { ascending: false })
         .limit(8);
 
-      histContents.push(
+      histMessages.push(
         ...(hist ?? []).reverse().map((m) => ({
-          role: m.role === "niño" ? "user" : "model",
-          parts: [{ text: m.message }],
+          role: m.role === "niño" ? "user" : "assistant",
+          content: m.message,
         }))
       );
     }
 
-    const contents = [
-      ...histContents,
-      { role: "user", parts: [{ text: clean }] },
-    ];
+    // Llamada a DeepSeek (formato OpenAI)
+    const apiKey = Deno.env.get("DEEPSEEK_API_KEY")!;
+    const dsRes = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [
+          { role: "system", content: activeSystemPrompt },
+          ...histMessages,
+          { role: "user", content: clean },
+        ],
+        max_tokens: 200,
+        temperature: 0.7,
+      }),
+    });
 
-    // Llamada a Gemini 1.5 Flash (REST, sin SDK)
-    const apiKey = Deno.env.get("GEMINI_API_KEY")!;
-    const gemRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: activeSystemPrompt }] },
-          contents,
-          safetySettings: [
-            { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-            { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE"    },
-            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-          ],
-          generationConfig: { maxOutputTokens: 200, temperature: 0.7 },
-        }),
-      }
-    );
+    const dsJson = await dsRes.json();
 
-    const gemJson = await gemRes.json();
+    if (!dsRes.ok) {
+      console.error("DeepSeek HTTP error:", dsRes.status, JSON.stringify(dsJson).slice(0, 300));
+      return json({ reply: FALLBACK_ERROR });
+    }
 
-    if (gemJson.candidates?.[0]?.finishReason === "SAFETY") {
+    if (dsJson.choices?.[0]?.finish_reason === "content_filter") {
       return json({ reply: FALLBACK_SAFE });
     }
 
     const reply: string =
-      gemJson.candidates?.[0]?.content?.parts?.[0]?.text ?? FALLBACK_SAFE;
+      dsJson.choices?.[0]?.message?.content ?? FALLBACK_SAFE;
 
     if (BANNED.some((w) => reply.toLowerCase().includes(w))) {
       return json({ reply: FALLBACK_SAFE });
