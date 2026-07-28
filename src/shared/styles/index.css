@@ -79,6 +79,14 @@ body,
   min-height: 100%;
 }
 
+html,
+body {
+  /* Evita que cualquier elemento hijo genere scroll horizontal
+     y rompa el layout vertical en celulares. */
+  overflow-x: hidden;
+  width: 100%;
+}
+
 body {
   margin: 0;
   background: var(--color-background);

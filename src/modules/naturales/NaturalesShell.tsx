@@ -122,10 +122,10 @@ const Item = ({
 );
 
 const Row = ({ k, a, b }: { k: string; a: string; b: string }) => (
-  <div className="grid grid-cols-3 p-2 border-t border-white/30">
-    <div className="font-bold">{k}</div>
-    <div className="text-center">{a}</div>
-    <div className="text-center">{b}</div>
+  <div className="grid grid-cols-3 gap-1 p-2 border-t border-white/30 text-xs sm:text-sm">
+    <div className="min-w-0 break-words font-bold">{k}</div>
+    <div className="min-w-0 break-words text-center">{a}</div>
+    <div className="min-w-0 break-words text-center">{b}</div>
   </div>
 );
 
@@ -140,7 +140,7 @@ const SECTIONS: LessonSection[] = [
           La <b>Hidrósfera</b> es la capa de <b>agua</b> que cubre nuestro
           planeta. El agua aparece en tres estados.
         </p>
-        <div className="grid grid-cols-3 gap-3 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
           <div className="bg-white/30 rounded-2xl p-3 text-center backdrop-blur-sm">
             <div className="text-4xl">🧊</div>
             <p className="font-bold mt-1 text-sm">Sólido</p>
@@ -236,10 +236,10 @@ const SECTIONS: LessonSection[] = [
     gradient: "from-teal-400 via-emerald-400 to-lime-400",
     body: (
       <div className="bg-white/30 rounded-2xl overflow-hidden backdrop-blur-sm text-sm">
-        <div className="grid grid-cols-3 font-extrabold bg-white/30 p-2">
-          <div>Característica</div>
-          <div className="text-center">🌊 Salada</div>
-          <div className="text-center">💧 Dulce</div>
+        <div className="grid grid-cols-3 gap-1 font-extrabold bg-white/30 p-2 text-xs sm:text-sm">
+          <div className="min-w-0 break-words">Característica</div>
+          <div className="min-w-0 break-words text-center">🌊 Salada</div>
+          <div className="min-w-0 break-words text-center">💧 Dulce</div>
         </div>
         <Row k="Salinidad" a="Mucha sal" b="Casi sin sal" />
         <Row k="Cantidad" a="97% del planeta" b="3% del planeta" />
