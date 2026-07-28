@@ -67,3 +67,5 @@ export default tseslint.config([
   },
 ])
 ```
+
+Hola desde el flujo automatizado

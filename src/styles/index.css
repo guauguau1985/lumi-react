@@ -75,6 +75,11 @@
   --color-naturales-border: hsl(199 85% 70%);
   --color-naturales-dot:    hsl(201 85% 50%);
   --color-naturales-text:   hsl(203 75% 35%);
+
+  /* Módulo Ayúdame con mi tarea */
+  --color-tarea-border: hsl(174 70% 62%);
+  --color-tarea-dot:    hsl(174 80% 38%);
+  --color-tarea-text:   hsl(174 80% 26%);
 }
 
 /* Base */

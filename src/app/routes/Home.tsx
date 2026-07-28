@@ -146,6 +146,24 @@ export default function Home() {
               </div>
             </Link>
           </motion.div>
+
+          {/* Ayúdame con mi tarea */}
+          <motion.div variants={item}>
+            <Link
+              to="/tarea"
+              className="
+                block rounded-2xl px-4 py-3 shadow transition-transform hover:scale-[1.02] hover:shadow-md
+                bg-[var(--color-surface)] border-4 border-[var(--color-tarea-border)]
+              "
+            >
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-[var(--color-tarea-dot)]" />
+                <span className="font-semibold text-[var(--color-tarea-text)]">
+                  📖 Ayúdame con mi tarea
+                </span>
+              </div>
+            </Link>
+          </motion.div>
         </motion.div>
 
         {/* Reporte de padres */}
