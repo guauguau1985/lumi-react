@@ -1,4 +1,5 @@
 // src/shared/components/ui/ConsentModal.tsx
+import { useState } from 'react'
 import { setProfileEnabled } from '@/shared/lib/deviceId'
 import { useLearningProfile } from '@/shared/hooks/useLearningProfile'
 
@@ -7,11 +8,18 @@ interface ConsentModalProps {
 }
 
 export function ConsentModal({ onClose }: ConsentModalProps) {
-  const { enable, compute } = useLearningProfile()
+  const { enable, compute, error } = useLearningProfile()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleAccept() {
-    await enable()
+    setIsSubmitting(true)
+    const enabled = await enable()
+    if (!enabled) {
+      setIsSubmitting(false)
+      return
+    }
     await compute()
+    setIsSubmitting(false)
     onClose()
   }
 
@@ -57,17 +65,26 @@ export function ConsentModal({ onClose }: ConsentModalProps) {
           <li>❌ Sin nombre, sin correo, sin ubicación</li>
         </ul>
 
+        {/* Error */}
+        {error && (
+          <p className="mb-4 rounded-xl bg-red-50 px-4 py-2 text-center text-sm text-red-700">
+            No se pudo activar el perfil. Revisa tu conexión a internet e inténtalo de nuevo.
+          </p>
+        )}
+
         {/* Botones */}
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <button
             onClick={handleAccept}
-            className="w-full rounded-2xl bg-[var(--color-primary)] px-6 py-3 text-base font-bold text-[var(--color-primary-foreground)] transition-opacity hover:opacity-90 active:scale-95 sm:w-auto"
+            disabled={isSubmitting}
+            className="w-full rounded-2xl bg-[var(--color-primary)] px-6 py-3 text-base font-bold text-[var(--color-primary-foreground)] transition-opacity hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
-            Sí, activar perfil
+            {isSubmitting ? 'Guardando…' : 'Sí, activar perfil'}
           </button>
           <button
             onClick={handleDecline}
-            className="w-full rounded-2xl border border-[var(--color-card-border)] bg-[var(--color-card)] px-6 py-3 text-base font-semibold text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-muted)] active:scale-95 sm:w-auto"
+            disabled={isSubmitting}
+            className="w-full rounded-2xl border border-[var(--color-card-border)] bg-[var(--color-card)] px-6 py-3 text-base font-semibold text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-muted)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
             No por ahora
           </button>

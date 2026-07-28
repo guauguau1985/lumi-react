@@ -16,8 +16,8 @@ export interface LearningProfileResult {
   isComputing: boolean
   error: string | null
   loadFromDB: () => Promise<void>
-  compute: () => Promise<void>
-  enable: () => Promise<void>
+  compute: () => Promise<boolean>
+  enable: () => Promise<boolean>
   disable: () => Promise<void>
   deleteProfile: () => Promise<void>
 }
@@ -88,15 +88,17 @@ export function useLearningProfile(): LearningProfileResult {
         setProfile(null)
         setSummary(null)
         setRecommendations([])
-        return
+        return true
       }
 
       setIsEnabled(true)
       setProfile(data.profile as StoredProfile)
       setSummary(data.summary ?? null)
       setRecommendations(Array.isArray(data.recommendations) ? data.recommendations : [])
+      return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al calcular el perfil')
+      return false
     } finally {
       setIsComputing(false)
     }
@@ -126,8 +128,10 @@ export function useLearningProfile(): LearningProfileResult {
 
       setProfileEnabled(true)
       setIsEnabled(true)
+      return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al activar el perfil')
+      return false
     } finally {
       setIsLoading(false)
     }
