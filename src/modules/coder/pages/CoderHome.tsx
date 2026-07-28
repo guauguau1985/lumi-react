@@ -1,205 +1,73 @@
-import { useState } from "react";
-import { motion, type Variants } from "framer-motion";
+import { Link, NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/Card";
-import { ProgressBar } from "@/shared/components/ui/ProgressBar";
-import { LumiAvatar } from "@/shared/components/lumi/LumiAvatar";
-import { Link } from "react-router-dom";
+import AtrapaError from "@/modules/coder/games/AtrapaError";
+import CarreraLumi from "@/modules/coder/games/CarreraLumi";
+import CaminoComandos from "@/modules/coder/games/CaminoComandos";
 
-// Animaciones
-const container: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-  },
-};
-
-const item: Variants = {
-  hidden: { opacity: 0, y: 12 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 220, damping: 18 },
-  },
-};
-
-export default function Home() {
-  const [progress, setProgress] = useState(40);
+function CoderLanding() {
+  const cards = [
+    { to: "atrapa-error", title: "🔧 Atrapa el Error", subtitle: "Encuentra el paso incorrecto en el circuito." },
+    { to: "carrera-lumi", title: "🏁 Carrera de Lumi", subtitle: "Responde tablas de multiplicar y avanza." },
+    { to: "camino-comandos", title: "🧭 Camino de Comandos", subtitle: "Programa los movimientos de Lumi." },
+  ];
 
   return (
-    <motion.div
-      className="
-        min-h-screen p-6 rounded-2xl shadow transition-transform hover:scale-[1.02] hover:shadow-md
-        bg-[var(--color-background)] text-[var(--color-foreground)]
-        border-4 border-[var(--color-shell-border)]
-      "
-      variants={container}
-      initial="hidden"
-      animate="show"
-    >
-      <motion.div className="w-full max-w-xl mx-auto space-y-6" variants={item}>
-        {/* Header */}
-        <motion.div className="flex items-center gap-4" variants={item}>
-          <LumiAvatar size={96} />
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--color-foreground)]">
-              ¡Bienvenido a Lumi!
-            </h1>
-            <p className="text-[var(--color-muted-foreground)]">
-              Elige tu módulo para comenzar
-            </p>
-          </div>
-        </motion.div>
+    <main className="min-h-svh p-4 sm:p-6 bg-[var(--color-background)] text-[var(--color-foreground)]">
+      <header className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--color-coder-text)]">
+          Módulo Programación 💻
+        </h1>
+        <NavLink
+          to="/"
+          className="px-3 py-1 rounded-lg border shadow-sm bg-[var(--color-surface)] border-[var(--color-coder-border)] text-[var(--color-coder-text)]"
+        >
+          ⬅️ Inicio
+        </NavLink>
+      </header>
+      <p className="text-[var(--color-muted-foreground)] mt-1">
+        Pensamiento computacional y lógica de programación.
+      </p>
 
-        {/* Progreso */}
-        <motion.div variants={item}>
-          <Card>
-            <CardHeader
-              title="Progreso de hoy"
-              subtitle="Sigue practicando 💪"
-            />
-            <CardContent>
-              <ProgressBar value={progress} />
+      <div className="grid gap-4 sm:grid-cols-3 mt-6">
+        {cards.map((c) => (
+          <Link key={c.to} to={c.to} className="focus:outline-none">
+            <Card className="h-full">
+              <CardHeader title={c.title} />
+              <CardContent>
+                <p className="text-sm text-[var(--color-muted-foreground)]">{c.subtitle}</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </main>
+  );
+}
 
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => setProgress((p) => Math.max(0, p - 10))}
-                  className="
-                    px-3 py-1 rounded-lg transition
-                    bg-[var(--color-muted)]
-                    text-[var(--color-foreground)]
-                    border border-[var(--color-card-border)]
-                  "
-                >
-                  −10%
-                </button>
+function BackToCoder({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
 
-                <button
-                  onClick={() => setProgress((p) => Math.min(100, p + 10))}
-                  className="
-                    px-3 py-1 rounded-lg transition
-                    bg-[var(--color-primary)]
-                    text-[var(--color-primary-foreground)]
-                  "
-                >
-                  +10%
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => navigate("/coder")}
+        className="absolute top-3 right-3 sm:top-4 sm:right-6 z-10 px-3 py-1 rounded-lg border shadow-sm bg-white/90 border-[var(--color-coder-border)] text-[var(--color-coder-text)] text-sm font-semibold"
+      >
+        ⬅️ Volver
+      </button>
+      {children}
+    </div>
+  );
+}
 
-        {/* Módulos */}
-        <motion.div className="grid gap-3" variants={item}>
-          {/* Matemáticas */}
-          <motion.div variants={item}>
-            <Link
-              to="/math"
-              className="
-                block rounded-2xl px-4 py-4 shadow transition-transform hover:scale-[1.02] hover:shadow-md
-                bg-[var(--color-surface)] border-4 border-[var(--color-math-border)]
-              "
-            >
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-[var(--color-math-dot)]" />
-                <span className="font-semibold text-[var(--color-math-text)]">
-                  🧮 Matemáticas
-                </span>
-              </div>
-            </Link>
-          </motion.div>
-
-          {/* Ecología */}
-          <motion.div variants={item}>
-            <Link
-              to="/eco"
-              className="
-                block rounded-2xl px-4 py-3 shadow transition-transform hover:scale-[1.02] hover:shadow-md
-                bg-[var(--color-surface)] border-4 border-[var(--color-eco-border)]
-              "
-            >
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-[var(--color-eco-dot)]" />
-                <span className="font-semibold text-[var(--color-eco-text)]">
-                  🌿 Ecología
-                </span>
-              </div>
-            </Link>
-          </motion.div>
-
-          {/* Ciencias Naturales */}
-          <motion.div variants={item}>
-            <Link
-              to="/naturales"
-              className="
-                block rounded-2xl px-4 py-3 shadow transition-transform hover:scale-[1.02] hover:shadow-md
-                bg-[var(--color-surface)] border-4 border-sky-300
-              "
-            >
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-sky-500" />
-                <span className="font-semibold text-sky-700">
-                  🔬 Ciencias Naturales
-                </span>
-              </div>
-            </Link>
-          </motion.div>
-
-          {/* Programación */}
-          <motion.div variants={item}>
-            <Link
-              to="/coder"
-              className="
-                block rounded-2xl px-4 py-3 shadow transition-transform hover:scale-[1.02] hover:shadow-md
-                bg-[var(--color-surface)] border-4 border-[var(--color-coder-border)]
-              "
-            >
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-[var(--color-coder-dot)]" />
-                <span className="font-semibold text-[var(--color-coder-text)]">
-                  💻 Programación
-                </span>
-              </div>
-            </Link>
-          </motion.div>
-
-          {/* Inglés */}
-          <motion.div variants={item}>
-            <Link
-              to="/english"
-              className="
-                block rounded-2xl px-4 py-3 shadow transition-transform hover:scale-[1.02] hover:shadow-md
-                bg-[var(--color-surface)] border-4 border-[var(--color-english-border)]
-              "
-            >
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-[var(--color-english-dot)]" />
-                <span className="font-semibold text-[var(--color-english-text)]">
-                  🇬🇧 Inglés
-                </span>
-              </div>
-            </Link>
-          </motion.div>
-
-          {/* IA */}
-          <motion.div variants={item}>
-            <button
-              onClick={() => alert("Pronto 😉")}
-              className="
-                w-full rounded-2xl px-4 py-3 text-left shadow transition-transform hover:scale-[1.02] hover:shadow-md
-                bg-[var(--color-surface)] border-4 border-[var(--color-ai-border)]
-              "
-            >
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-[var(--color-ai-dot)]" />
-                <span className="font-semibold text-[var(--color-ai-text)]">
-                  🤖 Inteligencia Artificial
-                </span>
-              </div>
-            </button>
-          </motion.div>
-        </motion.div>
-      </motion.div>
-    </motion.div>
+export default function CoderHome() {
+  return (
+    <Routes>
+      <Route index element={<CoderLanding />} />
+      <Route path="atrapa-error" element={<BackToCoder><AtrapaError /></BackToCoder>} />
+      <Route path="carrera-lumi" element={<BackToCoder><CarreraLumi /></BackToCoder>} />
+      <Route path="camino-comandos" element={<BackToCoder><CaminoComandos /></BackToCoder>} />
+    </Routes>
   );
 }

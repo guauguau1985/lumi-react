@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export default function CarreraLumi() {
   const totalCasillas = 10;
   const [posicion, setPosicion] = useState(0);
-  const [pregunta, setPregunta] = useState('');
+  const [pregunta, setPregunta] = useState("");
   const [respuestaCorrecta, setRespuestaCorrecta] = useState(0);
   const [opciones, setOpciones] = useState<number[]>([]);
-  const [mensaje, setMensaje] = useState('');
+  const [mensaje, setMensaje] = useState("");
 
   const preguntas = [];
   for (let t = 5; t <= 6; t++) {
@@ -32,10 +32,10 @@ export default function CarreraLumi() {
 
   const verificarRespuesta = (resp: number) => {
     if (resp === respuestaCorrecta) {
-      setMensaje('¡Correcto! Lumi avanza 2 casillas.');
+      setMensaje("¡Correcto! Lumi avanza 2 casillas.");
       setPosicion(Math.min(posicion + 2, totalCasillas - 1));
     } else {
-      setMensaje('Uy... Lumi retrocede 1 casilla.');
+      setMensaje("Uy... Lumi retrocede 1 casilla.");
       setPosicion(Math.max(posicion - 1, 0));
     }
 
@@ -54,51 +54,39 @@ export default function CarreraLumi() {
   }, []);
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#ecfdf5', textAlign: 'center', padding: '20px', minHeight: '100vh' }}>
-      <h1 style={{ color: '#065f46' }}>🏁 Carrera de Lumi al parque</h1>
+    <div className="min-h-svh bg-emerald-50 text-center px-4 py-5">
+      <h1 className="text-xl sm:text-2xl font-extrabold text-emerald-800">🏁 Carrera de Lumi al parque</h1>
 
-      <div style={{ display: 'flex', justifyContent: 'center', margin: '30px 0' }}>
+      <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 justify-items-center max-w-md sm:max-w-2xl mx-auto my-6">
         {[...Array(totalCasillas)].map((_, i) => (
-          <div key={i} style={{
-            width: '60px',
-            height: '60px',
-            margin: '5px',
-            backgroundColor: '#d1fae5',
-            border: '2px solid #10b981',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '18px',
-            position: 'relative'
-          }}>
+          <div
+            key={i}
+            className="relative w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-base sm:text-lg bg-emerald-100 border-2 border-emerald-500 rounded-md"
+          >
             {i === posicion && (
-              <img src="/img/lumi/feliz.png" alt="Lumi" style={{ position: 'absolute', top: '-50px', width: '50px' }} />
+              <img src="/img/lumi/feliz.png" alt="Lumi" className="absolute -top-8 w-10 sm:w-12" />
             )}
             {i + 1}
           </div>
         ))}
       </div>
 
-      <div style={{ fontSize: '24px', margin: '20px' }}>{pregunta && `¿Cuánto es ${pregunta}?`}</div>
+      <div className="text-lg sm:text-xl my-4">{pregunta && `¿Cuánto es ${pregunta}?`}</div>
 
-      <div>
+      <div className="flex flex-wrap justify-center gap-2">
         {opciones.map((num, i) => (
-          <button key={i} onClick={() => verificarRespuesta(num)} style={btnStyle}>{num}</button>
+          <button
+            key={i}
+            type="button"
+            onClick={() => verificarRespuesta(num)}
+            className="bg-emerald-400 hover:bg-emerald-500 text-white rounded-md px-5 py-2 text-base sm:text-lg transition-colors"
+          >
+            {num}
+          </button>
         ))}
       </div>
 
-      <div style={{ marginTop: '20px', fontSize: '20px' }}>{mensaje}</div>
+      <div className="mt-5 text-lg sm:text-xl">{mensaje}</div>
     </div>
   );
 }
-
-const btnStyle: React.CSSProperties = {
-  backgroundColor: '#34d399',
-  color: 'white',
-  border: 'none',
-  borderRadius: '5px',
-  padding: '10px 20px',
-  margin: '10px',
-  fontSize: '18px',
-  cursor: 'pointer'
-};
