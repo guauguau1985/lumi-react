@@ -7,6 +7,16 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
 const CURSOS = ['3° básico', '4° básico', '5° básico', '6° básico', '7° básico', '8° básico'];
 
+function LumiFace({ className }: { className: string }) {
+  return (
+    <img
+      src={`${import.meta.env.BASE_URL}img/lumi/logo.png`}
+      alt="Lumi"
+      className={`rounded-full object-cover flex-shrink-0 ${className}`}
+    />
+  );
+}
+
 interface Message {
   id: string;
   role: 'user' | 'lumi';
@@ -113,7 +123,7 @@ export default function TareaShell() {
       {/* Header */}
       <header className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4 flex-shrink-0 shadow-sm flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-violet-100 flex items-center justify-center text-xl">🌱</div>
+          <LumiFace className="w-9 h-9" />
           <div>
             <h1 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">Lumi — Ayúdame con mi tarea</h1>
             <p className="text-xs text-green-500 font-medium">
@@ -134,7 +144,7 @@ export default function TareaShell() {
       {!curso ? (
         /* Selección de curso */
         <main className="flex-1 overflow-y-auto px-4 py-8 flex flex-col items-center justify-center text-center gap-6">
-          <div className="w-14 h-14 rounded-full bg-violet-100 flex items-center justify-center text-3xl">🌱</div>
+          <LumiFace className="w-16 h-16" />
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-gray-900">¡Hola! Soy Lumi 🌱</h2>
             <p className="mt-2 text-sm sm:text-base text-gray-600 max-w-sm">
@@ -167,7 +177,7 @@ export default function TareaShell() {
             {messages.map(msg => (
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.role === 'lumi' && (
-                  <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-base mr-2 flex-shrink-0 self-end">🌱</div>
+                  <LumiFace className="w-8 h-8 mr-2 self-end" />
                 )}
                 <div className={`max-w-[80%] sm:max-w-[70%] ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
                   <div className={`rounded-2xl px-4 py-3 text-sm whitespace-pre-line leading-relaxed shadow-sm ${
@@ -187,7 +197,7 @@ export default function TareaShell() {
 
             {loading && (
               <div className="flex justify-start">
-                <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center text-base mr-2 flex-shrink-0 self-end">🌱</div>
+                <LumiFace className="w-8 h-8 mr-2 self-end" />
                 <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
                   <div className="flex gap-1.5 items-center">
                     {[0, 150, 300].map(delay => (
