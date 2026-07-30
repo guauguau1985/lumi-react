@@ -10,7 +10,7 @@ function HabitIntro({ onNext }: { onNext: () => void }) {
   return (
     <SlideCard>
       <motion.img
-        src="/img/lumi/feliz.png"
+        src="/img/lumi/body.png"
         alt="Lumi"
         className="w-28 h-28 object-contain"
         animate={{ rotate: [-4, 4, -4] }}

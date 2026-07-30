@@ -252,7 +252,7 @@ export default function ParentReportPage() {
       <header className="border-b border-slate-100 bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <img src="/img/lumi/logo.png" alt="Lumi" className="h-11 w-11 object-contain" />
+            <img src="/img/lumi/face.png" alt="Lumi" className="h-11 w-11 object-contain" />
             <div>
               <p className="text-xl font-black tracking-tight text-violet-700">Lumi Familia</p>
               <p className="flex items-center gap-1 text-xs font-semibold text-slate-500">
@@ -289,7 +289,7 @@ export default function ParentReportPage() {
         {loading ? (
           <div className="grid min-h-[60svh] place-items-center">
             <img
-              src="/img/lumi/pensativa.png"
+              src="/img/lumi/face.png"
               alt="Lumi cargando"
               className="h-24 w-24 animate-pulse object-contain"
             />

@@ -27,4 +27,17 @@ navigation, upload state, staged task flow, tutor conversation and parent summar
 - Assets: generated child avatars and Tabler interface icons are used; no placeholder
   artwork is present in the implemented flows.
 
+## Lumi character refresh
+
+- Source assets: the supplied transparent face and full-body Lumi artwork.
+- Placement: face artwork is used in compact identity, loading and tutor states;
+  full-body artwork is used for celebrations, game characters and the task sidebar.
+- Backward compatibility: the legacy Lumi asset URLs also resolve to the new artwork.
+- App identity: the favicon and installable-app icons now use the new Lumi face.
+- Visual comparison: the source assets and local access/task screenshots were reviewed
+  side by side at the same desktop viewport.
+- Fit and finish: transparent edges, proportions, cropping and legibility pass in both
+  compact and full-body placements.
+- Production build: passed.
+
 final result: passed

@@ -470,7 +470,7 @@ export default function TareaShell() {
       <div className="mx-auto flex min-h-[calc(100svh-56px)] max-w-[1500px]">
         <aside className="hidden w-64 shrink-0 border-r border-violet-100 bg-white px-5 py-6 lg:flex lg:flex-col">
           <Link to="/" className="flex items-center gap-3 px-2">
-            <img src="/img/lumi/logo.png" alt="Lumi" className="h-12 w-12 object-contain" />
+            <img src="/img/lumi/face.png" alt="Lumi" className="h-12 w-12 object-contain" />
             <span className="text-3xl font-black tracking-tight text-violet-700">Lumi</span>
           </Link>
 
@@ -504,7 +504,7 @@ export default function TareaShell() {
               Estoy aquí para ayudarte
             </p>
             <img
-              src="/img/lumi/pensativa.png"
+              src="/img/lumi/body.png"
               alt="Lumi"
               className="mx-auto mt-2 h-28 object-contain"
             />
@@ -515,7 +515,7 @@ export default function TareaShell() {
           <header className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-violet-100 bg-white px-4 py-4 shadow-sm sm:px-6">
             <div className="flex items-center gap-3">
               <img
-                src="/img/lumi/logo.png"
+                src="/img/lumi/face.png"
                 alt="Lumi"
                 className="h-11 w-11 rounded-2xl object-contain"
               />
@@ -658,7 +658,7 @@ export default function TareaShell() {
                     {task.instructions_summary && (
                       <div className="flex gap-3">
                         <img
-                          src="/img/lumi/logo.png"
+                          src="/img/lumi/face.png"
                           alt="Lumi"
                           className="h-11 w-11 shrink-0 rounded-2xl object-contain"
                         />
@@ -700,7 +700,7 @@ export default function TareaShell() {
                           >
                             {message.role === 'tutor' && (
                               <img
-                                src="/img/lumi/logo.png"
+                                src="/img/lumi/face.png"
                                 alt=""
                                 className="h-8 w-8 shrink-0 rounded-xl object-contain"
                               />

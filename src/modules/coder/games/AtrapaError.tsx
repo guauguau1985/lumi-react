@@ -42,7 +42,7 @@ export default function AtrapaError() {
 
       <div className="px-4 py-5">
         <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
-          <img src="/img/Lumi_confundida.png" alt="Lumi confundida" className="w-16 sm:w-20" />
+          <img src="/img/lumi/face.png" alt="Lumi confundida" className="w-16 sm:w-20" />
           <div className="bg-emerald-100 rounded-xl px-4 py-2 max-w-xs text-sm sm:text-base text-left">
             ¡Oh no! Algo no funciona. Toca el paso equivocado.
           </div>

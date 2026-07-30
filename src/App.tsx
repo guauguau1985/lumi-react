@@ -35,7 +35,7 @@ export default function App() {
         fallback={
           <div className="grid min-h-[50svh] place-items-center">
             <img
-              src="/img/lumi/pensativa.png"
+              src="/img/lumi/face.png"
               alt="Lumi cargando"
               className="h-24 w-24 animate-pulse object-contain"
             />

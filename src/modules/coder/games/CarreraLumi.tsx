@@ -64,7 +64,7 @@ export default function CarreraLumi() {
             className="relative w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-base sm:text-lg bg-emerald-100 border-2 border-emerald-500 rounded-md"
           >
             {i === posicion && (
-              <img src="/img/lumi/feliz.png" alt="Lumi" className="absolute -top-8 w-10 sm:w-12" />
+              <img src="/img/lumi/body.png" alt="Lumi" className="absolute -top-8 w-10 sm:w-12" />
             )}
             {i + 1}
           </div>

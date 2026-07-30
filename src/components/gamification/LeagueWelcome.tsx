@@ -32,7 +32,7 @@ export function LeagueWelcome() {
                 <IconTrophy size={46} />
               </span>
               <motion.img
-                src="/img/lumi/feliz.png"
+                src="/img/lumi/body.png"
                 alt="Lumi celebrando"
                 className="absolute -bottom-2 -right-7 h-16 w-16 object-contain"
                 animate={{ y: [0, -5, 0] }}

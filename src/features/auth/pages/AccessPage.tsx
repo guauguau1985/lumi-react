@@ -183,7 +183,7 @@ export default function AccessPage() {
     <main className="min-h-svh bg-[radial-gradient(circle_at_top,_#f0e9ff_0,_#f8f8fd_42%,_#eefaf4_100%)] px-4 py-8 text-slate-900">
       <div className="mx-auto w-full max-w-md">
         <div className="mb-6 flex items-center justify-center gap-3">
-          <img src="/img/lumi/logo.png" alt="Lumi" className="h-14 w-14 object-contain" />
+          <img src="/img/lumi/face.png" alt="Lumi" className="h-14 w-14 object-contain" />
           <div>
             <p className="text-3xl font-black tracking-tight text-violet-700">Lumi</p>
             <p className="text-xs font-semibold text-violet-500">Aprende a tu manera</p>

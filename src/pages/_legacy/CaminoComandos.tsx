@@ -60,7 +60,7 @@ export default function CaminoComandos() {
           }}>
             {i === lumiPos ? (
               <img
-                src="/img/lumi/feliz.png"
+                src="/img/lumi/body.png"
                 alt="Lumi"
                 style={{ width: '50px', position: 'absolute' }}
               />

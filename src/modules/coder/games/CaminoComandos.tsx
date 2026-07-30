@@ -47,7 +47,7 @@ export default function CaminoComandos() {
             className="relative aspect-square flex items-center justify-center text-lg sm:text-2xl bg-emerald-100 border-2 border-emerald-500 rounded-md"
           >
             {i === lumiPos ? (
-              <img src="/img/lumi/feliz.png" alt="Lumi" className="absolute w-3/4" />
+              <img src="/img/lumi/body.png" alt="Lumi" className="absolute w-3/4" />
             ) : (
               cell
             )}

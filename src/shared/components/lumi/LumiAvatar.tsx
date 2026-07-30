@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 const ASSET_BASE = `${import.meta.env.BASE_URL}img/lumi/`;
 
 const srcByMood = {
-  feliz:     `${ASSET_BASE}feliz.png`,
-  confundida:`${ASSET_BASE}confundida.png`,
-  pensativa: `${ASSET_BASE}pensativa.png`,
+  feliz:     `${ASSET_BASE}face.png`,
+  confundida:`${ASSET_BASE}face.png`,
+  pensativa: `${ASSET_BASE}face.png`,
 } as const;
 
 type Mood = keyof typeof srcByMood;

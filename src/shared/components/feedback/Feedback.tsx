@@ -7,8 +7,8 @@ import { AnimatePresence, motion } from "framer-motion";
 // Prefijo para imágenes públicas
 const ASSET_BASE = `${import.meta.env.BASE_URL}img/lumi/`;
 
-const LumiFeliz = `${ASSET_BASE}emocionada.png`;
-const LumiPensativa = `${ASSET_BASE}pensativa.png`;
+const LumiFeliz = `${ASSET_BASE}body.png`;
+const LumiPensativa = `${ASSET_BASE}face.png`;
 
 type Props = {
   state: FeedbackState;

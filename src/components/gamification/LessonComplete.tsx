@@ -126,7 +126,7 @@ export function LessonComplete() {
             className="flex w-full max-w-sm flex-col items-center gap-5 rounded-3xl border border-gray-700 bg-gray-900 px-6 py-8 shadow-2xl"
           >
             <motion.img
-              src="/img/lumi/feliz.png"
+              src="/img/lumi/body.png"
               alt="Lumi feliz"
               className="h-24 w-24 object-contain"
               animate={{ y: [0, -10, 0, -6, 0] }}

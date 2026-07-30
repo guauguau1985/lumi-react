@@ -16,7 +16,7 @@ const LumiStatusBar: React.FC = () => {
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 overflow-hidden rounded-full bg-white flex-shrink-0">
             <img
-              src={`${import.meta.env.BASE_URL}img/lumi/logo.png`}
+              src={`${import.meta.env.BASE_URL}img/lumi/face.png`}
               alt="Lumi"
               className="h-full w-full object-contain"
             />

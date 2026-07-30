@@ -12,7 +12,7 @@ export function ProtectedRoute({
     return (
       <div className="grid min-h-svh place-items-center bg-[#f7f7fc]">
         <img
-          src="/img/lumi/pensativa.png"
+          src="/img/lumi/face.png"
           alt="Lumi cargando"
           className="h-24 w-24 animate-pulse object-contain"
         />
