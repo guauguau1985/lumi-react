@@ -1,48 +1,160 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { Suspense, lazy, type ReactNode } from 'react'
+import Home from '@/app/routes/Home'
+import { modules } from '@/shared/config/modules'
+import LumiCelebrationOverlay from '@/shared/components/lumi/LumiCelebrationOverlay'
+import LumiStatusBar from '@/shared/components/lumi/LumiStatusBar'
+import { useAuth } from '@/features/auth/AuthContext'
+import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 
-import Home from "@/app/routes/Home";
-import { modules } from "@/shared/config/modules";
+const EcoModule = lazy(() => import('@/modules/eco/pages/EcoHome'))
+const MathModule = lazy(() => import('@/modules/math/pages/MathShell'))
+const NaturalesModule = lazy(() => import('@/modules/naturales/NaturalesShell'))
+const CoderModule = lazy(() => import('@/modules/coder/pages/CoderHome'))
+const AIModule = lazy(() => import('@/modules/ai/AIShell'))
+const TareaModule = lazy(() => import('@/modules/tarea/pages/TareaShell'))
+const ParentReport = lazy(() => import('@/modules/ai/pages/ParentReportPage'))
+const AccessPage = lazy(() => import('@/features/auth/pages/AccessPage'))
+const ParentGateway = lazy(() => import('@/features/auth/pages/ParentGateway'))
+const LeaguePage = lazy(() => import('@/modules/liga/LeaguePage'))
 
-// Gamificación global
-import LumiCelebrationOverlay from "@/shared/components/lumi/LumiCelebrationOverlay";
-import LumiStatusBar from "@/shared/components/lumi/LumiStatusBar";
-
-const EcoModule      = lazy(() => import("@/modules/eco/pages/EcoHome"));
-const MathModule     = lazy(() => import("@/modules/math/pages/MathShell"));
-const NaturalesModule= lazy(() => import("@/modules/naturales/NaturalesShell"));
-const CoderModule    = lazy(() => import("@/modules/coder/pages/CoderHome"));
-const AIModule       = lazy(() => import("@/modules/ai/AIShell"));
-const TareaModule    = lazy(() => import("@/modules/tarea/pages/TareaShell"));
-const ParentReport   = lazy(() => import("@/modules/ai/pages/ParentReportPage"));
+function StudentRoute({ children }: { children: ReactNode }) {
+  return <ProtectedRoute role="student">{children}</ProtectedRoute>
+}
 
 export default function App() {
+  const { session, profile } = useAuth()
+  const showStudentChrome = Boolean(session && profile?.role === 'student')
+
   return (
     <>
-      {/* 🎉 Confeti global */}
-      <LumiCelebrationOverlay />
+      {showStudentChrome && <LumiCelebrationOverlay />}
+      {showStudentChrome && <LumiStatusBar />}
 
-      {/* 💚 Barra global de nivel/XP/monedas */}
-      <LumiStatusBar />
-
-      {/* 📌 Rutas principales */}
-      <Suspense fallback={<div className="p-6">Cargando…</div>}>
+      <Suspense
+        fallback={
+          <div className="grid min-h-[50svh] place-items-center">
+            <img
+              src="/img/lumi/pensativa.png"
+              alt="Lumi cargando"
+              className="h-24 w-24 animate-pulse object-contain"
+            />
+          </div>
+        }
+      >
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/acceso" element={<AccessPage />} />
+          <Route
+            path="/"
+            element={
+              <StudentRoute>
+                <Home />
+              </StudentRoute>
+            }
+          />
 
-          {modules.eco && <Route path="/eco/*" element={<EcoModule />} />}
-          {modules.math && <Route path="/math/*" element={<MathModule />} />}
-          {modules.naturales && (
-            <Route path="/naturales/*" element={<NaturalesModule />} />
+          {modules.eco && (
+            <Route
+              path="/eco/*"
+              element={
+                <StudentRoute>
+                  <EcoModule />
+                </StudentRoute>
+              }
+            />
           )}
-          {modules.coder && <Route path="/coder/*" element={<CoderModule />} />}
-          {modules.ai    && <Route path="/ai/*"    element={<AIModule />}    />}
-          {modules.tarea && <Route path="/tarea/*" element={<TareaModule />} />}
-          <Route path="/reporte-padres" element={<ParentReport />} />
+          {modules.math && (
+            <Route
+              path="/math/*"
+              element={
+                <StudentRoute>
+                  <MathModule />
+                </StudentRoute>
+              }
+            />
+          )}
+          {modules.naturales && (
+            <Route
+              path="/naturales/*"
+              element={
+                <StudentRoute>
+                  <NaturalesModule />
+                </StudentRoute>
+              }
+            />
+          )}
+          {modules.coder && (
+            <Route
+              path="/coder/*"
+              element={
+                <StudentRoute>
+                  <CoderModule />
+                </StudentRoute>
+              }
+            />
+          )}
+          {modules.ai && (
+            <Route
+              path="/ai/*"
+              element={
+                <StudentRoute>
+                  <AIModule />
+                </StudentRoute>
+              }
+            />
+          )}
+          {modules.tarea && (
+            <Route
+              path="/tarea/*"
+              element={
+                <StudentRoute>
+                  <TareaModule />
+                </StudentRoute>
+              }
+            />
+          )}
+          <Route
+            path="/liga"
+            element={
+              <StudentRoute>
+                <LeaguePage />
+              </StudentRoute>
+            }
+          />
+          <Route
+            path="/familia"
+            element={
+              <StudentRoute>
+                <ParentGateway />
+              </StudentRoute>
+            }
+          />
+          <Route
+            path="/reporte-padres"
+            element={
+              <ProtectedRoute role="parent">
+                <ParentReport />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route
+            path="*"
+            element={
+              <Navigate
+                to={
+                  !session
+                    ? '/acceso'
+                    : profile?.role === 'parent'
+                      ? '/reporte-padres'
+                      : '/'
+                }
+                replace
+              />
+            }
+          />
         </Routes>
       </Suspense>
     </>
-  );
+  )
 }

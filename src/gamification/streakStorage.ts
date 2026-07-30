@@ -79,24 +79,29 @@ export function actualizarRachaHoy(prev: StreakState): StreakState {
 }
 
 export function syncStreakToSupabase(streak: StreakState): void {
-  void supabase
-    .from("user_streaks")
-    .upsert(
-      {
-        device_id: getDeviceId(),
-        racha_actual: streak.rachaActual,
-        racha_maxima: streak.rachaMaxima,
-        ultimo_dia_activo: streak.ultimoDiaActivo,
-        dias_meta: streak.diasMeta,
-        freeze_disponibles: streak.freezeDisponibles,
-        habito_configurado: streak.habitoConfigurado,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "device_id" }
-    )
-    .then(({ error }) => {
-      if (error) console.error("[Lumi] user_streaks upsert error:", error.message);
-    });
+  void supabase.auth.getSession().then(({ data }) => {
+    const userId = data.session?.user.id;
+    if (!userId) return;
+    void supabase
+      .from("user_streaks")
+      .upsert(
+        {
+          user_id: userId,
+          device_id: getDeviceId(),
+          racha_actual: streak.rachaActual,
+          racha_maxima: streak.rachaMaxima,
+          ultimo_dia_activo: streak.ultimoDiaActivo,
+          dias_meta: streak.diasMeta,
+          freeze_disponibles: streak.freezeDisponibles,
+          habito_configurado: streak.habitoConfigurado,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      )
+      .then(({ error }) => {
+        if (error) console.error("[Lumi] user_streaks upsert error:", error.message);
+      });
+  });
 }
 
 /** Retorna los 7 días de la semana actual con su estado para el tracker visual */

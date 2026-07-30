@@ -3,7 +3,8 @@ export type ModuleId =
   | "programacion"
   | "inteligenciaArtificial"
   | "historiasLumi"
-  | "educacionAmbiental";
+  | "educacionAmbiental"
+  | "tareas";
 
 export type GameEventType =
   | "CORRECT_ANSWER"

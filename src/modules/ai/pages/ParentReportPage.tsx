@@ -1,483 +1,719 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useLearningProfile } from '@/shared/hooks/useLearningProfile'
-import type { StoredProfile } from '@/shared/hooks/useLearningProfile'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  IconAlertTriangle,
+  IconBrain,
+  IconChevronDown,
+  IconCircleCheck,
+  IconClock,
+  IconFileText,
+  IconFlame,
+  IconHelpCircle,
+  IconKey,
+  IconLock,
+  IconLogout,
+  IconRefresh,
+  IconSettings,
+  IconShieldCheck,
+  IconSparkles,
+  IconStar,
+  IconTargetArrow,
+  IconTrash,
+  IconUsers,
+} from '@tabler/icons-react'
+import { useAuth, type LumiProfile } from '@/features/auth/AuthContext'
+import { supabase } from '@/shared/lib/supabaseClient'
+import type { Tables } from '@/shared/lib/database.types'
+import { GRADES, SUBJECTS } from '@/modules/tarea/data/curriculumContext'
 
-// ─── helpers ────────────────────────────────────────────────────────────────
+type HomeworkTask = Tables<'homework_tasks'>
+type LearningProfile = Tables<'learning_profile'>
 
-function confidenceLabel(c: StoredProfile['data_confidence']) {
-  return c === 'alta' ? 'Alta' : c === 'media' ? 'Media' : 'Baja'
-}
-
-function confidenceColor(c: StoredProfile['data_confidence']) {
-  return c === 'alta'
-    ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-    : c === 'media'
-    ? 'bg-amber-100 text-amber-800 border-amber-200'
-    : 'bg-slate-100 text-slate-600 border-slate-200'
-}
-
-function confidenceDesc(c: StoredProfile['data_confidence'], total: number) {
-  if (c === 'alta') return `Con ${total} sesiones registradas, el análisis es muy confiable.`
-  if (c === 'media') return `Con ${total} sesiones registradas, el análisis es moderadamente confiable. Sigue usando Lumi para mejorar la precisión.`
-  return `Solo hay ${total} sesión${total === 1 ? '' : 'es'} registrada${total === 1 ? '' : 's'}. Las recomendaciones son preliminares y mejorarán con más uso.`
-}
-
-function styleLabel(s: StoredProfile['learning_style']) {
-  if (!s) return '—'
-  return s === 'visual' ? 'Visual'
-    : s === 'texto' ? 'Lectura/texto'
-    : s === 'interactivo' ? 'Interactivo'
-    : 'Mixto (variado)'
-}
-
-function styleDesc(s: StoredProfile['learning_style']) {
-  if (!s) return 'Aún no hay suficientes datos para determinar el estilo de aprendizaje.'
-  if (s === 'visual') return 'Aprende mejor con imágenes, diagramas y ejercicios visuales.'
-  if (s === 'texto') return 'Procesa bien la información escrita y las explicaciones textuales.'
-  if (s === 'interactivo') return 'Aprende haciendo — responde muy bien a ejercicios prácticos e interactivos.'
-  return 'Se adapta bien a distintos formatos. Disfruta variedad en los ejercicios.'
-}
-
-function sessionLabel(s: StoredProfile['session_preference']) {
-  if (!s) return '—'
-  return s === 'corta' ? 'Corta (menos de 15 min)' : s === 'media' ? 'Media (15–30 min)' : 'Larga (más de 30 min)'
-}
-
-function sessionTip(s: StoredProfile['session_preference']) {
-  if (!s) return 'Aún no hay datos de sesiones completadas.'
-  if (s === 'corta') return 'Prefiere sesiones breves y frecuentes. Varias veces al día funciona mejor que una sesión larga.'
-  if (s === 'media') return 'Rinde bien en sesiones de 15 a 30 minutos. Un bloque diario es ideal.'
-  return 'Puede mantener concentración en sesiones largas. Útil para repasos profundos.'
-}
-
-// ─── sub-componentes ─────────────────────────────────────────────────────────
-
-function Section({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl border border-[var(--color-card-border)] bg-[var(--color-surface)] p-5 space-y-3">
-      <h2 className="flex items-center gap-2 text-sm font-bold text-[var(--color-foreground)] uppercase tracking-wide">
-        <span>{icon}</span>
-        {title}
-      </h2>
-      {children}
-    </div>
-  )
-}
-
-function TagList({ items, emptyText, color }: { items: string[]; emptyText: string; color: string }) {
-  if (items.length === 0) {
-    return <p className="text-sm text-[var(--color-muted-foreground)] italic">{emptyText}</p>
+interface ProfileResponse {
+  enabled: boolean
+  profile: LearningProfile | null
+  summary: string | null
+  recommendations: string[]
+  adaptive_levels?: Record<string, number>
+  recent_tasks?: HomeworkTask[]
+  stats?: {
+    total_events: number
+    completed_activities: number
+    total_tasks: number
+    completed_tasks: number
+    average_session_seconds: number
+    xp_total: number
+    level: number
+    streak_days: number
   }
-  return (
-    <div className="flex flex-wrap gap-2">
-      {items.map((item) => (
-        <span key={item} className={`px-3 py-1 rounded-full text-xs font-medium border ${color}`}>
-          {item}
-        </span>
-      ))}
-    </div>
-  )
+  error?: string
 }
 
-// ─── pantalla de consentimiento ───────────────────────────────────────────────
-
-function ConsentScreen({ onEnable, isLoading }: { onEnable: () => void; isLoading: boolean }) {
-  return (
-    <div className="max-w-lg mx-auto space-y-6 text-center">
-      <div className="text-5xl">📊</div>
-      <div>
-        <h1 className="text-xl font-bold text-[var(--color-foreground)]">
-          Reporte de aprendizaje
-        </h1>
-        <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
-          Analiza el progreso, el estilo de aprendizaje y las áreas de mejora de tu hijo/a.
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-[var(--color-card-border)] bg-[var(--color-surface)] p-5 text-left space-y-3">
-        <p className="text-sm font-semibold text-[var(--color-foreground)]">¿Qué datos se analizan?</p>
-        <ul className="text-sm text-[var(--color-muted-foreground)] space-y-1.5">
-          <li>• Resultados de ejercicios (aciertos, errores, niveles)</li>
-          <li>• Tiempo y frecuencia de cada sesión</li>
-          <li>• Horarios de mejor rendimiento</li>
-          <li>• Módulos con fortalezas o dificultades</li>
-        </ul>
-        <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-          <p className="text-xs text-amber-800">
-            Los datos se almacenan de forma segura en Supabase y no se comparten con terceros.
-            Puedes desactivar el perfil en cualquier momento desde esta pantalla.
-          </p>
-        </div>
-      </div>
-
-      <button
-        onClick={onEnable}
-        disabled={isLoading}
-        className="
-          w-full py-3 rounded-2xl font-bold text-white text-sm
-          bg-[var(--color-ai-dot)]
-          disabled:opacity-50 disabled:cursor-not-allowed
-          transition-opacity
-        "
-      >
-        {isLoading ? 'Activando...' : 'Activar perfil de aprendizaje'}
-      </button>
-      <p className="text-xs text-[var(--color-muted-foreground)]">
-        Al activar, aceptas el análisis de los datos de uso de Lumi para generar este reporte.
-      </p>
-    </div>
-  )
+function formatDuration(seconds: number) {
+  if (!seconds) return 'Sin datos'
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) return `${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest ? `${hours} h ${rest} min` : `${hours} h`
 }
 
-// ─── pantalla de carga ────────────────────────────────────────────────────────
-
-function ComputingScreen() {
-  return (
-    <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-      <div className="flex gap-1.5">
-        {[0, 150, 300].map((d) => (
-          <span
-            key={d}
-            className="w-3 h-3 rounded-full bg-[var(--color-ai-dot)] animate-bounce"
-            style={{ animationDelay: `${d}ms` }}
-          />
-        ))}
-      </div>
-      <p className="text-sm text-[var(--color-muted-foreground)]">Analizando datos de aprendizaje…</p>
-      <p className="text-xs text-[var(--color-muted-foreground)]">Esto puede tomar unos segundos</p>
-    </div>
-  )
+function subjectLabel(value: string) {
+  return SUBJECTS.find((subject) => subject.value === value)?.label ?? value
 }
 
-// ─── página principal ─────────────────────────────────────────────────────────
+function gradeLabel(value: string | null) {
+  return GRADES.find((grade) => grade.value === value)?.label ?? 'Curso no indicado'
+}
 
 export default function ParentReportPage() {
-  const { profile, summary, recommendations, isEnabled, isLoading, isComputing, error, compute, enable, disable, deleteProfile } =
-    useLearningProfile()
+  const { profile: parentProfile, signOut } = useAuth()
+  const [children, setChildren] = useState<LumiProfile[]>([])
+  const [selectedId, setSelectedId] = useState('')
+  const [tasks, setTasks] = useState<HomeworkTask[]>([])
+  const [report, setReport] = useState<ProfileResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState('')
+  const [showSettings, setShowSettings] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [passwordMessage, setPasswordMessage] = useState('')
 
-  const [showDisableConfirm, setShowDisableConfirm] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deleteStep, setDeleteStep] = useState<1 | 2>(1)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const selectedChild = children.find((child) => child.id === selectedId) ?? null
 
-  // Una vez habilitado y cargado desde DB, calcular automáticamente si no hay datos de sesión actuales
-  useEffect(() => {
-    if (isEnabled && !isLoading && !isComputing) {
-      compute()
+  const loadChildren = useCallback(async () => {
+    setLoading(true)
+    setError('')
+    try {
+      await supabase.rpc('claim_family_links')
+      const { data: links, error: linksError } = await supabase
+        .from('family_links')
+        .select('child_id')
+      if (linksError) throw linksError
+      const childIds = (links ?? []).map((item) => item.child_id)
+      if (!childIds.length) {
+        setChildren([])
+        setSelectedId('')
+        return
+      }
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', childIds)
+        .eq('role', 'student')
+      if (profilesError) throw profilesError
+      setChildren(profiles ?? [])
+      setSelectedId((current) =>
+        current && childIds.includes(current) ? current : profiles?.[0]?.id ?? ''
+      )
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : 'No pudimos encontrar los perfiles familiares.'
+      )
+    } finally {
+      setLoading(false)
     }
-    // Solo al montar con perfil habilitado
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEnabled, isLoading])
+  }, [])
 
-  const handleEnable = async () => {
-    await enable()
-    await compute()
+  const loadReport = useCallback(async (childId: string) => {
+    if (!childId) return
+    setRefreshing(true)
+    setError('')
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session) throw new Error('Tu sesión terminó. Vuelve a ingresar.')
+      const [taskResult, profileResult] = await Promise.all([
+        supabase
+          .from('homework_tasks')
+          .select('*')
+          .eq('child_id', childId)
+          .order('created_at', { ascending: false })
+          .limit(8),
+        fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/compute-profile`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ child_id: childId }),
+        }),
+      ])
+      if (taskResult.error) throw taskResult.error
+      const payload = (await profileResult.json()) as ProfileResponse
+      if (!profileResult.ok) throw new Error(payload.error ?? 'No pudimos calcular el reporte.')
+      setTasks(payload.recent_tasks ?? taskResult.data ?? [])
+      setReport(payload)
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : 'No pudimos actualizar el reporte.'
+      )
+    } finally {
+      setRefreshing(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadChildren()
+  }, [loadChildren])
+
+  useEffect(() => {
+    if (selectedId) void loadReport(selectedId)
+  }, [selectedId, loadReport])
+
+  const setLearningEnabled = async (enabled: boolean) => {
+    if (!selectedId) return
+    setRefreshing(true)
+    const { error: requestError } = await supabase.rpc('set_child_learning_enabled', {
+      p_child_id: selectedId,
+      p_enabled: enabled,
+    })
+    if (requestError) {
+      setError(requestError.message)
+    } else {
+      await loadReport(selectedId)
+    }
+    setRefreshing(false)
   }
 
-  const handleDisable = async () => {
-    await disable()
-    setShowDisableConfirm(false)
+  const deleteLearningData = async () => {
+    if (!selectedId) return
+    setRefreshing(true)
+    const { error: requestError } = await supabase.rpc('delete_child_learning_data', {
+      p_child_id: selectedId,
+    })
+    if (requestError) {
+      setError(requestError.message)
+    } else {
+      setTasks([])
+      setReport(null)
+      setConfirmDelete(false)
+      await loadReport(selectedId)
+    }
+    setRefreshing(false)
   }
 
-  const handleDelete = async () => {
-    setIsDeleting(true)
-    await deleteProfile()
-    setIsDeleting(false)
-    setShowDeleteConfirm(false)
-    setDeleteStep(1)
+  const changeChildPassword = async () => {
+    if (!selectedId || newPassword.length < 8) {
+      setPasswordMessage('La nueva contraseña debe tener al menos 8 caracteres.')
+      return
+    }
+    setRefreshing(true)
+    setPasswordMessage('')
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session) throw new Error('Tu sesión terminó.')
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/family-admin`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ child_id: selectedId, password: newPassword }),
+        }
+      )
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error ?? 'No pudimos cambiarla.')
+      setNewPassword('')
+      setPasswordMessage('Contraseña actualizada. El estudiante ya puede usarla.')
+    } catch (caught) {
+      setPasswordMessage(
+        caught instanceof Error ? caught.message : 'No pudimos cambiar la contraseña.'
+      )
+    } finally {
+      setRefreshing(false)
+    }
   }
 
-  const lastUpdated = profile?.last_updated
-    ? new Date(profile.last_updated).toLocaleDateString('es-CL', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : null
+  const stats = report?.stats
+  const latestTask = tasks[0]
+  const completedTasks = tasks.filter((task) => task.status === 'completed').length
+  const statusHelp = useMemo(() => {
+    const difficulties = report?.profile?.difficulties.length ?? 0
+    const blocks = report?.profile?.bloqueo_detectado.length ?? 0
+    if (blocks > 0) return { label: 'Necesita apoyo', color: 'text-red-700 bg-red-50' }
+    if (difficulties > 0) return { label: 'Moderado', color: 'text-amber-700 bg-amber-50' }
+    return { label: 'Autónomo', color: 'text-emerald-700 bg-emerald-50' }
+  }, [report])
 
   return (
-    <div className="min-h-svh bg-[var(--color-background)]">
-      {/* Header */}
-      <header className="flex items-center gap-3 px-4 py-3 border-b border-[var(--color-card-border)] bg-[var(--color-surface)]">
-        <Link
-          to="/"
-          className="px-3 py-1 rounded-lg border text-sm bg-[var(--color-surface)] border-[var(--color-card-border)] text-[var(--color-foreground)]"
-        >
-          ⬅️ Inicio
-        </Link>
-        <div>
-          <h1 className="text-base font-extrabold text-[var(--color-ai-text)]">
-            📊 Reporte de aprendizaje
-          </h1>
-          <p className="text-xs text-[var(--color-muted-foreground)]">Para padres y tutores</p>
+    <div className="min-h-svh bg-[#f7f8fc] text-slate-900">
+      <header className="border-b border-slate-100 bg-white">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <img src="/img/lumi/logo.png" alt="Lumi" className="h-11 w-11 object-contain" />
+            <div>
+              <p className="text-xl font-black tracking-tight text-violet-700">Lumi Familia</p>
+              <p className="flex items-center gap-1 text-xs font-semibold text-slate-500">
+                <IconLock size={13} /> Reporte privado para padres y tutores
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="hidden text-right sm:block">
+              <span className="block text-sm font-black">
+                {parentProfile?.nombre ?? 'Familia'}
+              </span>
+              <span className="block text-xs text-slate-400">{parentProfile?.email}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-600"
+            >
+              <IconLogout size={17} /> Salir
+            </button>
+          </div>
         </div>
       </header>
 
-      <div className="px-4 py-6 max-w-2xl mx-auto">
-        {/* Error global */}
+      <main className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-7">
         {error && (
-          <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <div className="mb-4 flex items-start gap-2 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+            <IconAlertTriangle size={19} className="mt-0.5 shrink-0" />
             {error}
           </div>
         )}
 
-        {/* Estado: cargando desde DB */}
-        {isLoading && (
-          <div className="flex justify-center py-16">
-            <div className="w-8 h-8 border-4 border-[var(--color-ai-dot)] border-t-transparent rounded-full animate-spin" />
+        {loading ? (
+          <div className="grid min-h-[60svh] place-items-center">
+            <img
+              src="/img/lumi/pensativa.png"
+              alt="Lumi cargando"
+              className="h-24 w-24 animate-pulse object-contain"
+            />
           </div>
-        )}
-
-        {/* Estado: no habilitado → pantalla de consentimiento */}
-        {!isLoading && isEnabled === false && (
-          <ConsentScreen onEnable={handleEnable} isLoading={isComputing} />
-        )}
-
-        {/* Estado: calculando con IA */}
-        {!isLoading && isEnabled && isComputing && !profile && (
-          <ComputingScreen />
-        )}
-
-        {/* Estado: perfil disponible */}
-        {!isLoading && isEnabled && profile && (
-          <div className="space-y-4">
-            {/* Cabecera del reporte */}
-            <div className="flex items-center justify-between">
+        ) : children.length === 0 ? (
+          <EmptyFamily onRefresh={() => void loadChildren()} />
+        ) : (
+          <>
+            <section className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
-                {lastUpdated && (
-                  <p className="text-xs text-[var(--color-muted-foreground)]">
-                    Actualizado: {lastUpdated}
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={compute}
-                disabled={isComputing}
-                className="
-                  flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium
-                  bg-[var(--color-ai-dot)] text-white
-                  disabled:opacity-50 disabled:cursor-not-allowed transition-opacity
-                "
-              >
-                {isComputing ? (
-                  <>
-                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Actualizando…
-                  </>
-                ) : (
-                  '↻ Actualizar análisis'
-                )}
-              </button>
-            </div>
-
-            {/* Sección 1: Confianza del perfil */}
-            <Section title="Confianza del análisis" icon="🎯">
-              <div className="flex items-center gap-3">
-                <span className={`px-3 py-1 rounded-full text-sm font-bold border ${confidenceColor(profile.data_confidence)}`}>
-                  {confidenceLabel(profile.data_confidence)}
-                </span>
-                <p className="text-sm text-[var(--color-muted-foreground)]">
-                  {confidenceDesc(profile.data_confidence, profile.total_eventos)}
+                <h1 className="text-2xl font-black sm:text-3xl">Reporte de aprendizaje</h1>
+                <p className="mt-1 text-sm text-slate-500">
+                  Una vista clara para acompañar sin interrumpir.
                 </p>
               </div>
-            </Section>
+              <div className="flex items-center gap-2">
+                {children.length > 1 && (
+                  <label className="relative">
+                    <span className="sr-only">Seleccionar estudiante</span>
+                    <select
+                      value={selectedId}
+                      onChange={(event) => setSelectedId(event.target.value)}
+                      className="appearance-none rounded-2xl border border-slate-200 bg-white py-2.5 pl-4 pr-9 text-sm font-black"
+                    >
+                      {children.map((child) => (
+                        <option key={child.id} value={child.id}>
+                          {child.nombre ?? child.email}
+                        </option>
+                      ))}
+                    </select>
+                    <IconChevronDown
+                      size={16}
+                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                  </label>
+                )}
+                <button
+                  type="button"
+                  onClick={() => selectedId && void loadReport(selectedId)}
+                  disabled={refreshing}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-violet-600 px-4 py-2.5 text-sm font-black text-white disabled:opacity-50"
+                >
+                  <IconRefresh size={18} className={refreshing ? 'animate-spin' : ''} />
+                  Actualizar
+                </button>
+              </div>
+            </section>
 
-            {/* Sección 2: Resumen IA */}
-            {(summary || isComputing) && (
-              <Section title="Resumen general" icon="✍️">
-                {isComputing ? (
-                  <p className="text-sm text-[var(--color-muted-foreground)] italic">Generando análisis…</p>
-                ) : summary ? (
-                  <p className="text-sm text-[var(--color-foreground)] leading-relaxed">{summary}</p>
-                ) : null}
-              </Section>
+            {selectedChild && (
+              <section className="overflow-hidden rounded-3xl border border-violet-100 bg-white shadow-sm">
+                <div className="grid lg:grid-cols-[1.15fr_.85fr]">
+                  <div className="flex gap-4 bg-gradient-to-br from-amber-50 via-white to-violet-50 p-5 sm:p-6">
+                    <img
+                      src={`/img/avatars/${selectedChild.avatar_key === 'boy' ? 'boy' : 'girl'}.png`}
+                      alt={`Avatar de ${selectedChild.nombre ?? 'estudiante'}`}
+                      className="h-20 w-20 shrink-0 rounded-full border-4 border-white object-cover shadow-md sm:h-24 sm:w-24"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-xs font-black uppercase tracking-wide text-violet-600">
+                        Resumen de {selectedChild.nombre ?? 'estudiante'}
+                      </p>
+                      <p className="mt-1 text-xs font-semibold text-slate-500">
+                        {gradeLabel(selectedChild.grade)}
+                      </p>
+                      <p className="mt-3 text-sm font-bold leading-6 text-slate-700">
+                        {report?.summary ??
+                          'Lumi está preparando el primer resumen con sus actividades.'}
+                      </p>
+                      {latestTask && (
+                        <p className="mt-2 text-xs text-slate-600">
+                          <span className="font-black">Última tarea:</span>{' '}
+                          {subjectLabel(latestTask.subject)} — {latestTask.title}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="border-t border-violet-100 p-5 lg:border-l lg:border-t-0">
+                    <h2 className="text-sm font-black">Tareas recientes</h2>
+                    <div className="mt-3 space-y-2">
+                      {tasks.slice(0, 3).map((task) => (
+                        <TaskRow key={task.id} task={task} />
+                      ))}
+                      {!tasks.length && (
+                        <p className="rounded-2xl bg-slate-50 p-4 text-xs font-semibold text-slate-500">
+                          Todavía no hay tareas guardadas.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </section>
             )}
 
-            {/* Sección 3: Estilo de aprendizaje */}
-            <Section title="Estilo de aprendizaje" icon="🧠">
-              <p className="text-base font-semibold text-[var(--color-ai-text)]">
-                {styleLabel(profile.learning_style)}
-              </p>
-              <p className="text-sm text-[var(--color-muted-foreground)]">
-                {styleDesc(profile.learning_style)}
-              </p>
-            </Section>
-
-            {/* Sección 4 + 5: Horario y duración */}
-            <div className="grid grid-cols-2 gap-4">
-              <Section title="Mejor horario" icon="🕐">
-                <p className="text-base font-semibold text-[var(--color-ai-text)]">
-                  {profile.best_time_range ?? '—'}
-                </p>
-                <p className="text-xs text-[var(--color-muted-foreground)]">
-                  {profile.best_time_range
-                    ? 'Franja con mayor precisión en ejercicios'
-                    : 'Necesita más sesiones en distintos horarios'}
-                </p>
-              </Section>
-
-              <Section title="Duración óptima" icon="⏱️">
-                <p className="text-base font-semibold text-[var(--color-ai-text)]">
-                  {sessionLabel(profile.session_preference)}
-                </p>
-                <p className="text-xs text-[var(--color-muted-foreground)]">
-                  {sessionTip(profile.session_preference)}
-                </p>
-              </Section>
-            </div>
-
-            {/* Sección 6: Fortalezas */}
-            <Section title="Fortalezas" icon="⭐">
-              <TagList
-                items={profile.strengths}
-                emptyText="Aún no hay áreas con rendimiento destacado. Sigue practicando."
-                color="bg-emerald-50 text-emerald-800 border-emerald-200"
+            <section className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
+              <Metric
+                icon={IconClock}
+                label="Tiempo promedio"
+                value={formatDuration(stats?.average_session_seconds ?? 0)}
+                tone="blue"
               />
-            </Section>
-
-            {/* Sección 7: Áreas en desarrollo */}
-            <Section title="Áreas en desarrollo" icon="📈">
-              <TagList
-                items={profile.difficulties}
-                emptyText="No se han detectado dificultades persistentes. ¡Buen trabajo!"
-                color="bg-amber-50 text-amber-800 border-amber-200"
+              <Metric
+                icon={IconCircleCheck}
+                label="Tareas completadas"
+                value={`${stats?.completed_tasks ?? completedTasks}/${stats?.total_tasks ?? tasks.length}`}
+                tone="green"
               />
-            </Section>
-
-            {/* Sección 8: Bloqueos detectados */}
-            <Section title="Bloqueos detectados" icon="⚠️">
-              <TagList
-                items={profile.bloqueo_detectado}
-                emptyText="No se detectaron bloqueos. El progreso fluye bien."
-                color="bg-red-50 text-red-700 border-red-200"
+              <Metric
+                icon={IconStar}
+                label="Puntos Lumi"
+                value={String(stats?.xp_total ?? 0)}
+                tone="amber"
               />
-              {profile.bloqueo_detectado.length > 0 && (
-                <p className="text-xs text-[var(--color-muted-foreground)]">
-                  En estas áreas el estudiante se atasca frecuentemente (3 o más errores seguidos en múltiples sesiones).
-                  El tutor IA se activa automáticamente para brindar apoyo.
-                </p>
-              )}
-            </Section>
+              <Metric
+                icon={IconFlame}
+                label="Racha"
+                value={`${stats?.streak_days ?? 0} días`}
+                tone="violet"
+              />
+              <Metric
+                icon={IconHelpCircle}
+                label="Nivel de ayuda"
+                value={statusHelp.label}
+                tone="rose"
+                className="col-span-2 lg:col-span-1"
+              />
+            </section>
 
-            {/* Sección 9: Recomendaciones */}
-            {(recommendations.length > 0 || isComputing) && (
-              <Section title="Recomendaciones para padres" icon="💡">
-                {isComputing ? (
-                  <p className="text-sm text-[var(--color-muted-foreground)] italic">Generando recomendaciones…</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {recommendations.map((rec, i) => (
-                      <li key={i} className="flex gap-2 text-sm text-[var(--color-foreground)]">
-                        <span className="shrink-0 w-5 h-5 rounded-full bg-[var(--color-ai-dot)] text-white text-xs flex items-center justify-center font-bold">
-                          {i + 1}
+            {report?.enabled === false ? (
+              <section className="mt-4 rounded-3xl border border-amber-200 bg-amber-50 p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="font-black text-amber-900">El reporte está pausado</h2>
+                    <p className="mt-1 text-sm text-amber-800">
+                      El historial se conserva, pero no se calculan nuevas recomendaciones.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void setLearningEnabled(true)}
+                    className="rounded-2xl bg-amber-700 px-4 py-2.5 text-sm font-black text-white"
+                  >
+                    Reactivar
+                  </button>
+                </div>
+              </section>
+            ) : (
+              <section className="mt-4 grid gap-4 lg:grid-cols-2">
+                <InsightCard
+                  icon={IconSparkles}
+                  title="Fortalezas"
+                  items={report?.profile?.strengths ?? []}
+                  empty="Aún faltan actividades para reconocer fortalezas estables."
+                  tone="emerald"
+                />
+                <InsightCard
+                  icon={IconTargetArrow}
+                  title="Áreas para acompañar"
+                  items={report?.profile?.difficulties ?? []}
+                  empty="No se observan dificultades persistentes."
+                  tone="amber"
+                />
+                <section className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm lg:col-span-2">
+                  <h2 className="flex items-center gap-2 font-black">
+                    <IconBrain size={21} className="text-violet-600" />
+                    Recomendaciones adaptativas
+                  </h2>
+                  <div className="mt-4 grid gap-3 md:grid-cols-3">
+                    {(report?.recommendations ?? []).map((recommendation, index) => (
+                      <div
+                        key={recommendation}
+                        className="rounded-2xl bg-violet-50 p-4 text-sm leading-6 text-violet-950"
+                      >
+                        <span className="mb-2 grid h-7 w-7 place-items-center rounded-full bg-violet-600 text-xs font-black text-white">
+                          {index + 1}
                         </span>
-                        {rec}
-                      </li>
+                        {recommendation}
+                      </div>
                     ))}
-                  </ul>
-                )}
-              </Section>
+                  </div>
+                </section>
+              </section>
             )}
 
-            {/* Desactivar / Borrar perfil */}
-            <div className="pt-4 border-t border-[var(--color-card-border)] space-y-4">
+            <section className="mt-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+              <button
+                type="button"
+                onClick={() => setShowSettings((value) => !value)}
+                className="flex w-full items-center justify-between gap-3 p-5 text-left"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-100 text-slate-600">
+                    <IconSettings size={21} />
+                  </span>
+                  <span>
+                    <span className="block font-black">Privacidad y datos</span>
+                    <span className="block text-xs text-slate-500">
+                      Pausa el reporte o elimina el historial.
+                    </span>
+                  </span>
+                </span>
+                <IconChevronDown
+                  size={20}
+                  className={`text-slate-400 transition ${showSettings ? 'rotate-180' : ''}`}
+                />
+              </button>
 
-              {/* — Desactivar (pausa el reporte, conserva datos) */}
-              {!showDisableConfirm ? (
-                <button
-                  onClick={() => setShowDisableConfirm(true)}
-                  className="text-xs text-[var(--color-muted-foreground)] underline underline-offset-2"
-                >
-                  Pausar reporte (mantiene los datos)
-                </button>
-              ) : (
-                <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 space-y-3">
-                  <p className="text-sm text-amber-800 font-medium">
-                    ¿Pausar el reporte de aprendizaje?
-                  </p>
-                  <p className="text-xs text-amber-700">
-                    El historial se conserva. Puedes reactivar el perfil en cualquier momento sin perder datos.
-                  </p>
-                  <div className="flex gap-2">
+              {showSettings && (
+                <div className="border-t border-slate-100 p-5">
+                  <div className="flex items-start gap-3 rounded-2xl bg-emerald-50 p-4">
+                    <IconShieldCheck size={22} className="shrink-0 text-emerald-700" />
+                    <p className="text-xs leading-5 text-emerald-900">
+                      Los archivos son privados. Solo la cuenta del estudiante y el correo
+                      familiar vinculado pueden consultar este reporte.
+                    </p>
+                  </div>
+                  <div className="mt-4 rounded-2xl border border-violet-100 p-4">
+                    <p className="flex items-center gap-2 text-sm font-black">
+                      <IconKey size={18} className="text-violet-600" />
+                      Restablecer contraseña de {selectedChild?.nombre ?? 'estudiante'}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Esta es la alternativa familiar al correo de recuperación. Lumi no
+                      necesita un servicio de correo transaccional.
+                    </p>
+                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(event) => setNewPassword(event.target.value)}
+                        minLength={8}
+                        placeholder="Nueva contraseña (mínimo 8)"
+                        className="lumi-auth-input flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void changeChildPassword()}
+                        disabled={refreshing}
+                        className="rounded-2xl bg-violet-600 px-4 py-2.5 text-xs font-black text-white disabled:opacity-50"
+                      >
+                        Cambiar contraseña
+                      </button>
+                    </div>
+                    {passwordMessage && (
+                      <p className="mt-2 text-xs font-bold text-slate-600">
+                        {passwordMessage}
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {report?.enabled !== false && (
+                      <button
+                        type="button"
+                        onClick={() => void setLearningEnabled(false)}
+                        className="rounded-2xl border border-amber-200 px-4 py-2.5 text-xs font-black text-amber-800"
+                      >
+                        Pausar reporte
+                      </button>
+                    )}
                     <button
-                      onClick={handleDisable}
-                      className="px-4 py-2 rounded-lg text-xs font-bold bg-amber-600 text-white"
+                      type="button"
+                      onClick={() => setConfirmDelete(true)}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-red-200 px-4 py-2.5 text-xs font-black text-red-700"
                     >
-                      Sí, pausar
-                    </button>
-                    <button
-                      onClick={() => setShowDisableConfirm(false)}
-                      className="px-4 py-2 rounded-lg text-xs border border-amber-300 text-amber-800"
-                    >
-                      Cancelar
+                      <IconTrash size={16} /> Borrar historial
                     </button>
                   </div>
+
+                  {confirmDelete && (
+                    <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4">
+                      <p className="text-sm font-black text-red-900">
+                        Esta acción elimina tareas, chats, progreso y puntos de este perfil.
+                      </p>
+                      <p className="mt-1 text-xs text-red-700">No se puede deshacer.</p>
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void deleteLearningData()}
+                          disabled={refreshing}
+                          className="rounded-xl bg-red-700 px-4 py-2 text-xs font-black text-white disabled:opacity-50"
+                        >
+                          Confirmar eliminación
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDelete(false)}
+                          className="rounded-xl bg-white px-4 py-2 text-xs font-black text-slate-600"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-
-              {/* — Borrar datos (derecho al olvido) */}
-              {!showDeleteConfirm ? (
-                <button
-                  onClick={() => { setShowDeleteConfirm(true); setDeleteStep(1) }}
-                  className="text-xs text-red-500 underline underline-offset-2"
-                >
-                  Borrar todos los datos de aprendizaje
-                </button>
-              ) : deleteStep === 1 ? (
-                <div className="rounded-xl bg-red-50 border border-red-200 p-4 space-y-3">
-                  <p className="text-sm text-red-800 font-semibold">
-                    ⚠️ Borrar datos — esto no se puede deshacer
-                  </p>
-                  <p className="text-xs text-red-700">
-                    Se eliminarán permanentemente el perfil de aprendizaje, el historial de ejercicios y los chats con el tutor IA de este dispositivo.
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setDeleteStep(2)}
-                      className="px-4 py-2 rounded-lg text-xs font-bold bg-red-600 text-white"
-                    >
-                      Entiendo, continuar
-                    </button>
-                    <button
-                      onClick={() => setShowDeleteConfirm(false)}
-                      className="px-4 py-2 rounded-lg text-xs border border-red-200 text-red-800"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-xl bg-red-100 border-2 border-red-400 p-4 space-y-3">
-                  <p className="text-sm text-red-900 font-bold">
-                    Confirmación final
-                  </p>
-                  <p className="text-xs text-red-800">
-                    ¿Confirmas que quieres borrar permanentemente todos los datos de aprendizaje de este dispositivo?
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleDelete}
-                      disabled={isDeleting}
-                      className="px-4 py-2 rounded-lg text-xs font-bold bg-red-700 text-white disabled:opacity-50"
-                    >
-                      {isDeleting ? 'Borrando...' : 'Sí, borrar todo'}
-                    </button>
-                    <button
-                      onClick={() => { setShowDeleteConfirm(false); setDeleteStep(1) }}
-                      className="px-4 py-2 rounded-lg text-xs border border-red-300 text-red-900"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+            </section>
+          </>
         )}
-      </div>
+      </main>
     </div>
+  )
+}
+
+function EmptyFamily({ onRefresh }: { onRefresh: () => void }) {
+  return (
+    <section className="mx-auto mt-12 max-w-xl rounded-3xl border border-violet-100 bg-white p-7 text-center shadow-sm">
+      <span className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-violet-100 text-violet-700">
+        <IconUsers size={32} />
+      </span>
+      <h1 className="mt-5 text-2xl font-black">Aún no aparece un estudiante vinculado</h1>
+      <p className="mt-3 text-sm leading-6 text-slate-600">
+        El correo de esta cuenta debe ser exactamente el mismo que el niño indicó como
+        correo de su mamá, papá o tutor al registrarse.
+      </p>
+      <button
+        type="button"
+        onClick={onRefresh}
+        className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-violet-600 px-5 py-3 text-sm font-black text-white"
+      >
+        <IconRefresh size={18} /> Buscar nuevamente
+      </button>
+    </section>
+  )
+}
+
+function TaskRow({ task }: { task: HomeworkTask }) {
+  const completed = task.status === 'completed'
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-slate-100 px-3 py-2.5">
+      <span
+        className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${
+          completed ? 'bg-emerald-100 text-emerald-700' : 'bg-violet-100 text-violet-700'
+        }`}
+      >
+        {completed ? <IconCircleCheck size={19} /> : <IconFileText size={19} />}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-xs font-black">{task.title}</span>
+        <span className="block text-[11px] text-slate-500">
+          {subjectLabel(task.subject)}
+        </span>
+      </span>
+      <span
+        className={`rounded-full px-2 py-1 text-[10px] font-black ${
+          completed
+            ? 'bg-emerald-50 text-emerald-700'
+            : task.current_stage >= 3
+              ? 'bg-amber-50 text-amber-700'
+              : 'bg-blue-50 text-blue-700'
+        }`}
+      >
+        {completed ? 'Completada' : task.current_stage >= 3 ? 'En progreso' : 'Pendiente'}
+      </span>
+    </div>
+  )
+}
+
+const METRIC_TONES = {
+  blue: 'bg-blue-50 text-blue-700',
+  green: 'bg-emerald-50 text-emerald-700',
+  amber: 'bg-amber-50 text-amber-700',
+  violet: 'bg-violet-50 text-violet-700',
+  rose: 'bg-rose-50 text-rose-700',
+}
+
+function Metric({
+  icon: Icon,
+  label,
+  value,
+  tone,
+  className = '',
+}: {
+  icon: typeof IconClock
+  label: string
+  value: string
+  tone: keyof typeof METRIC_TONES
+  className?: string
+}) {
+  return (
+    <div className={`rounded-3xl border border-slate-100 bg-white p-4 shadow-sm ${className}`}>
+      <span className={`grid h-9 w-9 place-items-center rounded-2xl ${METRIC_TONES[tone]}`}>
+        <Icon size={19} />
+      </span>
+      <p className="mt-3 text-[11px] font-bold text-slate-500">{label}</p>
+      <p className="mt-0.5 text-lg font-black">{value}</p>
+    </div>
+  )
+}
+
+function InsightCard({
+  icon: Icon,
+  title,
+  items,
+  empty,
+  tone,
+}: {
+  icon: typeof IconSparkles
+  title: string
+  items: string[]
+  empty: string
+  tone: 'emerald' | 'amber'
+}) {
+  const colors =
+    tone === 'emerald'
+      ? 'border-emerald-100 bg-emerald-50 text-emerald-800'
+      : 'border-amber-100 bg-amber-50 text-amber-800'
+  return (
+    <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+      <h2 className="flex items-center gap-2 font-black">
+        <Icon
+          size={21}
+          className={tone === 'emerald' ? 'text-emerald-600' : 'text-amber-600'}
+        />
+        {title}
+      </h2>
+      {items.length ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {items.map((item) => (
+            <span
+              key={item}
+              className={`rounded-full border px-3 py-1.5 text-xs font-black ${colors}`}
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-3 text-sm leading-6 text-slate-500">{empty}</p>
+      )}
+    </section>
   )
 }

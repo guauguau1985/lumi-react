@@ -17,5 +17,6 @@ export const defaultProfile: GamificationProfile = {
     inteligenciaArtificial: {},
     historiasLumi: {},
     educacionAmbiental: {},
+    tareas: {},
   },
 };

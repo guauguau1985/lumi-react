@@ -86,4 +86,13 @@ export const gamificationConfig: GamificationConfig = {
       GAME_COMPLETED: { xp: 20, coins: 2, badge: "historia_empatia_1" },
     },
   },
+
+  tareas: {
+    "tutor-tareas": {
+      CORRECT_ANSWER: { xp: 4, coins: 0 },
+      WRONG_ANSWER: { xp: 0, coins: 0 },
+      LEVEL_COMPLETED: { xp: 10, coins: 1 },
+      GAME_COMPLETED: { xp: 40, coins: 8, badge: "tarea_terminada" },
+    },
+  },
 };

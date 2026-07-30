@@ -49,6 +49,7 @@ export type Database = {
           trigger_type?: 'error_seguido' | 'solicitud_niño' | null
           user_id?: string | null
         }
+        Relationships: []
       }
       child_profiles: {
         Row: {
@@ -75,6 +76,7 @@ export type Database = {
           nombre?: string
           parent_id?: string
         }
+        Relationships: []
       }
       learning_events: {
         Row: {
@@ -87,11 +89,14 @@ export type Database = {
           errores_seguidos: number
           hora_uso: number | null
           id: string
-          modulo: 'math' | 'eco' | 'naturales' | 'coder' | 'ai' | null
+          modulo: 'math' | 'eco' | 'naturales' | 'coder' | 'ai' | 'tarea' | 'lenguaje' | 'ingles' | 'historia' | 'tecnologia' | null
           nivel: number
           session_id: string
+          subject: string | null
+          task_id: string | null
           tiempo_sesion: number | null
           tipo_ejercicio: 'visual' | 'texto' | 'interactivo' | null
+          topic: string | null
           user_id: string | null
           velocidad_respuesta: number | null
         }
@@ -105,11 +110,14 @@ export type Database = {
           errores_seguidos?: number
           hora_uso?: number | null
           id?: string
-          modulo?: 'math' | 'eco' | 'naturales' | 'coder' | 'ai' | null
+          modulo?: 'math' | 'eco' | 'naturales' | 'coder' | 'ai' | 'tarea' | 'lenguaje' | 'ingles' | 'historia' | 'tecnologia' | null
           nivel?: number
           session_id: string
+          subject?: string | null
+          task_id?: string | null
           tiempo_sesion?: number | null
           tipo_ejercicio?: 'visual' | 'texto' | 'interactivo' | null
+          topic?: string | null
           user_id?: string | null
           velocidad_respuesta?: number | null
         }
@@ -123,14 +131,18 @@ export type Database = {
           errores_seguidos?: number
           hora_uso?: number | null
           id?: string
-          modulo?: 'math' | 'eco' | 'naturales' | 'coder' | 'ai' | null
+          modulo?: 'math' | 'eco' | 'naturales' | 'coder' | 'ai' | 'tarea' | 'lenguaje' | 'ingles' | 'historia' | 'tecnologia' | null
           nivel?: number
           session_id?: string
+          subject?: string | null
+          task_id?: string | null
           tiempo_sesion?: number | null
           tipo_ejercicio?: 'visual' | 'texto' | 'interactivo' | null
+          topic?: string | null
           user_id?: string | null
           velocidad_respuesta?: number | null
         }
+        Relationships: []
       }
       learning_profile: {
         Row: {
@@ -178,6 +190,178 @@ export type Database = {
           total_eventos?: number
           user_id?: string | null
         }
+        Relationships: []
+      }
+      family_links: {
+        Row: {
+          child_id: string
+          created_at: string
+          id: string
+          parent_id: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          id?: string
+          parent_id: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          id?: string
+          parent_id?: string
+        }
+        Relationships: []
+      }
+      gamification_profiles: {
+        Row: {
+          badges: Json
+          coins: number
+          last_active_date: string | null
+          level: number
+          module_progress: Json
+          streak_days: number
+          updated_at: string
+          user_id: string
+          xp_total: number
+        }
+        Insert: {
+          badges?: Json
+          coins?: number
+          last_active_date?: string | null
+          level?: number
+          module_progress?: Json
+          streak_days?: number
+          updated_at?: string
+          user_id: string
+          xp_total?: number
+        }
+        Update: {
+          badges?: Json
+          coins?: number
+          last_active_date?: string | null
+          level?: number
+          module_progress?: Json
+          streak_days?: number
+          updated_at?: string
+          user_id?: string
+          xp_total?: number
+        }
+        Relationships: []
+      }
+      homework_messages: {
+        Row: {
+          child_id: string
+          content: string
+          created_at: string
+          id: string
+          message_kind: 'chat' | 'summary' | 'draft' | 'review' | 'system'
+          role: 'student' | 'tutor'
+          task_id: string
+        }
+        Insert: {
+          child_id: string
+          content: string
+          created_at?: string
+          id?: string
+          message_kind?: 'chat' | 'summary' | 'draft' | 'review' | 'system'
+          role: 'student' | 'tutor'
+          task_id: string
+        }
+        Update: {
+          child_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          message_kind?: 'chat' | 'summary' | 'draft' | 'review' | 'system'
+          role?: 'student' | 'tutor'
+          task_id?: string
+        }
+        Relationships: []
+      }
+      homework_tasks: {
+        Row: {
+          checklist: Json
+          child_id: string
+          completed_at: string | null
+          created_at: string
+          current_stage: number
+          extracted_text: string | null
+          file_name: string | null
+          file_path: string | null
+          file_type: string | null
+          grade: '5-basico' | '6-basico' | '7-basico' | '8-basico' | '1-medio'
+          id: string
+          instructions_summary: string | null
+          points_earned: number
+          status: 'in_progress' | 'completed' | 'archived'
+          subject:
+            | 'matematicas'
+            | 'ciencias'
+            | 'ingles'
+            | 'historia'
+            | 'lenguaje'
+            | 'tecnologia'
+            | 'robotica'
+            | 'otra'
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          checklist?: Json
+          child_id: string
+          completed_at?: string | null
+          created_at?: string
+          current_stage?: number
+          extracted_text?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          grade: '5-basico' | '6-basico' | '7-basico' | '8-basico' | '1-medio'
+          id?: string
+          instructions_summary?: string | null
+          points_earned?: number
+          status?: 'in_progress' | 'completed' | 'archived'
+          subject:
+            | 'matematicas'
+            | 'ciencias'
+            | 'ingles'
+            | 'historia'
+            | 'lenguaje'
+            | 'tecnologia'
+            | 'robotica'
+            | 'otra'
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          checklist?: Json
+          child_id?: string
+          completed_at?: string | null
+          created_at?: string
+          current_stage?: number
+          extracted_text?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          grade?: '5-basico' | '6-basico' | '7-basico' | '8-basico' | '1-medio'
+          id?: string
+          instructions_summary?: string | null
+          points_earned?: number
+          status?: 'in_progress' | 'completed' | 'archived'
+          subject?:
+            | 'matematicas'
+            | 'ciencias'
+            | 'ingles'
+            | 'historia'
+            | 'lenguaje'
+            | 'tecnologia'
+            | 'robotica'
+            | 'otra'
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       lesson_sessions: {
         Row: {
@@ -219,26 +403,43 @@ export type Database = {
           user_id?: string | null
           xp_ganado?: number
         }
+        Relationships: []
       }
       profiles: {
         Row: {
+          avatar_key: 'girl' | 'boy' | null
           created_at: string | null
           email: string
+          grade: '5-basico' | '6-basico' | '7-basico' | '8-basico' | '1-medio' | null
           id: string
           nombre: string | null
+          parent_email: string | null
+          role: 'student' | 'parent'
+          updated_at: string
         }
         Insert: {
+          avatar_key?: 'girl' | 'boy' | null
           created_at?: string | null
           email: string
+          grade?: '5-basico' | '6-basico' | '7-basico' | '8-basico' | '1-medio' | null
           id?: string
           nombre?: string | null
+          parent_email?: string | null
+          role?: 'student' | 'parent'
+          updated_at?: string
         }
         Update: {
+          avatar_key?: 'girl' | 'boy' | null
           created_at?: string | null
           email?: string
+          grade?: '5-basico' | '6-basico' | '7-basico' | '8-basico' | '1-medio' | null
           id?: string
           nombre?: string | null
+          parent_email?: string | null
+          role?: 'student' | 'parent'
+          updated_at?: string
         }
+        Relationships: []
       }
       store_items: {
         Row: {
@@ -271,6 +472,7 @@ export type Database = {
           precio_coins?: number
           tipo?: 'tema' | 'marco' | 'freeze' | 'titulo'
         }
+        Relationships: []
       }
       user_purchases: {
         Row: {
@@ -294,6 +496,7 @@ export type Database = {
           purchased_at?: string
           user_id?: string | null
         }
+        Relationships: []
       }
       user_streaks: {
         Row: {
@@ -338,6 +541,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
+        Relationships: []
       }
       weekly_league: {
         Row: {
@@ -367,10 +571,45 @@ export type Database = {
           user_id?: string | null
           xp_semanal?: number
         }
+        Relationships: []
       }
     }
     Views: Record<never, never>
-    Functions: Record<never, never>
+    Functions: {
+      add_game_rewards: {
+        Args: { p_xp: number; p_coins: number; p_module?: string | null }
+        Returns: Database['public']['Tables']['gamification_profiles']['Row']
+      }
+      add_weekly_xp: {
+        Args: {
+          p_xp: number
+          p_alias: string
+          p_device_id: string
+          p_week: string
+        }
+        Returns: undefined
+      }
+      claim_family_links: {
+        Args: Record<never, never>
+        Returns: number
+      }
+      increment_xp_semanal: {
+        Args: { p_device_id: string; p_semana: string; p_xp: number }
+        Returns: undefined
+      }
+      delete_child_learning_data: {
+        Args: { p_child_id: string }
+        Returns: undefined
+      }
+      merge_device_history: {
+        Args: { p_device_id: string }
+        Returns: undefined
+      }
+      set_child_learning_enabled: {
+        Args: { p_child_id: string; p_enabled: boolean }
+        Returns: undefined
+      }
+    }
     Enums: Record<never, never>
   }
 }
