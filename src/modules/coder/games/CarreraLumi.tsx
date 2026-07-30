@@ -8,7 +8,7 @@ export default function CarreraLumi() {
   const [opciones, setOpciones] = useState<number[]>([]);
   const [mensaje, setMensaje] = useState("");
 
-  const preguntas = [];
+  const preguntas: Array<{ pregunta: string; respuesta: number }> = [];
   for (let t = 5; t <= 6; t++) {
     for (let i = 1; i <= 10; i++) {
       preguntas.push({ pregunta: `${t} × ${i}`, respuesta: t * i });

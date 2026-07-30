@@ -1,0 +1,3 @@
+-- Applied remotely before this repository baseline.
+-- The remote version contained historical bootstrap credentials and is intentionally
+-- not copied into source control.

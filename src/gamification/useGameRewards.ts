@@ -10,9 +10,11 @@ export function useGameRewards(module: ModuleId, gameId: string) {
 
   return {
     profile,                     // por si quieres mostrar nivel, monedas, etc.
-    onCorrect: () => sendEvent("CORRECT_ANSWER"),
-    onWrong: () => sendEvent("WRONG_ANSWER"),
-    onLevelCompleted: () => sendEvent("LEVEL_COMPLETED"),
-    onGameCompleted: () => sendEvent("GAME_COMPLETED"),
+    onCorrect: (payload?: Record<string, unknown>) => sendEvent("CORRECT_ANSWER", payload),
+    onWrong: (payload?: Record<string, unknown>) => sendEvent("WRONG_ANSWER", payload),
+    onLevelCompleted: (payload?: Record<string, unknown>) =>
+      sendEvent("LEVEL_COMPLETED", payload),
+    onGameCompleted: (payload?: Record<string, unknown>) =>
+      sendEvent("GAME_COMPLETED", payload),
   };
 }

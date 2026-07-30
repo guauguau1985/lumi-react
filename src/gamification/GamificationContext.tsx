@@ -1,21 +1,27 @@
-import React, {
+import {
   createContext,
   useContext,
   useEffect,
   useState,
-  ReactNode,
 } from "react";
+import type { ReactNode } from "react";
 import { defaultProfile } from "./defaultProfile";
 import { gamificationConfig } from "./config";
 import type { GameEvent, GamificationProfile, LessonSessionData, ModuleId } from "./types";
 import {
   type StreakState,
-  defaultStreak,
   loadStreak,
   saveStreak,
   actualizarRachaHoy,
   syncStreakToSupabase,
 } from "./streakStorage";
+import {
+  loadLeagueLocal,
+  markLeagueJoined,
+  addXpSemanal,
+} from "./leagueStorage";
+import { supabase } from "@/shared/lib/supabaseClient";
+import { useAuth } from "@/features/auth/AuthContext";
 
 const STORAGE_KEY = "lumi-gamification-profile-v1";
 
@@ -34,15 +40,21 @@ interface GamificationContextValue {
   streakFlowVisible: boolean;
   closeStreakFlow: () => void;
   configurarHabito: (dias: number) => void;
+  leagueWelcomeVisible: boolean;
+  closeLeagueWelcome: () => void;
 }
 
 const GamificationContext = createContext<GamificationContextValue | null>(
   null
 );
 
-function loadProfile(): GamificationProfile {
+function profileStorageKey(userId?: string | null) {
+  return userId ? `${STORAGE_KEY}:${userId}` : STORAGE_KEY;
+}
+
+function loadProfile(userId?: string | null): GamificationProfile {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(profileStorageKey(userId));
     if (!raw) return defaultProfile;
     const parsed = JSON.parse(raw) as GamificationProfile;
     return {
@@ -73,12 +85,14 @@ function sumarDias(fechaISO: string, dias: number): string {
 }
 
 export function GamificationProvider({ children }: { children: ReactNode }) {
+  const { session, profile: accountProfile } = useAuth();
   const [profile, setProfile] = useState<GamificationProfile>(() => loadProfile());
   const [celebration, setCelebration] = useState<CelebrationType>("none");
   const [lessonCompleteVisible, setLessonCompleteVisible] = useState(false);
   const [lastLessonData, setLastLessonData] = useState<LessonSessionData | null>(null);
   const [streak, setStreak] = useState<StreakState>(() => loadStreak());
   const [streakFlowVisible, setStreakFlowVisible] = useState(false);
+  const [leagueWelcomeVisible, setLeagueWelcomeVisible] = useState(false);
 
   // Persistir racha en localStorage cuando cambia
   useEffect(() => {
@@ -86,8 +100,46 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
   }, [streak]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-  }, [profile]);
+    if (!session?.user.id || accountProfile?.role !== "student") {
+      setProfile(defaultProfile);
+      return;
+    }
+
+    const userId = session.user.id;
+    const local = loadProfile(userId);
+    setProfile({ ...local, id: userId, apodo: accountProfile.nombre ?? "Jugador" });
+
+    void supabase
+      .from("gamification_profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[Lumi] gamification profile load error:", error.message);
+          return;
+        }
+        if (!data) return;
+        setProfile((current) => ({
+          ...current,
+          id: userId,
+          apodo: accountProfile.nombre ?? current.apodo,
+          xpTotal: data.xp_total,
+          monedas: data.coins,
+          nivel: data.level,
+          rachaDias: data.streak_days,
+          ultimoIngreso: data.last_active_date,
+          insignias: Array.isArray(data.badges)
+            ? data.badges.filter((badge): badge is string => typeof badge === "string")
+            : current.insignias,
+        }));
+      });
+  }, [session?.user.id, accountProfile?.role, accountProfile?.nombre]);
+
+  useEffect(() => {
+    if (!session?.user.id || accountProfile?.role !== "student") return;
+    localStorage.setItem(profileStorageKey(session.user.id), JSON.stringify(profile));
+  }, [profile, session?.user.id, accountProfile?.role]);
 
   const registrarIngresoHoy = () => {
     const hoy = new Date().toISOString().slice(0, 10);
@@ -131,6 +183,16 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
 
   const closeStreakFlow = () => {
     setStreakFlowVisible(false);
+    // Mostrar bienvenida a la liga la primera vez
+    const leagueLocal = loadLeagueLocal(session?.user.id);
+    if (!leagueLocal.joined) {
+      setLeagueWelcomeVisible(true);
+    }
+  };
+
+  const closeLeagueWelcome = () => {
+    markLeagueJoined(session?.user.id);
+    setLeagueWelcomeVisible(false);
   };
 
   const configurarHabito = (dias: number) => {
@@ -143,15 +205,11 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
 
   const dispatchEvent = (event: GameEvent) => {
     const { module, gameId, type } = event;
+    const rule = gamificationConfig[module]?.[gameId]?.[type];
+    const xpEarned = rule?.xp ?? 0;
+    const coinsEarned = rule?.coins ?? 0;
 
     setProfile((prev) => {
-      const rulesForModule = gamificationConfig[module];
-      const rulesForGame = rulesForModule?.[gameId];
-      const rule = rulesForGame?.[type];
-
-      const xpEarned = rule?.xp ?? 0;
-      const coinsEarned = rule?.coins ?? 0;
-
       const newXpTotal = prev.xpTotal + xpEarned;
       const prevLevel = prev.nivel;
       const newLevel = calcularNivel(newXpTotal);
@@ -205,10 +263,33 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       };
     });
 
-    // Mostrar LessonComplete al terminar un juego
+    if (session?.user.id && accountProfile?.role === "student" && (xpEarned > 0 || coinsEarned > 0)) {
+      void supabase
+        .rpc("add_game_rewards", {
+          p_xp: xpEarned,
+          p_coins: coinsEarned,
+          p_module: module,
+        })
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("[Lumi] reward sync error:", error.message);
+            return;
+          }
+          if (!data) return;
+          setProfile((current) => ({
+            ...current,
+            xpTotal: data.xp_total,
+            monedas: data.coins,
+            nivel: data.level,
+            rachaDias: data.streak_days,
+            ultimoIngreso: data.last_active_date,
+          }));
+        });
+    }
+
+    // Mostrar LessonComplete al terminar un juego y actualizar liga
     if (type === "GAME_COMPLETED") {
-      const rule = gamificationConfig[module]?.[gameId]?.[type];
-      const xpGanado = rule?.xp ?? 0;
+      const xpGanado = xpEarned;
       setLastLessonData({
         ejercicios: (event.payload?.ejercicios as number) ?? 0,
         coinsGanados: xpGanado,
@@ -217,6 +298,8 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         gameId,
       });
       setLessonCompleteVisible(true);
+      // Actualizar XP semanal en la liga
+      addXpSemanal(xpGanado, session?.user.id);
     }
   };
 
@@ -235,6 +318,8 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         streakFlowVisible,
         closeStreakFlow,
         configurarHabito,
+        leagueWelcomeVisible,
+        closeLeagueWelcome,
       }}
     >
       {children}

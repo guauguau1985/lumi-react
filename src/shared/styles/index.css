@@ -93,3 +93,9 @@ body {
   color: var(--color-foreground);
   font-family: var(--font-sans);
 }
+
+@layer components {
+  .lumi-auth-input {
+    @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-violet-400 focus:ring-4 focus:ring-violet-100;
+  }
+}

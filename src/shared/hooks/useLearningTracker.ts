@@ -4,10 +4,21 @@ import {
   type AdaptiveLearningRuleConfig,
 } from '@/adaptiveLearning/hook/useAdaptiveLearning'
 import { supabase } from '@/shared/lib/supabaseClient'
-import { getDeviceId, getSessionId, isProfileEnabled } from '@/shared/lib/deviceId'
+import { getDeviceId, getSessionId } from '@/shared/lib/deviceId'
 import type { TablesInsert } from '@/shared/lib/database.types'
+import { useAuth } from '@/features/auth/AuthContext'
 
-type Modulo = 'math' | 'eco' | 'naturales' | 'coder' | 'ai'
+type Modulo =
+  | 'math'
+  | 'eco'
+  | 'naturales'
+  | 'coder'
+  | 'ai'
+  | 'tarea'
+  | 'lenguaje'
+  | 'ingles'
+  | 'historia'
+  | 'tecnologia'
 type TipoEjercicio = 'visual' | 'texto' | 'interactivo'
 
 interface UseLearningTrackerOptions {
@@ -15,10 +26,12 @@ interface UseLearningTrackerOptions {
   tipoEjercicio?: TipoEjercicio
   initialLevel?: number
   customRules?: Partial<AdaptiveLearningRuleConfig>
+  topic?: string
+  subject?: string
+  taskId?: string
 }
 
 function insertEvent(event: TablesInsert<'learning_events'>) {
-  if (!isProfileEnabled()) return
   void supabase
     .from('learning_events')
     .insert(event)
@@ -37,7 +50,11 @@ export function useLearningTracker({
   tipoEjercicio,
   initialLevel = 1,
   customRules,
+  topic,
+  subject,
+  taskId,
 }: UseLearningTrackerOptions) {
+  const { session } = useAuth()
   const { state, rules, recordAnswer, resetAdaptiveLearning } =
     useAdaptiveLearning(initialLevel, customRules)
 
@@ -45,6 +62,8 @@ export function useLearningTracker({
   const startTimeRef = useRef(Date.now())
   const firstAnswerMsRef = useRef<number | null>(null)
   const completadoRef = useRef(false)
+  const userIdRef = useRef(session?.user.id ?? null)
+  userIdRef.current = session?.user.id ?? null
 
   // Always reflects the latest state (updated during render, safe for use in effects)
   const stateRef = useRef(state)
@@ -54,7 +73,9 @@ export function useLearningTracker({
   useEffect(() => {
     return () => {
       if (!completadoRef.current && stateRef.current.totalAnswers > 0) {
+        if (!userIdRef.current) return
         insertEvent({
+          user_id: userIdRef.current,
           device_id: getDeviceId(),
           session_id: getSessionId(),
           modulo,
@@ -68,6 +89,9 @@ export function useLearningTracker({
           tiempo_sesion: Math.round((Date.now() - startTimeRef.current) / 1000),
           completado: false,
           abandono: true,
+          topic: topic ?? null,
+          subject: subject ?? null,
+          task_id: taskId ?? null,
         })
       }
     }
@@ -91,7 +115,9 @@ export function useLearningTracker({
    */
   const trackComplete = (finalAccuracy?: number) => {
     completadoRef.current = true
+    if (!userIdRef.current) return
     insertEvent({
+      user_id: userIdRef.current,
       device_id: getDeviceId(),
       session_id: getSessionId(),
       modulo,
@@ -105,6 +131,9 @@ export function useLearningTracker({
       tiempo_sesion: Math.round((Date.now() - startTimeRef.current) / 1000),
       completado: true,
       abandono: false,
+      topic: topic ?? null,
+      subject: subject ?? null,
+      task_id: taskId ?? null,
     })
   }
 

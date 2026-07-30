@@ -1,247 +1,1006 @@
-import { useState, useRef, useEffect } from 'react';
-import { supabase } from '@/shared/lib/supabaseClient';
-import { getDeviceId, getSessionId } from '@/shared/lib/deviceId';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import {
+  IconArrowRight,
+  IconBook2,
+  IconCheck,
+  IconChevronDown,
+  IconCircleCheck,
+  IconClipboardCheck,
+  IconFile,
+  IconFileText,
+  IconHelpCircle,
+  IconHistory,
+  IconHome,
+  IconPencil,
+  IconPlayerPlay,
+  IconPointFilled,
+  IconRosetteDiscountCheck,
+  IconSchool,
+  IconSend2,
+  IconSparkles,
+  IconStar,
+  IconTrophy,
+  IconUpload,
+  IconWand,
+} from '@tabler/icons-react'
+import { useAuth } from '@/features/auth/AuthContext'
+import { useGameRewards } from '@/gamification/useGameRewards'
+import { supabase } from '@/shared/lib/supabaseClient'
+import { getDeviceId, getSessionId } from '@/shared/lib/deviceId'
+import type { Json, Tables } from '@/shared/lib/database.types'
+import { extractHomeworkFile } from '@/modules/tarea/lib/extractHomeworkFile'
+import {
+  curriculumContext,
+  GRADES,
+  SUBJECTS,
+  type HomeworkSubject,
+} from '@/modules/tarea/data/curriculumContext'
 
-const CURSO_KEY = 'lumi_tarea_curso';
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+type HomeworkTask = Tables<'homework_tasks'>
+type HomeworkMessage = Tables<'homework_messages'>
+type TutorTool = 'explain' | 'guide' | 'draft' | 'review' | 'question'
 
-const CURSOS = ['3° básico', '4° básico', '5° básico', '6° básico', '7° básico', '8° básico'];
+const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tutor-ai`
 
-function LumiFace({ className }: { className: string }) {
-  return (
-    <img
-      src={`${import.meta.env.BASE_URL}img/lumi/logo.png`}
-      alt="Lumi"
-      className={`rounded-full object-cover flex-shrink-0 ${className}`}
-    />
-  );
+const TOOLS: Array<{
+  id: TutorTool
+  title: string
+  description: string
+  icon: typeof IconSparkles
+}> = [
+  {
+    id: 'explain',
+    title: 'Explicar el tema',
+    description: 'Lumi te explica paso a paso',
+    icon: IconSparkles,
+  },
+  {
+    id: 'guide',
+    title: 'Guía paso a paso',
+    description: 'Te acompaña en cada parte',
+    icon: IconPlayerPlay,
+  },
+  {
+    id: 'draft',
+    title: 'Generar borrador',
+    description: 'Crea un inicio para que lo mejores',
+    icon: IconPencil,
+  },
+  {
+    id: 'review',
+    title: 'Revisar mi trabajo',
+    description: 'Compara tu avance con la pauta',
+    icon: IconClipboardCheck,
+  },
+  {
+    id: 'question',
+    title: 'Preguntarme algo',
+    description: 'Lumi aclara una duda',
+    icon: IconHelpCircle,
+  },
+]
+
+function checklistFrom(value: Json): string[] {
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is string => typeof item === 'string')
 }
 
-interface Message {
-  id: string;
-  role: 'user' | 'lumi';
-  text: string;
-  time: string;
+function displayTime(value: string) {
+  return new Date(value).toLocaleTimeString('es-CL', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
-function now() {
-  return new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+function safeFileName(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .slice(0, 90)
 }
 
-function welcomeMessage(curso: string): Message {
-  return {
-    id: 'welcome',
-    role: 'lumi',
-    time: now(),
-    text: `¡Genial! Ya sé que estás en ${curso} 🌱 Ahora cuéntame: ¿en qué tarea o tema necesitas ayuda?`,
-  };
-}
+async function callTutor(
+  body: Record<string, unknown>
+): Promise<{
+  reply: string
+  title?: string
+  summary?: string
+  checklist?: string[]
+  messages?: HomeworkMessage[]
+}> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session) throw new Error('Tu sesión terminó. Vuelve a ingresar.')
 
-async function askTutor(message: string, curso: string): Promise<string> {
-  const { data: { session } } = await supabase.auth.getSession();
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
-
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/tutor-ai`, {
+  const response = await fetch(FUNCTION_URL, {
     method: 'POST',
-    headers,
-    body: JSON.stringify({
-      message,
-      session_id: getSessionId(),
-      device_id: getDeviceId(),
-      grade: curso,
-    }),
-  });
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify(body),
+  })
 
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  return data.reply as string;
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(
+      typeof payload.error === 'string'
+        ? payload.error
+        : 'Lumi no pudo responder en este momento.'
+    )
+  }
+  return payload
 }
 
 export default function TareaShell() {
-  const [curso, setCurso] = useState<string | null>(() => localStorage.getItem(CURSO_KEY));
-  const [messages, setMessages] = useState<Message[]>(() =>
-    curso ? [welcomeMessage(curso)] : []
-  );
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [offline, setOffline] = useState(!navigator.onLine);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [searchParams] = useSearchParams()
+  const { session, profile } = useAuth()
+  const rewards = useGameRewards('tareas', 'tutor-tareas')
+  const userId = session?.user.id
+  const [subject, setSubject] = useState<HomeworkSubject>(() => {
+    const requested = searchParams.get('subject')
+    return SUBJECTS.some((item) => item.value === requested)
+      ? (requested as HomeworkSubject)
+      : 'historia'
+  })
+  const [grade, setGrade] = useState(profile?.grade ?? '5-basico')
+  const [file, setFile] = useState<File | null>(null)
+  const [pastedText, setPastedText] = useState('')
+  const [task, setTask] = useState<HomeworkTask | null>(null)
+  const [recentTasks, setRecentTasks] = useState<HomeworkTask[]>([])
+  const [messages, setMessages] = useState<HomeworkMessage[]>([])
+  const [input, setInput] = useState('')
+  const [studentWork, setStudentWork] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [error, setError] = useState('')
+  const [showHistory, setShowHistory] = useState(false)
+  const [offline, setOffline] = useState(!navigator.onLine)
+  const chatEndRef = useRef<HTMLDivElement>(null)
+  const chatListRef = useRef<HTMLDivElement>(null)
+
+  const avatar = profile?.avatar_key === 'boy' ? 'boy' : 'girl'
+  const gradeLabel = GRADES.find((item) => item.value === grade)?.label ?? grade
+  const selectedSubject =
+    SUBJECTS.find((item) => item.value === subject)?.label ?? 'Materia'
+  const checklist = useMemo(() => checklistFrom(task?.checklist ?? []), [task?.checklist])
+  const currentStage = task?.current_stage ?? 1
 
   useEffect(() => {
-    const on = () => setOffline(false);
-    const off = () => setOffline(true);
-    window.addEventListener('online', on);
-    window.addEventListener('offline', off);
+    const handleOnline = () => setOffline(false)
+    const handleOffline = () => setOffline(true)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
     return () => {
-      window.removeEventListener('online', on);
-      window.removeEventListener('offline', off);
-    };
-  }, []);
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
+    if (!userId) return
+    let active = true
+    void (async () => {
+      const {
+        data: { session: currentSession },
+      } = await supabase.auth.getSession()
+      if (!active || currentSession?.user.id !== userId) return
+      const { data, error: loadError } = await supabase
+        .from('homework_tasks')
+        .select('*')
+        .eq('child_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(8)
+      if (!active) return
+        if (loadError) {
+          console.error('[Lumi] No se pudo cargar el historial:', loadError.message)
+          setError(`No pudimos cargar tus tareas guardadas: ${loadError.message}`)
+          return
+        }
+        if ((data ?? []).length > 0) {
+          setRecentTasks(data ?? [])
+          return
+        }
 
-  const elegirCurso = (elegido: string) => {
-    localStorage.setItem(CURSO_KEY, elegido);
-    setCurso(elegido);
-    setMessages([welcomeMessage(elegido)]);
-  };
+        // A restored account can briefly have an auth session before PostgREST
+        // refreshes its RLS claims. The profile endpoint validates the same user
+        // server-side and provides a reliable history fallback.
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/compute-profile`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${currentSession.access_token}`,
+            },
+            body: JSON.stringify({ child_id: userId }),
+          }
+        )
+        const payload = await response.json().catch(() => ({}))
+        if (
+          active &&
+          response.ok &&
+          Array.isArray(payload.recent_tasks)
+        ) {
+          setRecentTasks(payload.recent_tasks as HomeworkTask[])
+        }
+    })()
+    return () => {
+      active = false
+    }
+  }, [userId])
 
-  const cambiarCurso = () => {
-    localStorage.removeItem(CURSO_KEY);
-    setCurso(null);
-    setMessages([]);
-  };
+  useEffect(() => {
+    if (chatListRef.current) {
+      chatListRef.current.scrollTo({
+        top: chatListRef.current.scrollHeight,
+        behavior: 'smooth',
+      })
+    }
+  }, [messages, busy])
 
-  const send = async () => {
-    const text = input.trim();
-    if (!text || !curso || loading || offline) return;
+  const refreshMessages = async (taskId: string) => {
+    const history = await callTutor({ mode: 'get_task_history', task_id: taskId })
+    setMessages(history.messages ?? [])
+  }
 
-    setInput('');
-    setMessages(p => [...p, { id: `u-${Date.now()}`, role: 'user', text, time: now() }]);
-    setLoading(true);
+  const loadTask = async (selected: HomeworkTask) => {
+    setTask(selected)
+    setSubject(selected.subject)
+    setGrade(selected.grade)
+    setShowHistory(false)
+    setError('')
+    await refreshMessages(selected.id)
+  }
+
+  const startTask = async () => {
+    if (!userId || busy || offline) return
+    if (!file && pastedText.trim().length < 20) {
+      setError('Sube un archivo o pega las instrucciones de la tarea.')
+      return
+    }
+
+    setBusy(true)
+    setError('')
+    setUploadProgress(file ? 2 : 100)
 
     try {
-      const reply = await askTutor(text, curso);
-      setMessages(p => [...p, { id: `l-${Date.now()}`, role: 'lumi', text: reply, time: now() }]);
-    } catch {
-      setMessages(p => [...p, {
-        id: `e-${Date.now()}`,
-        role: 'lumi',
-        text: '¡Ups! Algo salió mal. Intenta de nuevo en un momento. 🔧',
-        time: now(),
-      }]);
+      let extractedText = pastedText.trim()
+      let pageCount: number | undefined
+      if (file) {
+        const extracted = await extractHomeworkFile(file, setUploadProgress)
+        extractedText = [extracted.text, extractedText].filter(Boolean).join('\n\n')
+        pageCount = extracted.pageCount
+      }
+      if (extractedText.length < 8) {
+        throw new Error(
+          'No encontramos texto legible. Prueba otra imagen o pega las instrucciones.'
+        )
+      }
+
+      const initialTitle = file
+        ? file.name.replace(/\.[^.]+$/, '').slice(0, 90)
+        : `${selectedSubject} — nueva tarea`
+      const { data: created, error: insertError } = await supabase
+        .from('homework_tasks')
+        .insert({
+          child_id: userId,
+          title: initialTitle,
+          subject,
+          grade: grade as HomeworkTask['grade'],
+          extracted_text: extractedText,
+          file_name: file?.name ?? null,
+          file_type: file?.type ?? null,
+          current_stage: 2,
+        })
+        .select('*')
+        .single()
+      if (insertError) throw insertError
+
+      let nextTask = created
+      if (file) {
+        const path = `${userId}/${created.id}/${Date.now()}-${safeFileName(file.name)}`
+        const { error: storageError } = await supabase.storage
+          .from('homework-files')
+          .upload(path, file, { contentType: file.type || undefined })
+        if (storageError) throw storageError
+        const { data: updated, error: updateError } = await supabase
+          .from('homework_tasks')
+          .update({ file_path: path })
+          .eq('id', created.id)
+          .select('*')
+          .single()
+        if (updateError) throw updateError
+        nextTask = updated
+      }
+
+      const analysis = await callTutor({
+        mode: 'analyze_task',
+        task_id: created.id,
+        subject,
+        grade,
+        task_context: extractedText,
+        curriculum_context: curriculumContext(subject, grade),
+        page_count: pageCount,
+      })
+      const { data: analyzed, error: analysisUpdateError } = await supabase
+        .from('homework_tasks')
+        .update({
+          title: analysis.title?.slice(0, 120) || nextTask.title,
+          instructions_summary: analysis.summary || analysis.reply,
+          checklist: analysis.checklist ?? [],
+          current_stage: 2,
+        })
+        .eq('id', created.id)
+        .select('*')
+        .single()
+      if (analysisUpdateError) throw analysisUpdateError
+
+      setTask(analyzed)
+      setRecentTasks((items) => [analyzed, ...items.filter((item) => item.id !== analyzed.id)])
+      await refreshMessages(analyzed.id)
+      rewards.onLevelCompleted({ stage: 'understand', taskId: analyzed.id })
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'No pudimos preparar tu tarea.')
     } finally {
-      setLoading(false);
+      setBusy(false)
     }
-  };
+  }
+
+  const sendTutorMessage = async (tool: TutorTool = 'question') => {
+    if (!task || !userId || busy || offline) return
+    const message =
+      tool === 'question'
+        ? input.trim()
+        : tool === 'review'
+          ? studentWork.trim()
+          : ''
+    if (tool === 'question' && !message) return
+    if (tool === 'review' && message.length < 15) {
+      setError('Pega o escribe una parte de tu trabajo para poder revisarla.')
+      return
+    }
+
+    setBusy(true)
+    setError('')
+    if (tool === 'question') setInput('')
+    try {
+      await callTutor({
+        mode: tool === 'review' ? 'review_work' : 'homework_chat',
+        tool,
+        task_id: task.id,
+        message,
+        student_work: tool === 'review' ? message : undefined,
+        subject: task.subject,
+        grade: task.grade,
+        task_context: task.extracted_text,
+        curriculum_context: curriculumContext(task.subject, task.grade),
+      })
+      if (tool === 'review') {
+        rewards.onCorrect({ taskId: task.id, action: 'review' })
+      }
+      const nextStage = tool === 'review' ? 4 : Math.max(task.current_stage, 3)
+      const { data: updated } = await supabase
+        .from('homework_tasks')
+        .update({ current_stage: nextStage })
+        .eq('id', task.id)
+        .select('*')
+        .single()
+      if (updated) setTask(updated)
+      await refreshMessages(task.id)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Lumi no pudo responder.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const completeTask = async () => {
+    if (!task || !userId || task.status === 'completed' || busy) return
+    setBusy(true)
+    setError('')
+    try {
+      const completedAt = new Date().toISOString()
+      const { data: completed, error: updateError } = await supabase
+        .from('homework_tasks')
+        .update({
+          status: 'completed',
+          current_stage: 4,
+          completed_at: completedAt,
+          points_earned: 40,
+        })
+        .eq('id', task.id)
+        .select('*')
+        .single()
+      if (updateError) throw updateError
+
+      await supabase.from('learning_events').insert({
+        user_id: userId,
+        device_id: getDeviceId(),
+        session_id: getSessionId(),
+        modulo: 'tarea',
+        tipo_ejercicio: 'texto',
+        hora_uso: new Date().getHours(),
+        accuracy: null,
+        attempts: Math.max(messages.filter((item) => item.role === 'student').length, 1),
+        errores_seguidos: 0,
+        nivel: 1,
+        velocidad_respuesta: null,
+        tiempo_sesion: Math.max(
+          60,
+          Math.round((Date.now() - new Date(task.created_at).getTime()) / 1000)
+        ),
+        completado: true,
+        abandono: false,
+        topic: task.title,
+        subject: task.subject,
+        task_id: task.id,
+      })
+      setTask(completed)
+      setRecentTasks((items) =>
+        items.map((item) => (item.id === completed.id ? completed : item))
+      )
+      rewards.onGameCompleted({
+        taskId: task.id,
+        ejercicios: checklist.length || 1,
+        accuracy: 100,
+      })
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'No pudimos terminar la tarea.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const resetTask = () => {
+    setTask(null)
+    setMessages([])
+    setFile(null)
+    setPastedText('')
+    setStudentWork('')
+    setUploadProgress(0)
+    setError('')
+  }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 font-sans">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4 flex-shrink-0 shadow-sm flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <LumiFace className="w-9 h-9" />
-          <div>
-            <h1 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">Lumi — Ayúdame con mi tarea</h1>
-            <p className="text-xs text-green-500 font-medium">
-              {curso ? `● ${curso}` : '● En línea'}
-            </p>
-          </div>
-        </div>
-        {curso && (
-          <button
-            onClick={cambiarCurso}
-            className="text-xs font-semibold text-violet-600 hover:text-violet-700 whitespace-nowrap"
-          >
-            Cambiar curso
-          </button>
-        )}
-      </header>
+    <div className="min-h-[calc(100svh-56px)] bg-[#f8f7fc] text-slate-900">
+      <div className="mx-auto flex min-h-[calc(100svh-56px)] max-w-[1500px]">
+        <aside className="hidden w-64 shrink-0 border-r border-violet-100 bg-white px-5 py-6 lg:flex lg:flex-col">
+          <Link to="/" className="flex items-center gap-3 px-2">
+            <img src="/img/lumi/logo.png" alt="Lumi" className="h-12 w-12 object-contain" />
+            <span className="text-3xl font-black tracking-tight text-violet-700">Lumi</span>
+          </Link>
 
-      {!curso ? (
-        /* Selección de curso */
-        <main className="flex-1 overflow-y-auto px-4 py-8 flex flex-col items-center justify-center text-center gap-6">
-          <LumiFace className="w-16 h-16" />
-          <div>
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900">¡Hola! Soy Lumi 🌱</h2>
-            <p className="mt-2 text-sm sm:text-base text-gray-600 max-w-sm">
-              Para ayudarte mejor con tu tarea, cuéntame primero: ¿en qué curso estás?
+          <div className="mt-7 text-center">
+            <img
+              src={`/img/avatars/${avatar}.png`}
+              alt="Tu avatar"
+              className="mx-auto h-20 w-20 rounded-full border-4 border-violet-100 object-cover"
+            />
+            <p className="mt-3 font-black">¡Hola, {profile?.nombre ?? 'estudiante'}!</p>
+            <p className="text-xs font-bold text-slate-500">{gradeLabel}</p>
+          </div>
+
+          <nav className="mt-7 space-y-1.5 text-sm font-bold">
+            <SideLink to="/" icon={IconHome} label="Inicio" />
+            <button
+              onClick={() => setShowHistory(true)}
+              className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-slate-600 hover:bg-violet-50"
+            >
+              <IconHistory size={19} /> Mis tareas
+            </button>
+            <span className="flex items-center gap-3 rounded-2xl bg-violet-600 px-4 py-3 text-white shadow-lg shadow-violet-200">
+              <IconWand size={19} /> Ayúdame con mi tarea
+            </span>
+            <SideLink to="/math" icon={IconBook2} label="Ejercicios" />
+            <SideLink to="/liga" icon={IconTrophy} label="Premios" />
+          </nav>
+
+          <div className="mt-auto rounded-3xl bg-gradient-to-br from-violet-50 to-emerald-50 p-4 text-center">
+            <p className="text-xs font-extrabold text-violet-800">
+              Estoy aquí para ayudarte
             </p>
+            <img
+              src="/img/lumi/pensativa.png"
+              alt="Lumi"
+              className="mx-auto mt-2 h-28 object-contain"
+            />
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full max-w-sm">
-            {CURSOS.map(c => (
-              <button
-                key={c}
-                onClick={() => elegirCurso(c)}
-                className="rounded-2xl border border-violet-200 bg-white px-3 py-3 text-sm font-semibold text-violet-700 shadow-sm hover:bg-violet-50 active:scale-95 transition"
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-        </main>
-      ) : (
-        <>
-          {/* Aviso sin conexión */}
+        </aside>
+
+        <main className="min-w-0 flex-1 px-3 py-4 sm:px-5 lg:px-7">
+          <header className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-violet-100 bg-white px-4 py-4 shadow-sm sm:px-6">
+            <div className="flex items-center gap-3">
+              <img
+                src="/img/lumi/logo.png"
+                alt="Lumi"
+                className="h-11 w-11 rounded-2xl object-contain"
+              />
+              <div>
+                <h1 className="text-lg font-black sm:text-2xl">Ayúdame con mi tarea</h1>
+                <p className="text-xs font-semibold text-slate-500 sm:text-sm">
+                  Sube tu tarea y Lumi te ayudará paso a paso
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-2xl bg-amber-50 px-3 py-2 text-sm font-black text-amber-700">
+              <IconStar size={19} fill="currentColor" />
+              {rewards.profile.xpTotal} puntos
+            </div>
+          </header>
+
           {offline && (
-            <div className="bg-amber-50 border-b border-amber-200 text-amber-800 text-sm text-center py-2 px-4">
-              📡 Sin conexión. Lumi estará lista cuando vuelvas a conectarte.
+            <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">
+              Estás sin conexión. Tu historial sigue visible, pero Lumi responderá cuando
+              vuelva internet.
             </div>
           )}
 
-          {/* Área de chat */}
-          <main className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 space-y-4">
-            {messages.map(msg => (
-              <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {msg.role === 'lumi' && (
-                  <LumiFace className="w-8 h-8 mr-2 self-end" />
-                )}
-                <div className={`max-w-[80%] sm:max-w-[70%] ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-                  <div className={`rounded-2xl px-4 py-3 text-sm whitespace-pre-line leading-relaxed shadow-sm ${
-                    msg.role === 'user'
-                      ? 'bg-violet-600 text-white rounded-br-sm'
-                      : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm'
-                  }`}>
-                    {msg.text}
-                  </div>
-                  <span className="text-[10px] text-gray-400 px-1">{msg.time}</span>
+          {showHistory ? (
+            <HistoryPanel
+              tasks={recentTasks}
+              onSelect={(selected) => void loadTask(selected)}
+              onClose={() => setShowHistory(false)}
+            />
+          ) : (
+            <>
+              <section className="mt-3 rounded-3xl border border-violet-100 bg-white p-4 shadow-sm sm:p-5">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h2 className="flex items-center gap-2 text-sm font-black text-violet-700">
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-violet-100">
+                      1
+                    </span>
+                    Sube tu tarea
+                  </h2>
+                  {task && (
+                    <button
+                      type="button"
+                      onClick={resetTask}
+                      className="text-xs font-black text-violet-600"
+                    >
+                      Nueva tarea
+                    </button>
+                  )}
                 </div>
-                {msg.role === 'user' && (
-                  <div className="w-8 h-8 rounded-full bg-violet-200 flex items-center justify-center text-base ml-2 flex-shrink-0 self-end">👤🏻</div>
-                )}
-              </div>
-            ))}
 
-            {loading && (
-              <div className="flex justify-start">
-                <LumiFace className="w-8 h-8 mr-2 self-end" />
-                <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
-                  <div className="flex gap-1.5 items-center">
-                    {[0, 150, 300].map(delay => (
-                      <span
-                        key={delay}
-                        className="w-2 h-2 rounded-full bg-violet-400 animate-bounce"
-                        style={{ animationDelay: `${delay}ms` }}
+                {!task ? (
+                  <div className="grid gap-4 lg:grid-cols-[1.25fr_.75fr]">
+                    <div className="rounded-3xl border-2 border-dashed border-violet-200 bg-violet-50/40 p-4">
+                      <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-2xl bg-white p-4 text-center shadow-sm">
+                        <input
+                          type="file"
+                          accept=".pdf,.txt,.jpg,.jpeg,.png,.webp,application/pdf,text/plain,image/*"
+                          className="sr-only"
+                          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                        />
+                        {file ? (
+                          <>
+                            <IconFileText size={32} className="text-red-500" />
+                            <span className="mt-2 max-w-full truncate text-sm font-black">
+                              {file.name}
+                            </span>
+                            <span className="text-xs font-semibold text-emerald-600">
+                              Archivo listo · {(file.size / 1024 / 1024).toFixed(1)} MB
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <IconUpload size={32} className="text-violet-600" />
+                            <span className="mt-2 text-sm font-black text-violet-700">
+                              Subir archivo o imagen
+                            </span>
+                            <span className="mt-1 text-xs text-slate-400">
+                              PDF, TXT, JPG, PNG o WEBP · máximo 10 MB
+                            </span>
+                          </>
+                        )}
+                      </label>
+                      <textarea
+                        value={pastedText}
+                        onChange={(event) => setPastedText(event.target.value)}
+                        placeholder="También puedes pegar aquí las instrucciones de la tarea…"
+                        className="mt-3 min-h-24 w-full resize-y rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
                       />
-                    ))}
+                    </div>
+
+                    <div className="space-y-3">
+                      <SelectField
+                        icon={IconBook2}
+                        label="Asignatura"
+                        value={subject}
+                        onChange={(value) => setSubject(value as HomeworkSubject)}
+                        options={SUBJECTS}
+                      />
+                      <SelectField
+                        icon={IconSchool}
+                        label="Curso"
+                        value={grade}
+                        onChange={(value) => setGrade(value as HomeworkTask['grade'])}
+                        options={[...GRADES]}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void startTask()}
+                        disabled={busy || offline}
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {busy ? `Preparando ${uploadProgress}%` : 'Continuar'}
+                        {!busy && <IconArrowRight size={19} />}
+                      </button>
+                    </div>
                   </div>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-violet-50 p-4">
+                    <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-violet-600 shadow-sm">
+                      <IconFile size={24} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-black">{task.title}</p>
+                      <p className="text-xs font-semibold text-slate-500">
+                        {selectedSubject} · {gradeLabel}
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700">
+                      <IconCheck size={15} /> Archivo leído
+                    </span>
+                  </div>
+                )}
+              </section>
+
+              <StageTabs current={currentStage} />
+
+              {task && (
+                <div className="mt-3 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+                  <section className="min-w-0 rounded-3xl border border-violet-100 bg-white p-3 shadow-sm sm:p-5">
+                    {task.instructions_summary && (
+                      <div className="flex gap-3">
+                        <img
+                          src="/img/lumi/logo.png"
+                          alt="Lumi"
+                          className="h-11 w-11 shrink-0 rounded-2xl object-contain"
+                        />
+                        <div className="rounded-3xl rounded-tl-md bg-[#f6f3ff] p-4">
+                          <p className="text-sm font-bold leading-6">
+                            ¡Listo! Ya leí tu tarea. Esto es lo que debes hacer:
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-slate-700">
+                            {task.instructions_summary}
+                          </p>
+                          {checklist.length > 0 && (
+                            <ol className="mt-3 space-y-1 rounded-2xl bg-white/70 p-3 text-sm text-slate-700">
+                              {checklist.map((item, index) => (
+                                <li key={`${item}-${index}`} className="flex gap-2">
+                                  <span className="font-black text-violet-600">
+                                    {index + 1}.
+                                  </span>
+                                  {item}
+                                </li>
+                              ))}
+                            </ol>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div
+                      ref={chatListRef}
+                      className="mt-4 max-h-[420px] space-y-3 overflow-y-auto pr-1"
+                    >
+                      {messages
+                        .filter((message) => message.message_kind !== 'summary')
+                        .map((message) => (
+                          <div
+                            key={message.id}
+                            className={`flex gap-2 ${
+                              message.role === 'student' ? 'justify-end' : 'justify-start'
+                            }`}
+                          >
+                            {message.role === 'tutor' && (
+                              <img
+                                src="/img/lumi/logo.png"
+                                alt=""
+                                className="h-8 w-8 shrink-0 rounded-xl object-contain"
+                              />
+                            )}
+                            <div
+                              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 ${
+                                message.role === 'student'
+                                  ? 'rounded-br-md bg-amber-50 text-slate-800'
+                                  : 'rounded-bl-md border border-violet-100 bg-white'
+                              }`}
+                            >
+                              <p className="whitespace-pre-line">
+                                {message.content.replace(/\*\*/g, '')}
+                              </p>
+                              <p className="mt-1 text-right text-[10px] text-slate-400">
+                                {displayTime(message.created_at)}
+                              </p>
+                            </div>
+                            {message.role === 'student' && (
+                              <img
+                                src={`/img/avatars/${avatar}.png`}
+                                alt=""
+                                className="h-8 w-8 shrink-0 rounded-full object-cover"
+                              />
+                            )}
+                          </div>
+                        ))}
+                      {busy && task && (
+                        <div className="flex items-center gap-2 text-xs font-bold text-violet-600">
+                          <IconPointFilled className="animate-pulse" size={18} />
+                          Lumi está pensando…
+                        </div>
+                      )}
+                      <div ref={chatEndRef} />
+                    </div>
+
+                    {currentStage >= 3 && (
+                      <div className="mt-4 rounded-2xl border border-violet-100 bg-violet-50/40 p-3">
+                        <label className="text-xs font-black text-slate-600">
+                          Tu borrador o respuesta
+                        </label>
+                        <textarea
+                          value={studentWork}
+                          onChange={(event) => setStudentWork(event.target.value)}
+                          placeholder="Escribe aquí una parte de tu trabajo para que Lumi la revise…"
+                          className="mt-2 min-h-28 w-full resize-y rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => void sendTutorMessage('review')}
+                          disabled={busy || offline}
+                          className="mt-2 inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-black text-violet-700 shadow-sm disabled:opacity-50"
+                        >
+                          <IconClipboardCheck size={17} /> Revisar mi avance
+                        </button>
+                      </div>
+                    )}
+
+                    <form
+                      onSubmit={(event: FormEvent) => {
+                        event.preventDefault()
+                        void sendTutorMessage('question')
+                      }}
+                      className="mt-4 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 focus-within:border-violet-400 focus-within:ring-4 focus-within:ring-violet-100"
+                    >
+                      <input
+                        value={input}
+                        onChange={(event) => setInput(event.target.value)}
+                        placeholder="Escribe tu mensaje…"
+                        className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!input.trim() || busy || offline}
+                        aria-label="Enviar mensaje"
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-violet-600 text-white disabled:opacity-40"
+                      >
+                        <IconSend2 size={18} />
+                      </button>
+                    </form>
+                  </section>
+
+                  <aside className="space-y-4">
+                    <section className="rounded-3xl border border-violet-100 bg-white p-4 shadow-sm">
+                      <h2 className="font-black">Herramientas</h2>
+                      <div className="mt-3 space-y-2">
+                        {TOOLS.map((tool) => {
+                          const ToolIcon = tool.icon
+                          return (
+                            <button
+                              key={tool.id}
+                              type="button"
+                              onClick={() => void sendTutorMessage(tool.id)}
+                              disabled={busy || offline || tool.id === 'question'}
+                              className="flex w-full items-start gap-3 rounded-2xl bg-[#f7f4ff] p-3 text-left transition hover:bg-violet-100 disabled:opacity-45"
+                            >
+                              <ToolIcon size={19} className="mt-0.5 text-violet-600" />
+                              <span>
+                                <span className="block text-xs font-black text-violet-800">
+                                  {tool.title}
+                                </span>
+                                <span className="mt-0.5 block text-[11px] leading-4 text-slate-500">
+                                  {tool.description}
+                                </span>
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </section>
+
+                    <section className="rounded-3xl border border-emerald-100 bg-emerald-50 p-4">
+                      <p className="flex items-center gap-2 text-xs font-black text-emerald-900">
+                        <IconRosetteDiscountCheck size={18} /> Consejo de Lumi
+                      </p>
+                      <p className="mt-2 text-xs leading-5 text-emerald-900">
+                        Lee cada parte con calma y escribe con tus propias palabras. Puedes
+                        preguntarme todas las veces que necesites.
+                      </p>
+                    </section>
+
+                    <button
+                      type="button"
+                      onClick={() => void completeTask()}
+                      disabled={busy || task.status === 'completed'}
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-emerald-200 disabled:opacity-55"
+                    >
+                      <IconCircleCheck size={20} />
+                      {task.status === 'completed' ? 'Tarea completada' : 'Terminé mi tarea'}
+                    </button>
+                  </aside>
                 </div>
-              </div>
-            )}
+              )}
+            </>
+          )}
 
-            <div ref={chatEndRef} />
-          </main>
-
-          {/* Input inferior */}
-          <div className="flex-shrink-0 bg-white border-t border-gray-100 px-4 py-3">
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2 focus-within:ring-2 focus-within:ring-violet-400 focus-within:border-transparent transition">
-              <input
-                type="text"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && send()}
-                placeholder={offline ? 'Sin conexión...' : 'Escribe tu mensaje...'}
-                disabled={loading || offline}
-                maxLength={500}
-                className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-400 outline-none disabled:opacity-50"
-              />
-              <button
-                onClick={send}
-                disabled={!input.trim() || loading || offline}
-                className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-white disabled:opacity-40 hover:bg-violet-700 transition flex-shrink-0"
-                aria-label="Enviar"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                  <path d="M3.105 2.289a.75.75 0 00-.826.95l1.903 6.23H13.5a.75.75 0 010 1.5H4.182l-1.903 6.23a.75.75 0 00.826.95 28.896 28.896 0 0015.293-7.154.75.75 0 000-1.115A28.897 28.897 0 003.105 2.289z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+          {error && (
+            <p role="alert" className="mt-3 rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+              {error}
+            </p>
+          )}
+        </main>
+      </div>
     </div>
-  );
+  )
+}
+
+function SideLink({
+  to,
+  icon: Icon,
+  label,
+}: {
+  to: string
+  icon: typeof IconHome
+  label: string
+}) {
+  return (
+    <Link
+      to={to}
+      className="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 hover:bg-violet-50"
+    >
+      <Icon size={19} /> {label}
+    </Link>
+  )
+}
+
+function SelectField({
+  icon: Icon,
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  icon: typeof IconBook2
+  label: string
+  value: string
+  onChange: (value: string) => void
+  options: ReadonlyArray<{ value: string; label: string }>
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 flex items-center gap-2 text-xs font-black text-slate-600">
+        <Icon size={17} className="text-violet-600" /> {label}
+      </span>
+      <span className="relative block">
+        <select
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="w-full appearance-none rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-9 text-sm font-bold outline-none focus:border-violet-400"
+        >
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <IconChevronDown
+          size={17}
+          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+        />
+      </span>
+    </label>
+  )
+}
+
+function StageTabs({ current }: { current: number }) {
+  const steps = ['Subir', 'Entender', 'Hacer conmigo', 'Revisar']
+  return (
+    <ol className="mt-3 grid grid-cols-4 gap-1.5">
+      {steps.map((step, index) => {
+        const number = index + 1
+        const active = current === number
+        const completed = current > number
+        return (
+          <li
+            key={step}
+            className={`rounded-xl px-2 py-2 text-center text-[10px] font-black sm:rounded-2xl sm:text-xs ${
+              active
+                ? 'bg-violet-600 text-white'
+                : completed
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : 'bg-white text-slate-400'
+            }`}
+          >
+            {completed ? <IconCheck size={14} className="mx-auto sm:hidden" /> : null}
+            <span className="hidden sm:inline">
+              {number}. {step}
+            </span>
+            <span className="sm:hidden">{completed ? '' : number}</span>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
+function HistoryPanel({
+  tasks,
+  onSelect,
+  onClose,
+}: {
+  tasks: HomeworkTask[]
+  onSelect: (task: HomeworkTask) => void
+  onClose: () => void
+}) {
+  return (
+    <section className="mt-3 rounded-3xl border border-violet-100 bg-white p-4 shadow-sm sm:p-6">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-black">Mis tareas</h2>
+          <p className="text-sm text-slate-500">Retoma una tarea o revisa lo que completaste.</p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-2xl bg-violet-50 px-4 py-2 text-sm font-black text-violet-700"
+        >
+          Volver
+        </button>
+      </div>
+      {tasks.length === 0 ? (
+        <div className="mt-6 rounded-3xl bg-slate-50 p-8 text-center">
+          <IconFileText size={36} className="mx-auto text-slate-300" />
+          <p className="mt-3 font-bold text-slate-500">Aún no tienes tareas guardadas.</p>
+        </div>
+      ) : (
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+          {tasks.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onSelect(item)}
+              className="flex items-center gap-3 rounded-2xl border border-slate-100 p-4 text-left transition hover:border-violet-200 hover:bg-violet-50"
+            >
+              <span
+                className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${
+                  item.status === 'completed'
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-violet-100 text-violet-700'
+                }`}
+              >
+                {item.status === 'completed' ? (
+                  <IconCircleCheck size={23} />
+                ) : (
+                  <IconFileText size={23} />
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-black">{item.title}</span>
+                <span className="mt-1 block text-xs font-semibold text-slate-500">
+                  {SUBJECTS.find((subject) => subject.value === item.subject)?.label}
+                  {' · '}
+                  {item.status === 'completed' ? 'Completada' : 'En progreso'}
+                </span>
+              </span>
+              <IconArrowRight size={18} className="text-slate-300" />
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  )
 }
