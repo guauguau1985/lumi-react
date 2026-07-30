@@ -18,10 +18,9 @@ serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Método no permitido" }, 405);
 
   try {
-    const service = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const service = createClient(supabaseUrl, serviceRoleKey);
     const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
     if (!token) return json({ error: "Autenticación requerida" }, 401);
     const {
@@ -44,8 +43,38 @@ serve(async (req) => {
       .maybeSingle();
     if (!link) return json({ error: "No tienes acceso a este perfil." }, 403);
 
-    const { error } = await service.auth.admin.updateUserById(childId, { password });
-    if (error) throw error;
+    // The Admin SDK's user update can fail with an empty error object for older
+    // accounts that were imported directly into auth.users. Calling GoTrue's
+    // documented admin endpoint works for both imported and newly created users.
+    const updateResponse = await fetch(
+      `${supabaseUrl}/auth/v1/admin/users/${encodeURIComponent(childId)}`,
+      {
+        method: "PUT",
+        headers: {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password }),
+      }
+    );
+    if (!updateResponse.ok) {
+      const detail = await updateResponse.text();
+      console.error("family-admin update", updateResponse.status, detail);
+      if (updateResponse.status === 404) {
+        return json({ error: "La cuenta del estudiante no existe en Supabase." }, 404);
+      }
+      if (updateResponse.status === 422) {
+        return json(
+          { error: "La contraseña no cumple los requisitos de seguridad." },
+          422
+        );
+      }
+      return json(
+        { error: "Supabase no pudo actualizar esta cuenta. Intenta nuevamente." },
+        502
+      );
+    }
     return json({ ok: true });
   } catch (error) {
     console.error("family-admin", error);
