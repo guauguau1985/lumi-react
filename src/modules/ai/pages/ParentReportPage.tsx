@@ -5,6 +5,8 @@ import {
   IconChevronDown,
   IconCircleCheck,
   IconClock,
+  IconEye,
+  IconEyeOff,
   IconFileText,
   IconFlame,
   IconHelpCircle,
@@ -77,6 +79,7 @@ export default function ParentReportPage() {
   const [showSettings, setShowSettings] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [newPassword, setNewPassword] = useState('')
+  const [showChildPassword, setShowChildPassword] = useState(false)
   const [passwordMessage, setPasswordMessage] = useState('')
 
   const selectedChild = children.find((child) => child.id === selectedId) ?? null
@@ -222,6 +225,7 @@ export default function ParentReportPage() {
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error ?? 'No pudimos cambiarla.')
       setNewPassword('')
+      setShowChildPassword(false)
       setPasswordMessage('Contraseña actualizada. El estudiante ya puede usarla.')
     } catch (caught) {
       setPasswordMessage(
@@ -511,14 +515,38 @@ export default function ParentReportPage() {
                       necesita un servicio de correo transaccional.
                     </p>
                     <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                      <input
-                        type="password"
-                        value={newPassword}
-                        onChange={(event) => setNewPassword(event.target.value)}
-                        minLength={8}
-                        placeholder="Nueva contraseña (mínimo 8)"
-                        className="lumi-auth-input flex-1"
-                      />
+                      <div className="relative flex-1">
+                        <input
+                          type={showChildPassword ? 'text' : 'password'}
+                          value={newPassword}
+                          onChange={(event) => setNewPassword(event.target.value)}
+                          minLength={8}
+                          autoComplete="new-password"
+                          placeholder="Nueva contraseña (mínimo 8)"
+                          className="lumi-auth-input w-full pr-12"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowChildPassword((visible) => !visible)}
+                          aria-label={
+                            showChildPassword
+                              ? 'Ocultar contraseña'
+                              : 'Mostrar contraseña'
+                          }
+                          title={
+                            showChildPassword
+                              ? 'Ocultar contraseña'
+                              : 'Mostrar contraseña'
+                          }
+                          className="absolute inset-y-0 right-0 grid w-12 place-items-center text-slate-400 transition hover:text-violet-600"
+                        >
+                          {showChildPassword ? (
+                            <IconEyeOff size={20} />
+                          ) : (
+                            <IconEye size={20} />
+                          )}
+                        </button>
+                      </div>
                       <button
                         type="button"
                         onClick={() => void changeChildPassword()}

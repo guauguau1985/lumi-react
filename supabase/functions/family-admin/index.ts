@@ -61,6 +61,19 @@ serve(async (req) => {
     if (!updateResponse.ok) {
       const detail = await updateResponse.text();
       console.error("family-admin update", updateResponse.status, detail);
+      if (updateResponse.status >= 500) {
+        const { error: fallbackError } = await service.rpc(
+          "reset_imported_auth_password",
+          {
+            p_user_id: childId,
+            p_password: password,
+          }
+        );
+        if (!fallbackError) {
+          return json({ ok: true, legacy_account_repaired: true });
+        }
+        console.error("family-admin fallback", fallbackError);
+      }
       if (updateResponse.status === 404) {
         return json({ error: "La cuenta del estudiante no existe en Supabase." }, 404);
       }
