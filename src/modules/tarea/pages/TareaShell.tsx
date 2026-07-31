@@ -78,7 +78,7 @@ const TOOLS: Array<{
   {
     id: 'review',
     title: 'Revisar mi trabajo',
-    description: 'Compara tu avance con la pauta',
+    description: 'Escribe tu avance en el chat y presiona aquí',
     icon: IconClipboardCheck,
   },
   {
@@ -161,7 +161,6 @@ export default function TareaShell() {
   const [recentTasks, setRecentTasks] = useState<HomeworkTask[]>([])
   const [messages, setMessages] = useState<HomeworkMessage[]>([])
   const [input, setInput] = useState('')
-  const [studentWork, setStudentWork] = useState('')
   const [busy, setBusy] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState('')
@@ -376,21 +375,17 @@ export default function TareaShell() {
 
   const sendTutorMessage = async (tool: TutorTool = 'question') => {
     if (!task || !userId || busy || offline) return
-    const message =
-      tool === 'question'
-        ? input.trim()
-        : tool === 'review'
-          ? studentWork.trim()
-          : ''
+    const usesChatInput = tool === 'question' || tool === 'review'
+    const message = usesChatInput ? input.trim() : ''
     if (tool === 'question' && !message) return
     if (tool === 'review' && message.length < 15) {
-      setError('Pega o escribe una parte de tu trabajo para poder revisarla.')
+      setError('Escribe o pega tu avance en el chat para que Lumi lo revise.')
       return
     }
 
     setBusy(true)
     setError('')
-    if (tool === 'question') setInput('')
+    if (usesChatInput) setInput('')
     try {
       await callTutor({
         mode: tool === 'review' ? 'review_work' : 'homework_chat',
@@ -484,7 +479,6 @@ export default function TareaShell() {
     setMessages([])
     setFiles([])
     setPastedText('')
-    setStudentWork('')
     setUploadProgress(0)
     setError('')
   }
@@ -801,28 +795,6 @@ export default function TareaShell() {
                       <div ref={chatEndRef} />
                     </div>
 
-                    {currentStage >= 3 && (
-                      <div className="mt-4 rounded-2xl border border-violet-100 bg-violet-50/40 p-3">
-                        <label className="text-xs font-black text-slate-600">
-                          Tu borrador o respuesta
-                        </label>
-                        <textarea
-                          value={studentWork}
-                          onChange={(event) => setStudentWork(event.target.value)}
-                          placeholder="Escribe aquí una parte de tu trabajo para que Lumi la revise…"
-                          className="mt-2 min-h-28 w-full resize-y rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => void sendTutorMessage('review')}
-                          disabled={busy || offline}
-                          className="mt-2 inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-black text-violet-700 shadow-sm disabled:opacity-50"
-                        >
-                          <IconClipboardCheck size={17} /> Revisar mi avance
-                        </button>
-                      </div>
-                    )}
-
                     <form
                       onSubmit={(event: FormEvent) => {
                         event.preventDefault()
@@ -858,7 +830,12 @@ export default function TareaShell() {
                               key={tool.id}
                               type="button"
                               onClick={() => void sendTutorMessage(tool.id)}
-                              disabled={busy || offline || tool.id === 'question'}
+                              disabled={
+                                busy ||
+                                offline ||
+                                tool.id === 'question' ||
+                                (tool.id === 'review' && !input.trim())
+                              }
                               className="flex w-full items-start gap-3 rounded-2xl bg-[#f7f4ff] p-3 text-left transition hover:bg-violet-100 disabled:opacity-45"
                             >
                               <ToolIcon size={19} className="mt-0.5 text-violet-600" />
