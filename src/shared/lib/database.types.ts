@@ -281,6 +281,7 @@ export type Database = {
       }
       homework_tasks: {
         Row: {
+          attachments: Json
           checklist: Json
           child_id: string
           completed_at: string | null
@@ -308,6 +309,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attachments?: Json
           checklist?: Json
           child_id: string
           completed_at?: string | null
@@ -335,6 +337,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attachments?: Json
           checklist?: Json
           child_id?: string
           completed_at?: string | null

@@ -1,4 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
+import { SpeakButton } from "@/shared/components/voice/SpeakButton";
+import { VoiceInputButton } from "@/shared/components/voice/VoiceInputButton";
 
 interface DivisionProblem {
   dividend: number;
@@ -17,6 +19,14 @@ function solveProblem({ dividend, divisor }: DivisionProblem) {
   const quotient = Math.floor(dividend / divisor);
   const remainder = dividend % divisor;
   return { quotient, remainder };
+}
+
+/** Extrae el primer número que el reconocimiento de voz haya entendido, para
+ * poder colocarlo en un campo numérico (cociente o resto). Si no reconoce
+ * ningún número, no se toca el campo y el niño puede escribirlo a mano. */
+function extractSpokenNumber(text: string): string | null {
+  const match = text.match(/-?\d+/);
+  return match ? match[0] : null;
 }
 
 const GameDivisionConResto = () => {
@@ -78,6 +88,11 @@ const GameDivisionConResto = () => {
           <p className="mt-1 text-3xl font-bold text-amber-700">
             {problem.dividend} ÷ {problem.divisor}
           </p>
+          <div className="mt-3 flex justify-center md:justify-start">
+            <SpeakButton
+              text={`¿Cuánto es ${problem.dividend} dividido por ${problem.divisor}? Escribe el cociente y el resto.`}
+            />
+          </div>
         </div>
         <div className="flex flex-col gap-4 md:w-80">
           <label className="text-sm font-medium text-amber-700">
@@ -89,6 +104,15 @@ const GameDivisionConResto = () => {
               onChange={(event) => setQuotientInput(event.currentTarget.value)}
               className="mt-1 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-base shadow focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
             />
+            <div className="mt-2">
+              <VoiceInputButton
+                label="Responder cociente hablando"
+                onResult={(text) => {
+                  const spokenNumber = extractSpokenNumber(text);
+                  if (spokenNumber !== null) setQuotientInput(spokenNumber);
+                }}
+              />
+            </div>
           </label>
           <label className="text-sm font-medium text-amber-700">
             Resto
@@ -99,6 +123,15 @@ const GameDivisionConResto = () => {
               onChange={(event) => setRemainderInput(event.currentTarget.value)}
               className="mt-1 w-full rounded-xl border border-amber-200 bg-white px-3 py-2 text-base shadow focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
             />
+            <div className="mt-2">
+              <VoiceInputButton
+                label="Responder resto hablando"
+                onResult={(text) => {
+                  const spokenNumber = extractSpokenNumber(text);
+                  if (spokenNumber !== null) setRemainderInput(spokenNumber);
+                }}
+              />
+            </div>
           </label>
           <div className="flex flex-wrap gap-3">
             <button

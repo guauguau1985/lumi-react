@@ -23,12 +23,14 @@ import {
   IconTrophy,
   IconUpload,
   IconWand,
+  IconX,
 } from '@tabler/icons-react'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useGameRewards } from '@/gamification/useGameRewards'
 import { supabase } from '@/shared/lib/supabaseClient'
 import { getDeviceId, getSessionId } from '@/shared/lib/deviceId'
 import type { Json, Tables } from '@/shared/lib/database.types'
+import { avatarSrc } from '@/shared/data/avatars'
 import { extractHomeworkFile } from '@/modules/tarea/lib/extractHomeworkFile'
 import {
   curriculumContext,
@@ -42,6 +44,12 @@ type HomeworkMessage = Tables<'homework_messages'>
 type TutorTool = 'explain' | 'guide' | 'draft' | 'review' | 'question'
 
 const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tutor-ai`
+const MAX_ATTACHMENTS = 6
+
+const OPTIONAL_SUBJECTS = [
+  { value: 'otra', label: 'No estoy seguro/a' },
+  ...SUBJECTS.filter((item) => item.value !== 'otra'),
+] as Array<{ value: HomeworkSubject; label: string }>
 
 const TOOLS: Array<{
   id: TutorTool
@@ -144,10 +152,10 @@ export default function TareaShell() {
     const requested = searchParams.get('subject')
     return SUBJECTS.some((item) => item.value === requested)
       ? (requested as HomeworkSubject)
-      : 'historia'
+      : 'otra'
   })
   const [grade, setGrade] = useState(profile?.grade ?? '5-basico')
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [pastedText, setPastedText] = useState('')
   const [task, setTask] = useState<HomeworkTask | null>(null)
   const [recentTasks, setRecentTasks] = useState<HomeworkTask[]>([])
@@ -162,10 +170,12 @@ export default function TareaShell() {
   const chatEndRef = useRef<HTMLDivElement>(null)
   const chatListRef = useRef<HTMLDivElement>(null)
 
-  const avatar = profile?.avatar_key === 'boy' ? 'boy' : 'girl'
+  const avatar = avatarSrc(profile?.avatar_key)
   const gradeLabel = GRADES.find((item) => item.value === grade)?.label ?? grade
   const selectedSubject =
-    SUBJECTS.find((item) => item.value === subject)?.label ?? 'Materia'
+    subject === 'otra'
+      ? 'Materia por identificar'
+      : SUBJECTS.find((item) => item.value === subject)?.label ?? 'Materia'
   const checklist = useMemo(() => checklistFrom(task?.checklist ?? []), [task?.checklist])
   const currentStage = task?.current_stage ?? 1
 
@@ -258,32 +268,41 @@ export default function TareaShell() {
 
   const startTask = async () => {
     if (!userId || busy || offline) return
-    if (!file && pastedText.trim().length < 20) {
-      setError('Sube un archivo o pega las instrucciones de la tarea.')
+    if (!pastedText.trim() && files.length === 0) {
+      setError('Cuéntale a Lumi qué necesitas, o adjunta un documento.')
       return
     }
 
     setBusy(true)
     setError('')
-    setUploadProgress(file ? 2 : 100)
+    setUploadProgress(files.length > 0 ? 1 : 100)
 
     try {
-      let extractedText = pastedText.trim()
-      let pageCount: number | undefined
-      if (file) {
-        const extracted = await extractHomeworkFile(file, setUploadProgress)
-        extractedText = [extracted.text, extractedText].filter(Boolean).join('\n\n')
-        pageCount = extracted.pageCount
+      const extractedParts: string[] = []
+      let pageCount = 0
+      for (let index = 0; index < files.length; index += 1) {
+        const currentFile = files[index]
+        const extracted = await extractHomeworkFile(currentFile, (progress) => {
+          setUploadProgress(Math.round(((index + progress / 100) / files.length) * 100))
+        })
+        extractedParts.push(
+          files.length > 1 ? `[Documento: ${currentFile.name}]\n${extracted.text}` : extracted.text
+        )
+        pageCount += extracted.pageCount ?? 0
       }
+      const extractedText = [pastedText.trim(), ...extractedParts].filter(Boolean).join('\n\n')
       if (extractedText.length < 8) {
         throw new Error(
-          'No encontramos texto legible. Prueba otra imagen o pega las instrucciones.'
+          'No encontramos texto legible. Cuéntale a Lumi con más detalle qué necesitas, o prueba con otra imagen.'
         )
       }
 
-      const initialTitle = file
-        ? file.name.replace(/\.[^.]+$/, '').slice(0, 90)
-        : `${selectedSubject} — nueva tarea`
+      const firstFile = files[0]
+      const initialTitle = pastedText.trim()
+        ? pastedText.trim().slice(0, 90)
+        : firstFile
+          ? firstFile.name.replace(/\.[^.]+$/, '').slice(0, 90)
+          : `${selectedSubject} — nueva tarea`
       const { data: created, error: insertError } = await supabase
         .from('homework_tasks')
         .insert({
@@ -292,8 +311,8 @@ export default function TareaShell() {
           subject,
           grade: grade as HomeworkTask['grade'],
           extracted_text: extractedText,
-          file_name: file?.name ?? null,
-          file_type: file?.type ?? null,
+          file_name: firstFile?.name ?? null,
+          file_type: firstFile?.type ?? null,
           current_stage: 2,
         })
         .select('*')
@@ -301,15 +320,20 @@ export default function TareaShell() {
       if (insertError) throw insertError
 
       let nextTask = created
-      if (file) {
-        const path = `${userId}/${created.id}/${Date.now()}-${safeFileName(file.name)}`
-        const { error: storageError } = await supabase.storage
-          .from('homework-files')
-          .upload(path, file, { contentType: file.type || undefined })
-        if (storageError) throw storageError
+      if (files.length > 0) {
+        const uploaded: Array<{ name: string; path: string; type: string }> = []
+        for (let index = 0; index < files.length; index += 1) {
+          const currentFile = files[index]
+          const path = `${userId}/${created.id}/${Date.now()}-${index}-${safeFileName(currentFile.name)}`
+          const { error: storageError } = await supabase.storage
+            .from('homework-files')
+            .upload(path, currentFile, { contentType: currentFile.type || undefined })
+          if (storageError) throw storageError
+          uploaded.push({ name: currentFile.name, path, type: currentFile.type || '' })
+        }
         const { data: updated, error: updateError } = await supabase
           .from('homework_tasks')
-          .update({ file_path: path })
+          .update({ file_path: uploaded[0]?.path ?? null, attachments: uploaded })
           .eq('id', created.id)
           .select('*')
           .single()
@@ -458,11 +482,23 @@ export default function TareaShell() {
   const resetTask = () => {
     setTask(null)
     setMessages([])
-    setFile(null)
+    setFiles([])
     setPastedText('')
     setStudentWork('')
     setUploadProgress(0)
     setError('')
+  }
+
+  const addFiles = (picked: FileList | null) => {
+    if (!picked || picked.length === 0) return
+    setFiles((prev) => {
+      const merged = [...prev, ...Array.from(picked)]
+      return merged.slice(0, MAX_ATTACHMENTS)
+    })
+  }
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, itemIndex) => itemIndex !== index))
   }
 
   return (
@@ -522,7 +558,7 @@ export default function TareaShell() {
               <div>
                 <h1 className="text-lg font-black sm:text-2xl">Ayúdame con mi tarea</h1>
                 <p className="text-xs font-semibold text-slate-500 sm:text-sm">
-                  Sube tu tarea y Lumi te ayudará paso a paso
+                  Cuéntale qué necesitas y Lumi te ayudará paso a paso
                 </p>
               </div>
             </div>
@@ -553,7 +589,7 @@ export default function TareaShell() {
                     <span className="grid h-6 w-6 place-items-center rounded-full bg-violet-100">
                       1
                     </span>
-                    Sube tu tarea
+                    Cuéntale a Lumi
                   </h2>
                   {task && (
                     <button
@@ -569,58 +605,83 @@ export default function TareaShell() {
                 {!task ? (
                   <div className="grid gap-4 lg:grid-cols-[1.25fr_.75fr]">
                     <div className="rounded-3xl border-2 border-dashed border-violet-200 bg-violet-50/40 p-4">
-                      <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-2xl bg-white p-4 text-center shadow-sm">
-                        <input
-                          type="file"
-                          accept=".pdf,.txt,.jpg,.jpeg,.png,.webp,application/pdf,text/plain,image/*"
-                          className="sr-only"
-                          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                        />
-                        {file ? (
-                          <>
-                            <IconFileText size={32} className="text-red-500" />
-                            <span className="mt-2 max-w-full truncate text-sm font-black">
-                              {file.name}
-                            </span>
-                            <span className="text-xs font-semibold text-emerald-600">
-                              Archivo listo · {(file.size / 1024 / 1024).toFixed(1)} MB
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <IconUpload size={32} className="text-violet-600" />
-                            <span className="mt-2 text-sm font-black text-violet-700">
-                              Subir archivo o imagen
-                            </span>
-                            <span className="mt-1 text-xs text-slate-400">
-                              PDF, TXT, JPG, PNG o WEBP · máximo 10 MB
-                            </span>
-                          </>
-                        )}
+                      <label className="block text-sm font-black text-violet-700">
+                        ¿Qué necesitas?
                       </label>
                       <textarea
                         value={pastedText}
                         onChange={(event) => setPastedText(event.target.value)}
-                        placeholder="También puedes pegar aquí las instrucciones de la tarea…"
-                        className="mt-3 min-h-24 w-full resize-y rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                        placeholder="Cuéntale a Lumi qué necesitas. Por ejemplo: “Necesito ayuda con las fracciones de la guía” o pega aquí las instrucciones."
+                        className="mt-2 min-h-28 w-full resize-y rounded-2xl border border-violet-100 bg-white px-4 py-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
                       />
+
+                      <div className="mt-4 border-t border-violet-100 pt-4">
+                        <p className="text-xs font-black text-violet-700">
+                          ¿Tienes una guía, rúbrica u otro documento?{' '}
+                          <span className="font-semibold text-slate-400">(opcional)</span>
+                        </p>
+                        <label className="mt-2 flex min-h-20 cursor-pointer flex-col items-center justify-center rounded-2xl bg-white p-4 text-center shadow-sm">
+                          <input
+                            type="file"
+                            multiple
+                            accept=".pdf,.txt,.jpg,.jpeg,.png,.webp,application/pdf,text/plain,image/*"
+                            className="sr-only"
+                            onChange={(event) => {
+                              addFiles(event.target.files)
+                              event.target.value = ''
+                            }}
+                          />
+                          <IconUpload size={26} className="text-violet-600" />
+                          <span className="mt-1 text-xs font-black text-violet-700">
+                            Adjuntar documentos
+                          </span>
+                          <span className="mt-1 text-[11px] text-slate-400">
+                            PDF, TXT, JPG, PNG o WEBP · máx. 10 MB cada uno, hasta{' '}
+                            {MAX_ATTACHMENTS}
+                          </span>
+                        </label>
+
+                        {files.length > 0 && (
+                          <ul className="mt-3 space-y-1.5">
+                            {files.map((item, index) => (
+                              <li
+                                key={`${item.name}-${index}`}
+                                className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold shadow-sm"
+                              >
+                                <IconFileText size={16} className="shrink-0 text-violet-500" />
+                                <span className="min-w-0 flex-1 truncate">{item.name}</span>
+                                <span className="shrink-0 text-slate-400">
+                                  {(item.size / 1024 / 1024).toFixed(1)} MB
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeFile(index)}
+                                  aria-label={`Quitar ${item.name}`}
+                                  className="shrink-0 text-slate-400 hover:text-red-500"
+                                >
+                                  <IconX size={15} />
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     </div>
 
                     <div className="space-y-3">
                       <SelectField
                         icon={IconBook2}
-                        label="Asignatura"
+                        label="Materia (si sabes cuál es)"
                         value={subject}
                         onChange={(value) => setSubject(value as HomeworkSubject)}
-                        options={SUBJECTS}
+                        options={OPTIONAL_SUBJECTS}
                       />
-                      <SelectField
-                        icon={IconSchool}
-                        label="Curso"
-                        value={grade}
-                        onChange={(value) => setGrade(value as HomeworkTask['grade'])}
-                        options={[...GRADES]}
-                      />
+                      <div className="rounded-2xl border border-violet-100 bg-violet-50/60 px-4 py-3">
+                        <span className="flex items-center gap-2 text-xs font-black text-slate-600">
+                          <IconSchool size={17} className="text-violet-600" /> Curso
+                        </span>
+                        <p className="mt-1 text-sm font-bold text-violet-800">{gradeLabel}</p>
+                      </div>
                       <button
                         type="button"
                         onClick={() => void startTask()}
@@ -644,7 +705,10 @@ export default function TareaShell() {
                       </p>
                     </div>
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700">
-                      <IconCheck size={15} /> Archivo leído
+                      <IconCheck size={15} />{' '}
+                      {files.length > 0
+                        ? `${files.length} documento${files.length > 1 ? 's' : ''} leído${files.length > 1 ? 's' : ''}`
+                        : 'Listo'}
                     </span>
                   </div>
                 )}
