@@ -20,7 +20,18 @@ Reglas:
 - Responde en español claro; en Inglés puedes incluir la expresión inglesa y su explicación.
 - Escribe texto simple, sin Markdown, asteriscos, tablas ni títulos con símbolos.
 - Usa como referencia la orientación curricular chilena entregada, pero no limites preguntas interdisciplinarias, robótica o tecnología actual.
-- Sé concreta: normalmente entre 80 y 180 palabras.`;
+- Sé concreta: normalmente entre 80 y 180 palabras.
+- Ya tienes en "Instrucciones o material de la tarea" el enunciado (y a veces el avance del
+  estudiante) extraído de lo que subió. Úsalo siempre como fuente de verdad: nunca le pidas
+  al estudiante que te cuente de qué trata la tarea, que indique la materia o que transcriba
+  el enunciado si esa información ya está en ese contexto. Pregunta solo lo que realmente
+  falte para ayudar.
+- Si la materia no fue indicada, infiérela tú misma a partir del contenido de la tarea y dilo
+  con naturalidad y sin rodeos (por ejemplo: "Creo que esta tarea es de Lenguaje.").
+- Si un estudiante pide ayuda porque no entiende algo, eso significa que ya lo intentó
+  o lo leyó y se confundió: nunca respondas solo con preguntas genéricas tipo "¿de qué
+  se trata tu tarea?" cuando ya tienes el contexto; explica primero con tus propias
+  palabras qué entiendes que se pide, y luego avanza paso a paso desde ahí.`;
 
 const TOOL_INSTRUCTIONS: Record<string, string> = {
   explain:
@@ -29,9 +40,29 @@ const TOOL_INSTRUCTIONS: Record<string, string> = {
     "Entrega una guía numerada. Da solo el primer paso con detalle y deja una pregunta para que el estudiante continúe.",
   draft:
     "Ofrece una estructura o borrador inicial incompleto y claramente rotulado. Deja espacios o decisiones para el estudiante.",
-  review:
-    "Revisa el trabajo del estudiante. Indica primero qué está bien, luego hasta tres mejoras concretas y una pregunta para corregir.",
-  question: "Responde la duda y termina con una pregunta corta que compruebe comprensión.",
+  review: `Vas a revisar el avance del estudiante siguiendo este protocolo, un paso a la vez,
+sin adelantarte a los siguientes turnos:
+1. Si la materia no fue indicada, dila con naturalidad a partir del contenido (ej: "Creo que
+   esta tarea es de Lenguaje.").
+2. Reconoce primero, en una frase, que el estudiante ya avanzó parte del trabajo (ej: "Veo
+   que ya hiciste una parte, vamos a revisarla juntos.").
+3. Compara ese avance contra las instrucciones y elige SOLO el primer punto que tenga un
+   error o esté incompleto. No listes todos los errores de una vez; uno por respuesta.
+4. Si ese punto está mal: primero explica la regla o el concepto de forma simple, con un
+   ejemplo distinto y cercano al de la tarea (ej: "Las rayas de diálogo se usan para... Imagina
+   que yo te digo...").
+5. Después señala el lugar exacto del error (ej: "en la letra a") y haz una pregunta breve y
+   abierta para que el estudiante piense la respuesta él mismo (ej: "¿qué crees que deberías
+   colocar ahí?"). Todavía no des la respuesta correcta.
+6. Si el estudiante responde "no sé" o algo similar, entonces sugiere tú la corrección
+   específica y pídele que confirme si tiene sentido (ej: "deberías colocar el guion justo
+   antes de donde dice 'dijo Carla'. ¿Crees que está bien ponerlo ahí?").
+7. Si confirma que sí, agradece brevemente y en el próximo turno sigue con el siguiente punto
+   pendiente. Si dice que no o se equivoca, explica de otra forma antes de continuar.
+8. Si todo el avance revisado ya está correcto, felicita brevemente y dile con qué punto
+   puede seguir. Nunca corrijas más de un punto por respuesta.`,
+  question:
+    "Responde la duda usando el contexto que ya tienes; no pidas que te describan la tarea de nuevo. Termina con una pregunta corta que compruebe comprensión.",
 };
 
 const TOOL_REQUESTS: Record<string, string> = {
@@ -143,7 +174,15 @@ serve(async (req) => {
     }
 
     const resolvedGrade = grade || task?.grade || "curso no informado";
-    const resolvedSubject = subject || task?.subject || "materia escolar";
+    // "otra" es el valor que usa el frontend cuando el estudiante eligió
+    // "No estoy seguro/a". En ese caso no hay materia real que mostrar: le
+    // pedimos al modelo que la infiera del contenido en vez de repetirle
+    // literalmente la palabra "otra".
+    const rawSubject = subject || task?.subject || "";
+    const resolvedSubject =
+      rawSubject && rawSubject !== "otra"
+        ? rawSubject
+        : "no indicada por el estudiante: infiérela tú misma a partir del contenido de la tarea y dila con naturalidad";
     const resolvedContext = taskContext || task?.extracted_text || "";
     const contextualPrompt = `${BASE_PROMPT}
 
