@@ -508,7 +508,7 @@ export default function TareaShell() {
 
           <div className="mt-7 text-center">
             <img
-              src={`/img/avatars/${avatar}.png`}
+              src={avatar}
               alt="Tu avatar"
               className="mx-auto h-20 w-20 rounded-full border-4 border-violet-100 object-cover"
             />
@@ -764,48 +764,58 @@ export default function TareaShell() {
                     >
                       {messages
                         .filter((message) => message.message_kind !== 'summary')
-                        .map((message) => (
-                          <div
-                            key={message.id}
-                            className={`flex gap-2 ${
-                              message.role === 'student' ? 'justify-end' : 'justify-start'
-                            }`}
-                          >
-                            {message.role === 'tutor' && (
-                              <img
-                                src="/img/lumi/face.png"
-                                alt=""
-                                className="h-8 w-8 shrink-0 rounded-xl object-contain"
-                              />
-                            )}
+                        .map((message) => {
+                          const cleanContent = message.content.replace(/\*\*/g, '').trim()
+                          // Lumi siempre debe poder leerse y escucharse a la vez. Si por algún
+                          // problema (por ejemplo una respuesta vacía del modelo) no hay texto,
+                          // mostramos un aviso en vez de dejar la burbuja en blanco con solo el
+                          // botón de audio.
+                          const displayContent =
+                            cleanContent ||
+                            (message.role === 'tutor'
+                              ? 'Lumi no pudo escribir una respuesta esta vez. Vuelve a preguntar.'
+                              : '')
+                          return (
                             <div
-                              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 ${
-                                message.role === 'student'
-                                  ? 'rounded-br-md bg-amber-50 text-slate-800'
-                                  : 'rounded-bl-md border border-violet-100 bg-white'
+                              key={message.id}
+                              className={`flex gap-2 ${
+                                message.role === 'student' ? 'justify-end' : 'justify-start'
                               }`}
                             >
-                              <p className="whitespace-pre-line">
-                                {message.content.replace(/\*\*/g, '')}
-                              </p>
                               {message.role === 'tutor' && (
-                                <div className="mt-2">
-                                  <SpeakButton text={message.content.replace(/\*\*/g, '')} />
-                                </div>
+                                <img
+                                  src="/img/lumi/face.png"
+                                  alt=""
+                                  className="h-8 w-8 shrink-0 rounded-xl object-contain"
+                                />
                               )}
-                              <p className="mt-1 text-right text-[10px] text-slate-400">
-                                {displayTime(message.created_at)}
-                              </p>
+                              <div
+                                className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 ${
+                                  message.role === 'student'
+                                    ? 'rounded-br-md bg-amber-50 text-slate-800'
+                                    : 'rounded-bl-md border border-violet-100 bg-white'
+                                }`}
+                              >
+                                <p className="whitespace-pre-line">{displayContent}</p>
+                                {message.role === 'tutor' && (
+                                  <div className="mt-2">
+                                    <SpeakButton text={displayContent} />
+                                  </div>
+                                )}
+                                <p className="mt-1 text-right text-[10px] text-slate-400">
+                                  {displayTime(message.created_at)}
+                                </p>
+                              </div>
+                              {message.role === 'student' && (
+                                <img
+                                  src={avatar}
+                                  alt=""
+                                  className="h-8 w-8 shrink-0 rounded-full object-cover"
+                                />
+                              )}
                             </div>
-                            {message.role === 'student' && (
-                              <img
-                                src={`/img/avatars/${avatar}.png`}
-                                alt=""
-                                className="h-8 w-8 shrink-0 rounded-full object-cover"
-                              />
-                            )}
-                          </div>
-                        ))}
+                          )
+                        })}
                       {busy && task && (
                         <div className="flex items-center gap-2 text-xs font-bold text-violet-600">
                           <IconPointFilled className="animate-pulse" size={18} />

@@ -53,6 +53,17 @@ function clip(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
+// El modelo puede devolver contenido vacío (por ejemplo si el proveedor
+// falla parcialmente o corta la respuesta). Un mensaje vacío en el chat se
+// ve como una burbuja en blanco con solo el ícono de audio, lo que confunde
+// a un niño. Nunca guardamos ni devolvemos una respuesta vacía.
+const EMPTY_REPLY_FALLBACK =
+  "No pude escribir una respuesta esta vez. ¿Puedes preguntarme de nuevo?";
+
+function nonEmptyReply(reply: string) {
+  return reply.trim() || EMPTY_REPLY_FALLBACK;
+}
+
 async function deepSeek(
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
   jsonMode = false
@@ -193,7 +204,12 @@ La checklist debe tener entre 2 y 8 elementos y reflejar solo requisitos visible
       }
 
       const title = clip(parsed.title, 120) || task.title;
-      const summary = clip(parsed.summary, 1800) || "Ya revisé las instrucciones.";
+      // Este texto se muestra en pantalla como "Esto es lo que debes hacer: {summary}",
+      // por lo que debe leerse como una instrucción para el estudiante, no como algo
+      // que Lumi ya hizo (evita frases tipo "Ya revisé las instrucciones.").
+      const summary =
+        clip(parsed.summary, 1800) ||
+        "leer con calma tu documento y contarme qué parte no entiendes para ayudarte paso a paso.";
       const checklist = Array.isArray(parsed.checklist)
         ? parsed.checklist.map((item) => clip(item, 260)).filter(Boolean).slice(0, 8)
         : [];
@@ -236,22 +252,24 @@ La checklist debe tener entre 2 y 8 elementos y reflejar solo requisitos visible
         message_kind: mode === "review_work" ? "review" : tool === "draft" ? "draft" : "chat",
       });
 
-      const reply = await deepSeek([
-        {
-          role: "system",
-          content: `${contextualPrompt}
+      const reply = nonEmptyReply(
+        await deepSeek([
+          {
+            role: "system",
+            content: `${contextualPrompt}
 
 Herramienta elegida: ${tool}.
 ${TOOL_INSTRUCTIONS[mode === "review_work" ? "review" : tool] ?? TOOL_INSTRUCTIONS.question}`,
-        },
-        ...(history ?? [])
-          .reverse()
-          .map((item) => ({
-            role: item.role === "student" ? ("user" as const) : ("assistant" as const),
-            content: item.content,
-          })),
-        { role: "user", content: prompt },
-      ]);
+          },
+          ...(history ?? [])
+            .reverse()
+            .map((item) => ({
+              role: item.role === "student" ? ("user" as const) : ("assistant" as const),
+              content: item.content,
+            })),
+          { role: "user", content: prompt },
+        ])
+      );
 
       await service.from("homework_messages").insert({
         task_id: task.id,
@@ -273,13 +291,15 @@ ${TOOL_INSTRUCTIONS[mode === "review_work" ? "review" : tool] ?? TOOL_INSTRUCTIO
       triggerType === "error_seguido" || mistakes >= 2
         ? "\nEl estudiante lleva dos o más errores seguidos: explica de otra forma, entrega un ejemplo paralelo y no reveles la respuesta directa."
         : "";
-    const reply = await deepSeek([
-      {
-        role: "system",
-        content: `${contextualPrompt}\nTema: ${topic || "no informado"}.${extra}`,
-      },
-      { role: "user", content: message },
-    ]);
+    const reply = nonEmptyReply(
+      await deepSeek([
+        {
+          role: "system",
+          content: `${contextualPrompt}\nTema: ${topic || "no informado"}.${extra}`,
+        },
+        { role: "user", content: message },
+      ])
+    );
 
     const { data: enabled } = await service
       .from("learning_profile")
