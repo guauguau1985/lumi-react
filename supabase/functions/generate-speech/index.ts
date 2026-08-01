@@ -10,12 +10,15 @@ const CORS = {
 // combina con una variante corta según el `context` que mande el frontend
 // (ver src/shared/config/voice.ts, que debe mantenerse coherente con esto).
 const BASE_VOICE_STYLE =
-  "Habla en español de Chile, con una voz cálida, tranquila y cercana. Usa un " +
-  "ritmo pausado, pero natural. Suena como una tutora joven, paciente y amable, " +
-  "que acompaña sin juzgar. Haz pausas breves entre cada paso. Destaca " +
-  "suavemente las palabras importantes. No uses entusiasmo exagerado, tono " +
-  "infantilizado ni voz de locutora. Cuando haya un error, transmite calma y " +
-  "seguridad. Pronuncia claramente números, operaciones y palabras escolares.";
+  "Habla en español de Chile, con un tono cálido, tranquilo y cercano. Usa un " +
+  "ritmo natural y ligeramente pausado, con pequeñas variaciones de entonación " +
+  "y pausas breves entre ideas. Suena como una tutora joven, muy paciente y " +
+  "acostumbrada a trabajar con niños y niñas que necesitan más tiempo o apoyo " +
+  "para aprender. Transmite motivación, seguridad y gusto por enseñar, sin " +
+  "sonar artificial. No hables como locutora. No uses tono infantilizado, " +
+  "condescendiente ni exageradamente alegre. Evita mantener la misma " +
+  "entonación en todas las frases. Pronuncia con claridad y termina las " +
+  "oraciones de manera natural.";
 
 const CONTEXT_STYLE: Record<string, string> = {
   explanation:
@@ -46,7 +49,11 @@ const ALLOWED_VOICES = new Set([
   "marin",
   "cedar",
 ]);
-const DEFAULT_VOICE = "coral";
+const DEFAULT_VOICE = "nova";
+// Ritmo base: levemente más lento que el 1.0 por defecto de OpenAI, para que
+// suene pausada sin arrastrar las palabras. El botón "Lenta" del frontend
+// multiplica esto todavía más vía audio.playbackRate, sin generar audio nuevo.
+const DEFAULT_SPEED = 0.95;
 const MAX_TEXT_LENGTH = 2000;
 
 function json(data: unknown, status = 200) {
@@ -104,7 +111,7 @@ serve(async (req) => {
     const speed =
       Number.isFinite(speedValue) && speedValue >= 0.25 && speedValue <= 4
         ? speedValue
-        : undefined;
+        : DEFAULT_SPEED;
 
     const instructions = [BASE_VOICE_STYLE, CONTEXT_STYLE[context]].filter(Boolean).join("\n\n");
 
@@ -120,7 +127,7 @@ serve(async (req) => {
         voice,
         instructions,
         response_format: "mp3",
-        ...(speed ? { speed } : {}),
+        speed,
       }),
     });
 

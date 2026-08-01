@@ -16,16 +16,16 @@ export interface VoiceOption {
 }
 
 /** Voz activa en toda la app. Cambiar aquí basta para afectar a Lumi entera. */
-export const DEFAULT_VOICE_ID = 'coral'
+export const DEFAULT_VOICE_ID = 'nova'
 
 /**
  * Voces de OpenAI disponibles para gpt-4o-mini-tts. Usadas por la pantalla
  * de prueba (`VoicePlayground`) para comparar antes de fijar `DEFAULT_VOICE_ID`.
  */
 export const VOICE_OPTIONS: VoiceOption[] = [
-  { id: 'coral', label: 'Coral', description: 'Cálida y cercana (voz por defecto de Lumi).' },
+  { id: 'nova', label: 'Nova', description: 'Clara y amigable (voz por defecto de Lumi).' },
+  { id: 'coral', label: 'Coral', description: 'Cálida y cercana.' },
   { id: 'sage', label: 'Sage', description: 'Suave y serena.' },
-  { id: 'nova', label: 'Nova', description: 'Clara y amigable.' },
   { id: 'shimmer', label: 'Shimmer', description: 'Luminosa, algo más joven.' },
   { id: 'alloy', label: 'Alloy', description: 'Neutra y equilibrada.' },
   { id: 'verse', label: 'Verse', description: 'Expresiva, natural para relatos cortos.' },
