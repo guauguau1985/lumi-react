@@ -27,6 +27,8 @@ import {
 } from '@tabler/icons-react'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useGameRewards } from '@/gamification/useGameRewards'
+import { SpeakButton } from '@/shared/components/voice/SpeakButton'
+import { VoiceInputButton } from '@/shared/components/voice/VoiceInputButton'
 import { supabase } from '@/shared/lib/supabaseClient'
 import { getDeviceId, getSessionId } from '@/shared/lib/deviceId'
 import type { Json, Tables } from '@/shared/lib/database.types'
@@ -739,6 +741,18 @@ export default function TareaShell() {
                               ))}
                             </ol>
                           )}
+                          <div className="mt-3">
+                            <SpeakButton
+                              text={[
+                                task.instructions_summary,
+                                checklist.length > 0
+                                  ? `Pasos a seguir: ${checklist.join('. ')}.`
+                                  : '',
+                              ]
+                                .filter(Boolean)
+                                .join(' ')}
+                            />
+                          </div>
                         </div>
                       </div>
                     )}
@@ -773,6 +787,11 @@ export default function TareaShell() {
                               <p className="whitespace-pre-line">
                                 {message.content.replace(/\*\*/g, '')}
                               </p>
+                              {message.role === 'tutor' && (
+                                <div className="mt-2">
+                                  <SpeakButton text={message.content.replace(/\*\*/g, '')} />
+                                </div>
+                              )}
                               <p className="mt-1 text-right text-[10px] text-slate-400">
                                 {displayTime(message.created_at)}
                               </p>
@@ -807,6 +826,14 @@ export default function TareaShell() {
                         onChange={(event) => setInput(event.target.value)}
                         placeholder="Escribe tu mensaje…"
                         className="min-w-0 flex-1 bg-transparent px-1 text-sm outline-none"
+                      />
+                      <VoiceInputButton
+                        label="Hablar"
+                        cancelLabel="Cancelar"
+                        onResult={(text) =>
+                          setInput((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text))
+                        }
+                        className="shrink-0"
                       />
                       <button
                         type="submit"
