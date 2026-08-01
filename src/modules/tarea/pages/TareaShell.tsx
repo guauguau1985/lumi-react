@@ -485,10 +485,10 @@ export default function TareaShell() {
     setError('')
   }
 
-  const addFiles = (picked: FileList | null) => {
-    if (!picked || picked.length === 0) return
+  const addFiles = (picked: File[]) => {
+    if (picked.length === 0) return
     setFiles((prev) => {
-      const merged = [...prev, ...Array.from(picked)]
+      const merged = [...prev, ...picked]
       return merged.slice(0, MAX_ATTACHMENTS)
     })
   }
@@ -623,8 +623,9 @@ export default function TareaShell() {
                             accept=".pdf,.txt,.jpg,.jpeg,.png,.webp,application/pdf,text/plain,image/*"
                             className="sr-only"
                             onChange={(event) => {
-                              addFiles(event.target.files)
+                              const picked = Array.from(event.target.files ?? [])
                               event.target.value = ''
+                              addFiles(picked)
                             }}
                           />
                           <IconUpload size={26} className="text-violet-600" />
