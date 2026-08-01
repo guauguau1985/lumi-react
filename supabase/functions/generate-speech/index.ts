@@ -1,0 +1,151 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+// Voz cálida y pausada para una tutora escolar chilena. El estilo base se
+// combina con una variante corta según el `context` que mande el frontend
+// (ver src/shared/config/voice.ts, que debe mantenerse coherente con esto).
+const BASE_VOICE_STYLE =
+  "Habla en español de Chile, con una voz cálida, tranquila y cercana. Usa un " +
+  "ritmo pausado, pero natural. Suena como una tutora joven, paciente y amable, " +
+  "que acompaña sin juzgar. Haz pausas breves entre cada paso. Destaca " +
+  "suavemente las palabras importantes. No uses entusiasmo exagerado, tono " +
+  "infantilizado ni voz de locutora. Cuando haya un error, transmite calma y " +
+  "seguridad. Pronuncia claramente números, operaciones y palabras escolares.";
+
+const CONTEXT_STYLE: Record<string, string> = {
+  explanation:
+    "Este texto es una explicación paso a paso: léelo claro, pausado, y marca " +
+    "ligeramente la transición entre cada paso, como si dieras tiempo para pensar.",
+  encouragement:
+    "Este texto es una frase de ánimo o cierre breve: dilo cálido, breve y " +
+    "auténtico, sin sonar ensayado.",
+  instruction:
+    "Este texto es una instrucción directa: dilo amable pero directo, sin rodeos.",
+  story:
+    "Este texto es parte de una historia o ejemplo: dilo un poco más expresivo " +
+    "que de costumbre, pero sin exagerar ni cambiar de personaje.",
+};
+
+const ALLOWED_VOICES = new Set([
+  "alloy",
+  "ash",
+  "ballad",
+  "coral",
+  "echo",
+  "fable",
+  "nova",
+  "onyx",
+  "sage",
+  "shimmer",
+  "verse",
+  "marin",
+  "cedar",
+]);
+const DEFAULT_VOICE = "coral";
+const MAX_TEXT_LENGTH = 2000;
+
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...CORS, "Content-Type": "application/json" },
+  });
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (req.method !== "POST") return json({ error: "Método no permitido" }, 405);
+
+  try {
+    const service = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
+    if (!token) return json({ error: "Inicia sesión para escuchar a Lumi." }, 401);
+
+    const {
+      data: { user },
+      error: authError,
+    } = await service.auth.getUser(token);
+    if (authError || !user) return json({ error: "La sesión ya no es válida." }, 401);
+
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) {
+      // El frontend interpreta cualquier respuesta no-OK como "usa la voz
+      // nativa del dispositivo como respaldo" (ver useOpenAiSpeech.ts).
+      console.error("generate-speech: OPENAI_API_KEY no configurada");
+      return json({ error: "voice_not_configured" }, 501);
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const text = typeof body?.text === "string" ? body.text.trim().slice(0, MAX_TEXT_LENGTH) : "";
+    if (!text) return json({ error: "Falta el texto a leer." }, 400);
+
+    const context = typeof body?.context === "string" ? body.context : "";
+    const requestedVoice = typeof body?.voice === "string" ? body.voice : "";
+    const voice = ALLOWED_VOICES.has(requestedVoice) ? requestedVoice : DEFAULT_VOICE;
+
+    const speedValue = Number(body?.speed);
+    const speed =
+      Number.isFinite(speedValue) && speedValue >= 0.25 && speedValue <= 4
+        ? speedValue
+        : undefined;
+
+    const instructions = [BASE_VOICE_STYLE, CONTEXT_STYLE[context]].filter(Boolean).join("\n\n");
+
+    const response = await fetch("https://api.openai.com/v1/audio/speech", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini-tts",
+        input: text,
+        voice,
+        instructions,
+        response_format: "mp3",
+        ...(speed ? { speed } : {}),
+      }),
+    });
+
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => ({}));
+      console.error(
+        "OpenAI TTS error",
+        response.status,
+        JSON.stringify(errorPayload).slice(0, 500)
+      );
+      return json({ error: "No pudimos generar la voz por ahora." }, 502);
+    }
+
+    const audioBuffer = await response.arrayBuffer();
+    if (audioBuffer.byteLength === 0) {
+      return json({ error: "No pudimos generar la voz por ahora." }, 502);
+    }
+
+    return json({
+      audio_base64: arrayBufferToBase64(audioBuffer),
+      mime_type: "audio/mpeg",
+      voice,
+    });
+  } catch (error) {
+    console.error("generate-speech", error);
+    return json({ error: "No pudimos generar la voz por ahora." }, 500);
+  }
+});

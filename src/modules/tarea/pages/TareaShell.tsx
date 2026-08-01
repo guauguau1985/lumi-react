@@ -752,6 +752,7 @@ export default function TareaShell() {
                               ]
                                 .filter(Boolean)
                                 .join(' ')}
+                              context="explanation"
                             />
                           </div>
                         </div>
@@ -799,7 +800,7 @@ export default function TareaShell() {
                                 <p className="whitespace-pre-line">{displayContent}</p>
                                 {message.role === 'tutor' && (
                                   <div className="mt-2">
-                                    <SpeakButton text={displayContent} />
+                                    <SpeakButton text={displayContent} context="explanation" />
                                   </div>
                                 )}
                                 <p className="mt-1 text-right text-[10px] text-slate-400">

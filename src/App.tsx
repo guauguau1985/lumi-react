@@ -17,6 +17,7 @@ const ParentReport = lazy(() => import('@/modules/ai/pages/ParentReportPage'))
 const AccessPage = lazy(() => import('@/features/auth/pages/AccessPage'))
 const ParentGateway = lazy(() => import('@/features/auth/pages/ParentGateway'))
 const LeaguePage = lazy(() => import('@/modules/liga/LeaguePage'))
+const VoicePlayground = lazy(() => import('@/app/routes/VoicePlayground'))
 
 function StudentRoute({ children }: { children: ReactNode }) {
   return <ProtectedRoute role="student">{children}</ProtectedRoute>
@@ -134,6 +135,14 @@ export default function App() {
             element={
               <ProtectedRoute role="parent">
                 <ParentReport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/voz-prueba"
+            element={
+              <ProtectedRoute role="parent">
+                <VoicePlayground />
               </ProtectedRoute>
             }
           />

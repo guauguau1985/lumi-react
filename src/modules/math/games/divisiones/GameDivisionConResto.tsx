@@ -91,6 +91,7 @@ const GameDivisionConResto = () => {
           <div className="mt-3 flex justify-center md:justify-start">
             <SpeakButton
               text={`¿Cuánto es ${problem.dividend} dividido por ${problem.divisor}? Escribe el cociente y el resto.`}
+              context="instruction"
             />
           </div>
         </div>
