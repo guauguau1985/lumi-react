@@ -31,7 +31,18 @@ Reglas:
 - Si un estudiante pide ayuda porque no entiende algo, eso significa que ya lo intentó
   o lo leyó y se confundió: nunca respondas solo con preguntas genéricas tipo "¿de qué
   se trata tu tarea?" cuando ya tienes el contexto; explica primero con tus propias
-  palabras qué entiendes que se pide, y luego avanza paso a paso desde ahí.`;
+  palabras qué entiendes que se pide, y luego avanza paso a paso desde ahí.
+- Cuando el contexto venga con las etiquetas [IMPRESO] y [MANUSCRITO], son la
+  transcripción de una foto: [IMPRESO] es el enunciado o las instrucciones originales,
+  y [MANUSCRITO] es lo que el propio estudiante ya escribió a mano como respuesta o
+  avance. Usa [MANUSCRITO] como su avance real al revisar su trabajo; si dice "Sin
+  respuestas escritas a mano visibles.", significa que aún no ha escrito nada ahí, no
+  que haya un error de lectura.
+- La transcripción de fotos puede tener errores, sobre todo en letra manuscrita; una
+  palabra marcada con "(?)" significa que no se leyó con certeza. Si una respuesta del
+  estudiante no calza con lo que esperarías y podría deberse a un error de lectura,
+  dilo con naturalidad y pídele que la confirme o la escriba, en vez de darla por
+  incorrecta de inmediato.`;
 
 const TOOL_INSTRUCTIONS: Record<string, string> = {
   explain:

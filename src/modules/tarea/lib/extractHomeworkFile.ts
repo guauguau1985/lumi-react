@@ -1,3 +1,5 @@
+import { extractImageWithVision } from '@/modules/tarea/lib/extractImageWithVision'
+
 const MAX_EXTRACTED_CHARACTERS = 18_000
 
 export interface ExtractedHomework {
@@ -55,6 +57,18 @@ export async function extractHomeworkFile(
   }
 
   if (file.type.startsWith('image/')) {
+    // Tesseract (OCR local, más abajo) no lee letra manuscrita de forma
+    // confiable: solo sirve para texto impreso. Para que Lumi pueda revisar
+    // lo que el estudiante ya escribió a mano en la foto, primero intentamos
+    // con un modelo de visión en el backend. Si no está configurado o falla,
+    // seguimos con OCR local como respaldo en vez de fallar por completo.
+    onProgress?.(15)
+    const visionText = await extractImageWithVision(file)
+    if (visionText) {
+      onProgress?.(100)
+      return { text: cleanText(visionText) }
+    }
+
     const { createWorker } = await import('tesseract.js')
     const worker = await createWorker(['spa', 'eng'], undefined, {
       logger: ({ status, progress }) => {
