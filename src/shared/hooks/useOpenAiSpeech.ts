@@ -112,8 +112,25 @@ export function useOpenAiSpeech(): UseOpenAiSpeechResult {
     }
   }, [])
 
+  const speakNative = useCallback(
+    (text: string, onEnd?: () => void) => {
+      setEngine('native')
+      if (!native.isSupported) {
+        setError('No pudimos generar la voz y este dispositivo tampoco tiene voz de respaldo.')
+        return
+      }
+      native.speak(text, { onEnd })
+    },
+    [native],
+  )
+
+  // `text` se guarda para poder caer a la voz nativa si `audio.play()` es
+  // rechazado (por ejemplo, por la política de autoplay del navegador cuando
+  // la generación del audio tardó varios segundos y perdió el "gesto" del
+  // clic). Sin este respaldo, un play() rechazado dejaba a Lumi en silencio
+  // total sin ningún aviso ("no se escucha nada").
   const playUrl = useCallback(
-    (url: string, onEnd?: () => void) => {
+    (url: string, text: string, onEnd?: () => void) => {
       const audio: MarkedAudio = new Audio(url)
       audio.playbackRate = SPEED_OPTIONS[speedRef.current]
       audioRef.current = audio
@@ -143,25 +160,17 @@ export function useOpenAiSpeech(): UseOpenAiSpeechResult {
         setAudioIsSpeaking(false)
         setAudioIsPaused(false)
         if (currentAudioEl === audio) currentAudioEl = null
+        speakNative(text, onEnd)
       }
-      audio.play().catch(() => {
+      audio.play().catch((playError) => {
+        console.error('No se pudo reproducir el audio de Lumi, se intenta la voz nativa:', playError)
         setAudioIsSpeaking(false)
         setAudioIsPaused(false)
+        if (currentAudioEl === audio) currentAudioEl = null
+        speakNative(text, onEnd)
       })
     },
-    [],
-  )
-
-  const speakNative = useCallback(
-    (text: string, onEnd?: () => void) => {
-      setEngine('native')
-      if (!native.isSupported) {
-        setError('No pudimos generar la voz y este dispositivo tampoco tiene voz de respaldo.')
-        return
-      }
-      native.speak(text, { onEnd })
-    },
-    [native],
+    [speakNative],
   )
 
   const speak = useCallback(
@@ -181,7 +190,7 @@ export function useOpenAiSpeech(): UseOpenAiSpeechResult {
       const cached = audioCache.get(key)
 
       if (cached) {
-        playUrl(cached.url, options?.onEnd)
+        playUrl(cached.url, trimmed, options?.onEnd)
         return
       }
 
@@ -216,7 +225,7 @@ export function useOpenAiSpeech(): UseOpenAiSpeechResult {
 
           if (requestId !== requestIdRef.current) return
           setIsLoading(false)
-          playUrl(url, options?.onEnd)
+          playUrl(url, trimmed, options?.onEnd)
         } catch {
           if (requestId !== requestIdRef.current) return
           setIsLoading(false)

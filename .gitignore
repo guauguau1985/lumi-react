@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.vercel
+
+# Claude Code: worktrees y config local de sesiones de agente — nunca deben
+# trackearse (rutas absolutas de Windows que rompen git en otros entornos).
+.claude/worktrees/
+.claude/settings.local.json
