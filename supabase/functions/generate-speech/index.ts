@@ -10,12 +10,16 @@ const CORS = {
 // combina con una variante corta según el `context` que mande el frontend
 // (ver src/shared/config/voice.ts, que debe mantenerse coherente con esto).
 const BASE_VOICE_STYLE =
-  "Habla en español de Chile, con un tono cálido, tranquilo y cercano. Usa un " +
-  "ritmo natural y ligeramente pausado, con pequeñas variaciones de entonación " +
-  "y pausas breves entre ideas. Suena como una tutora joven, muy paciente y " +
+  "Habla en español de Chile, con un tono cálido, amable y cercano, como una " +
+  "tutora joven a la que realmente le importa que a este niño o niña le vaya " +
+  "bien. Usa un ritmo natural y ligeramente pausado, con pequeñas variaciones " +
+  "de entonación y pausas breves entre ideas. Es muy paciente y está " +
   "acostumbrada a trabajar con niños y niñas que necesitan más tiempo o apoyo " +
-  "para aprender. Transmite motivación, seguridad y gusto por enseñar, sin " +
-  "sonar artificial. No hables como locutora. No uses tono infantilizado, " +
+  "para aprender. Cuando el texto reconoce un logro, un intento o un avance " +
+  "del niño, dilo con calidez genuina y refuerzo positivo real —que se note " +
+  "que estás contenta con su esfuerzo, no solo con el resultado—, sin sonar " +
+  "exagerada ni artificial. Transmite motivación, seguridad y gusto por " +
+  "enseñar. No hables como locutora. No uses tono infantilizado, " +
   "condescendiente ni exageradamente alegre. Evita mantener la misma " +
   "entonación en todas las frases. Pronuncia con claridad y termina las " +
   "oraciones de manera natural.";
@@ -25,8 +29,9 @@ const CONTEXT_STYLE: Record<string, string> = {
     "Este texto es una explicación paso a paso: léelo claro, pausado, y marca " +
     "ligeramente la transición entre cada paso, como si dieras tiempo para pensar.",
   encouragement:
-    "Este texto es una frase de ánimo o cierre breve: dilo cálido, breve y " +
-    "auténtico, sin sonar ensayado.",
+    "Este texto es una frase de ánimo, felicitación o refuerzo positivo: dilo " +
+    "con calidez genuina y alegría real por el esfuerzo o el logro del niño, " +
+    "breve y auténtico, sin sonar ensayado ni exagerado.",
   instruction:
     "Este texto es una instrucción directa: dilo amable pero directo, sin rodeos.",
   story:

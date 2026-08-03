@@ -348,7 +348,7 @@ export default function TareaShell() {
         subject,
         grade,
         task_context: extractedText,
-        curriculum_context: curriculumContext(subject, grade),
+        curriculum_context: curriculumContext(subject, grade, extractedText),
         page_count: pageCount,
       })
       const { data: analyzed, error: analysisUpdateError } = await supabase
@@ -398,7 +398,11 @@ export default function TareaShell() {
         subject: task.subject,
         grade: task.grade,
         task_context: task.extracted_text,
-        curriculum_context: curriculumContext(task.subject, task.grade),
+        curriculum_context: curriculumContext(
+          task.subject,
+          task.grade,
+          [message, task.extracted_text].filter(Boolean).join('\n')
+        ),
       })
       if (tool === 'review') {
         rewards.onCorrect({ taskId: task.id, action: 'review' })
