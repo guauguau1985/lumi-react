@@ -13,7 +13,9 @@ export default defineConfig({
     tailwind(),
 
     VitePWA({
-      registerType: "autoUpdate",
+      // Una actualización queda esperando hasta la próxima apertura de la app.
+      // Así nunca recarga Lumi mientras el niño escribe o espera una respuesta.
+      registerType: "prompt",
 
       workbox: {
         navigateFallback: "/index.html",
@@ -26,7 +28,6 @@ export default defineConfig({
         "icons/icon-512.png",
         "icons/maskable-512.png",
         "offline.html",
-        "sw.js",
       ],
 
       manifest: {
