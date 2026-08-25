@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "@/features/auth/AuthContext";
 import { LumiAvatar } from "@/shared/components/lumi/LumiAvatar";
+import { getDeviceId, getSessionId } from "@/shared/lib/deviceId";
+import { supabase } from "@/shared/lib/supabaseClient";
 
 type Role = "user" | "model";
 
@@ -12,10 +14,24 @@ interface Message {
 }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const MAX_STORED_MESSAGES = 50;
+const CHAT_STORAGE_VERSION = 1;
 
-async function callTutor(text: string): Promise<string> {
+async function callTutor(
+  text: string,
+  conversation: Message[],
+  grade?: string | null,
+): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error("Sin sesión");
+
+  const recentConversation = conversation
+    .filter((item) => item.id !== "welcome" && !item.id.startsWith("e-"))
+    .slice(-10)
+    .map((item) => ({
+      role: item.role === "user" ? "user" : "assistant",
+      content: item.text,
+    }));
 
   const res = await fetch(`${SUPABASE_URL}/functions/v1/tutor-ai`, {
     method: "POST",
@@ -23,12 +39,21 @@ async function callTutor(text: string): Promise<string> {
       Authorization: `Bearer ${session.access_token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ message: text }),
+    body: JSON.stringify({
+      message: text,
+      grade,
+      device_id: getDeviceId(),
+      session_id: getSessionId(),
+      conversation: recentConversation,
+    }),
   });
 
   if (!res.ok) throw new Error(`Error ${res.status}`);
   const data = await res.json();
-  return data.reply as string;
+  if (typeof data.reply !== "string" || !data.reply.trim()) {
+    throw new Error("Respuesta vacía");
+  }
+  return data.reply.trim();
 }
 
 const WELCOME: Message = {
@@ -37,8 +62,67 @@ const WELCOME: Message = {
   text: "¡Hola! Soy Lumi, tu tutora 🌟 ¿En qué materia te puedo ayudar hoy? Puedo explicarte matemáticas, ciencias, naturales… ¡lo que necesites!",
 };
 
+function messageId(prefix: "u" | "m" | "e") {
+  return `${prefix}-${crypto.randomUUID()}`;
+}
+
+function storageKey(userId?: string) {
+  return userId ? `lumi-ai-chat:${userId}` : "";
+}
+
+function readStoredMessages(userId?: string): Message[] {
+  const key = storageKey(userId);
+  if (!key) return [WELCOME];
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(key) ?? "null") as {
+      version?: number;
+      messages?: unknown;
+    } | null;
+    if (saved?.version !== CHAT_STORAGE_VERSION || !Array.isArray(saved.messages)) {
+      return [WELCOME];
+    }
+
+    const valid = saved.messages.filter((item): item is Message => {
+      if (!item || typeof item !== "object") return false;
+      const candidate = item as Partial<Message>;
+      return (
+        typeof candidate.id === "string" &&
+        (candidate.role === "user" || candidate.role === "model") &&
+        typeof candidate.text === "string" &&
+        candidate.text.trim().length > 0
+      );
+    });
+
+    return valid.length > 0 ? valid.slice(-MAX_STORED_MESSAGES) : [WELCOME];
+  } catch {
+    return [WELCOME];
+  }
+}
+
+function storeMessages(userId: string | undefined, messages: Message[]) {
+  const key = storageKey(userId);
+  if (!key) return;
+
+  try {
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        version: CHAT_STORAGE_VERSION,
+        messages: messages.slice(-MAX_STORED_MESSAGES),
+      }),
+    );
+  } catch {
+    // Si el navegador bloquea el almacenamiento, el chat sigue funcionando
+    // durante la sesión actual.
+  }
+}
+
 export default function AIShell() {
-  const [messages, setMessages] = useState<Message[]>([WELCOME]);
+  const { session, profile } = useAuth();
+  const [messages, setMessages] = useState<Message[]>(() =>
+    readStoredMessages(session?.user.id),
+  );
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [offline, setOffline] = useState(!navigator.onLine);
@@ -59,6 +143,11 @@ export default function AIShell() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  // Una recarga de la PWA no debe borrar una conversación en curso.
+  useEffect(() => {
+    storeMessages(session?.user.id, messages);
+  }, [messages, session?.user.id]);
+
   const send = async () => {
     const text = input.trim();
     if (!text || loading || offline) return;
@@ -66,20 +155,20 @@ export default function AIShell() {
     setInput("");
     setMessages((prev) => [
       ...prev,
-      { id: `u-${Date.now()}`, role: "user", text },
+      { id: messageId("u"), role: "user", text },
     ]);
     setLoading(true);
 
     try {
-      const reply = await callTutor(text);
+      const reply = await callTutor(text, messages, profile?.grade);
       setMessages((prev) => [
         ...prev,
-        { id: `m-${Date.now()}`, role: "model", text: reply },
+        { id: messageId("m"), role: "model", text: reply },
       ]);
     } catch {
       setMessages((prev) => [
         ...prev,
-        { id: `e-${Date.now()}`, role: "model", text: "¡Ups! Algo salió mal. Intenta de nuevo en un momento. 🔧" },
+        { id: messageId("e"), role: "model", text: "¡Ups! Algo salió mal. Intenta de nuevo en un momento. 🔧" },
       ]);
     } finally {
       setLoading(false);
@@ -135,7 +224,7 @@ export default function AIShell() {
       )}
 
       {/* Mensajes */}
-      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4" aria-live="polite">
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -149,7 +238,7 @@ export default function AIShell() {
 
             <div
               className={`
-                max-w-[78%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm
+                max-w-[86%] sm:max-w-[78%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap
                 ${msg.role === "user"
                   ? "bg-[var(--color-ai-dot)] text-white rounded-br-none"
                   : "bg-[var(--color-surface)] border border-[var(--color-ai-border)] text-[var(--color-foreground)] rounded-bl-none"
@@ -200,7 +289,7 @@ export default function AIShell() {
             onKeyDown={handleKey}
             placeholder={offline ? "Sin conexión..." : "Escribe tu pregunta aquí..."}
             disabled={loading || offline}
-            maxLength={500}
+            maxLength={1500}
             className="
               flex-1 rounded-xl border px-4 py-2.5 text-sm
               bg-[var(--color-background)] text-[var(--color-foreground)]
