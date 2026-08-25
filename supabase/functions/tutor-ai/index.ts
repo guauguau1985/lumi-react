@@ -10,17 +10,30 @@ const BASE_PROMPT = `Eres Lumi, una tutora escolar chilena cálida, paciente y r
 Trabajas con estudiantes desde 5° básico hasta 1° medio.
 
 Reglas:
+- Responde primero lo que el estudiante preguntó. No contestes solo con preguntas.
 - Guía el razonamiento; no hagas una tarea completa para que el estudiante solo la copie.
 - Divide problemas complejos, formula preguntas breves y ofrece ejemplos equivalentes.
 - Adapta vocabulario, profundidad y extensión al curso y a la materia.
+- Conserva el contexto de los mensajes anteriores. Interpreta frases como "voy en 5° básico",
+  "quiero el ejemplo" o "no entendí esa parte" usando lo que ya conversaron.
 - Si el estudiante se equivoca dos veces, explica de otra manera y baja temporalmente la dificultad.
 - Puedes tratar contenidos históricos, científicos, sociales, religiosos o tecnológicos cuando sean educativos, con neutralidad y cuidado.
 - Nunca pidas ni repitas datos personales, enlaces privados, direcciones o teléfonos.
 - No incluyas enlaces externos.
 - Responde en español claro; en Inglés puedes incluir la expresión inglesa y su explicación.
-- Escribe texto simple, sin Markdown, asteriscos, tablas ni títulos con símbolos.
+- Organiza las explicaciones con párrafos cortos, subtítulos simples, listas con "•" o pasos
+  numerados cuando ayuden. No uses tablas de Markdown ni asteriscos.
 - Usa como referencia la orientación curricular chilena entregada, pero no limites preguntas interdisciplinarias, robótica o tecnología actual.
-- Sé concreta: normalmente entre 80 y 180 palabras.
+- Sé concreta pero suficiente: normalmente entre 100 y 260 palabras. Una duda breve puede
+  requerir menos; una explicación general puede llegar a 320 palabras.
+- Para una pregunta amplia como "enséñame estadística": explica qué es, para qué sirve,
+  presenta entre 3 y 5 ideas esenciales con ejemplos cotidianos y termina ofreciendo 2 o 3
+  maneras concretas de continuar, adecuadas al curso del estudiante.
+- Si pide un ejemplo interactivo, crea una mini actividad que pueda realizar dentro del chat:
+  presenta pocos datos u opciones, explica qué debe cambiar, contar o elegir y haz una sola
+  pregunta para comenzar. No afirmes que existen botones o controles si la interfaz no los tiene.
+- Termina normalmente con una pregunta breve que compruebe comprensión o permita elegir el
+  siguiente paso. Evita preguntas genéricas si ya conoces el curso, la materia o la intención.
 - Ya tienes en "Instrucciones o material de la tarea" el enunciado (y a veces el avance del
   estudiante) extraído de lo que subió. Úsalo siempre como fuente de verdad: nunca le pidas
   al estudiante que te cuente de qué trata la tarea, que indique la materia o que transcriba
@@ -95,6 +108,38 @@ function clip(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
+type ModelMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
+function parseConversation(value: unknown): ModelMessage[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .slice(-10)
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const role = (item as { role?: unknown }).role;
+      const content = clip((item as { content?: unknown }).content, 1500);
+      if ((role !== "user" && role !== "assistant") || !content) return null;
+      return { role, content } as ModelMessage;
+    })
+    .filter((item): item is ModelMessage => item !== null);
+}
+
+const GRADE_LABELS: Record<string, string> = {
+  "5-basico": "5° básico",
+  "6-basico": "6° básico",
+  "7-basico": "7° básico",
+  "8-basico": "8° básico",
+  "1-medio": "1° medio",
+};
+
+function readableGrade(value: string) {
+  return GRADE_LABELS[value] ?? value;
+}
+
 // El modelo puede devolver contenido vacío (por ejemplo si el proveedor
 // falla parcialmente o corta la respuesta). Un mensaje vacío en el chat se
 // ve como una burbuja en blanco con solo el ícono de audio, lo que confunde
@@ -107,7 +152,7 @@ function nonEmptyReply(reply: string) {
 }
 
 async function deepSeek(
-  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
+  messages: ModelMessage[],
   jsonMode = false
 ) {
   const key = Deno.env.get("DEEPSEEK_API_KEY");
@@ -123,7 +168,7 @@ async function deepSeek(
       model: "deepseek-v4-flash",
       messages,
       temperature: jsonMode ? 0.25 : 0.55,
-      max_tokens: jsonMode ? 900 : 650,
+      max_tokens: jsonMode ? 900 : 850,
       ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
     }),
   });
@@ -163,6 +208,13 @@ serve(async (req) => {
     const tool = clip(body?.tool, 30) || "question";
     const message = clip(body?.message, 1500);
     const studentWork = clip(body?.student_work, 7000);
+    const clientConversation = parseConversation(body?.conversation);
+
+    const { data: profile } = await service
+      .from("profiles")
+      .select("grade")
+      .eq("id", user.id)
+      .maybeSingle();
 
     let task: {
       id: string;
@@ -184,7 +236,9 @@ serve(async (req) => {
       task = data;
     }
 
-    const resolvedGrade = grade || task?.grade || "curso no informado";
+    const resolvedGrade = readableGrade(
+      grade || task?.grade || clip(profile?.grade, 40) || "curso no informado"
+    );
     // "otra" es el valor que usa el frontend cuando el estudiante eligió
     // "No estoy seguro/a". En ese caso no hay materia real que mostrar: le
     // pedimos al modelo que la infiera del contenido en vez de repetirle
@@ -341,12 +395,33 @@ ${TOOL_INSTRUCTIONS[mode === "review_work" ? "review" : tool] ?? TOOL_INSTRUCTIO
       triggerType === "error_seguido" || mistakes >= 2
         ? "\nEl estudiante lleva dos o más errores seguidos: explica de otra forma, entrega un ejemplo paralelo y no reveles la respuesta directa."
         : "";
+    let recentConversation = clientConversation;
+    if (recentConversation.length === 0) {
+      let historyQuery = service
+        .from("chat_history")
+        .select("role, message")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      historyQuery = sessionId
+        ? historyQuery.eq("session_id", sessionId)
+        : historyQuery.eq("device_id", deviceId);
+      const { data: history } = await historyQuery;
+      recentConversation = (history ?? [])
+        .reverse()
+        .map((item) => ({
+          role: item.role === "niño" ? ("user" as const) : ("assistant" as const),
+          content: item.message,
+        }));
+    }
+
     const reply = nonEmptyReply(
       await deepSeek([
         {
           role: "system",
           content: `${contextualPrompt}\nTema: ${topic || "no informado"}.${extra}`,
         },
+        ...recentConversation,
         { role: "user", content: message },
       ])
     );
