@@ -13,6 +13,7 @@ const NaturalesModule = lazy(() => import('@/modules/naturales/NaturalesShell'))
 const CoderModule = lazy(() => import('@/modules/coder/pages/CoderHome'))
 const AIModule = lazy(() => import('@/modules/ai/AIShell'))
 const TareaModule = lazy(() => import('@/modules/tarea/pages/TareaShell'))
+const HistoriaModule = lazy(() => import('@/modules/historia/pages/HistoriaShell'))
 const ParentReport = lazy(() => import('@/modules/ai/pages/ParentReportPage'))
 const AccessPage = lazy(() => import('@/features/auth/pages/AccessPage'))
 const ParentGateway = lazy(() => import('@/features/auth/pages/ParentGateway'))
@@ -110,6 +111,16 @@ export default function App() {
               element={
                 <StudentRoute>
                   <TareaModule />
+                </StudentRoute>
+              }
+            />
+          )}
+          {modules.historia && (
+            <Route
+              path="/historia/*"
+              element={
+                <StudentRoute>
+                  <HistoriaModule />
                 </StudentRoute>
               }
             />

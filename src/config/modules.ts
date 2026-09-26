@@ -9,7 +9,8 @@ export type ModuleVariant =
   | "coder"
   | "english"
   | "ai"
-  | "tarea";
+  | "tarea"
+  | "historia";
 
 export interface ModuleConfig {
   id: string;
@@ -47,6 +48,15 @@ export const MODULE_LIST: ModuleConfig[] = [
     path: "/naturales",
     emoji: "🔬",
     variant: "naturales",
+    enabled: true,
+  },
+  {
+    id: "historia",
+    name: "Historia",
+    description: "Derechos humanos, el Estado y nuestros deberes",
+    path: "/historia",
+    emoji: "🏛️",
+    variant: "historia",
     enabled: true,
   },
   {

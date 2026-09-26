@@ -5,6 +5,7 @@ import {
   IconAtom2,
   IconBook2,
   IconBrain,
+  IconBuildingBank,
   IconCalculator,
   IconChartDots,
   IconCode,
@@ -58,6 +59,13 @@ const MODULES = [
     description: 'Descubre cómo funciona el mundo',
     icon: IconAtom2,
     colors: 'border-sky-200 bg-sky-50 text-sky-700',
+  },
+  {
+    to: '/historia',
+    title: 'Historia',
+    description: 'Derechos humanos: estudia jugando',
+    icon: IconBuildingBank,
+    colors: 'border-rose-200 bg-rose-50 text-rose-700',
   },
   {
     to: '/coder',

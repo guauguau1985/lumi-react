@@ -6,4 +6,5 @@ export const modules = {
   coder: true,
   ai: true,
   tarea: true,
+  historia: true,
 } as const;

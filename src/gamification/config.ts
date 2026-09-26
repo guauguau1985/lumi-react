@@ -87,6 +87,27 @@ export const gamificationConfig: GamificationConfig = {
     },
   },
 
+  historia: {
+    "repaso-derechos": {
+      GAME_COMPLETED: { xp: 30, coins: 4, badge: "historia_fichas_derechos" },
+    },
+    "quiz-derechos": {
+      CORRECT_ANSWER: { xp: 10, coins: 1 },
+      WRONG_ANSWER: { xp: 0, coins: 0 },
+      GAME_COMPLETED: { xp: 30, coins: 5, badge: "historia_quiz_derechos" },
+    },
+    "generaciones-derechos": {
+      CORRECT_ANSWER: { xp: 8, coins: 1 },
+      WRONG_ANSWER: { xp: 0, coins: 0 },
+      GAME_COMPLETED: { xp: 25, coins: 4, badge: "historia_generaciones" },
+    },
+    "memorice-derechos": {
+      CORRECT_ANSWER: { xp: 6, coins: 1 },
+      WRONG_ANSWER: { xp: 0, coins: 0 },
+      GAME_COMPLETED: { xp: 25, coins: 4, badge: "historia_memorice" },
+    },
+  },
+
   tareas: {
     "tutor-tareas": {
       CORRECT_ANSWER: { xp: 4, coins: 0 },
