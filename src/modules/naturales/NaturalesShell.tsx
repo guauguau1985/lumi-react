@@ -303,7 +303,11 @@ function AguaDulceSaladaLesson({
     if (isLast) {
       const finalScore = selected === current.correct ? score : score;
       trackComplete();
-      onGameCompleted();
+      onGameCompleted({
+        ejercicios: QUESTIONS.length,
+        correctas: score,
+        accuracy: Math.round((score / QUESTIONS.length) * 100),
+      });
       onComplete(finalScore);
       return;
     }

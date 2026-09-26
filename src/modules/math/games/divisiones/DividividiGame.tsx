@@ -32,6 +32,7 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
 
   const [bags, setBags] = useState(0);
   const [phase, setPhase] = useState<Phase>("adding");
+  const [intentos, setIntentos] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -86,6 +87,7 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
   };
 
   const handleReset = () => {
+    setIntentos(0);
     setBags(0);
     setPhase("adding");
     setError(null);
@@ -106,11 +108,17 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
     const correct = option === maxBags;
     setIsCorrect(correct);
     trackAnswer(correct);
+    const intentosRonda = intentos + 1;
+    setIntentos(intentosRonda);
 
     if (correct) {
       trackComplete();
       onCorrect();
-      onGameCompleted();
+      onGameCompleted({
+        ejercicios: 1,
+        correctas: 1,
+        accuracy: Math.round(100 / intentosRonda),
+      });
       markCorrect();
       setPhase("finished");
     } else {

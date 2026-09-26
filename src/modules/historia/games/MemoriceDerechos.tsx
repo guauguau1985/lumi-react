@@ -60,7 +60,14 @@ export default function MemoriceDerechos({ onSalir }: { onSalir: () => void }) {
       setAbiertas([])
       if (siguiente.size === PAREJAS_MEMORICE.length) {
         trackComplete()
-        onGameCompleted({ movimientos: movimientos + 1 })
+        // Precisión = parejas / intentos: 6 parejas en 6 movimientos es 100%.
+        const intentos = movimientos + 1
+        onGameCompleted({
+          ejercicios: PAREJAS_MEMORICE.length,
+          correctas: PAREJAS_MEMORICE.length,
+          accuracy: Math.round((PAREJAS_MEMORICE.length / intentos) * 100),
+          movimientos: intentos,
+        })
       }
     } else {
       onWrong()

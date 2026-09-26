@@ -56,7 +56,12 @@ export default function GeneracionesDerechos({ onSalir }: { onSalir: () => void 
   const siguiente = () => {
     if (paso === lista.length - 1) {
       trackComplete()
-      onGameCompleted({ aciertos, total: lista.length })
+      // La pantalla "Lección completada" lee `ejercicios` y `accuracy` (0-100).
+      onGameCompleted({
+        ejercicios: lista.length,
+        correctas: aciertos,
+        accuracy: Math.round((aciertos / lista.length) * 100),
+      })
       setTerminado(true)
       return
     }

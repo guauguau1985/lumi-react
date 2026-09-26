@@ -55,7 +55,12 @@ export default function QuizDerechos({ onSalir }: { onSalir: () => void }) {
   const siguiente = () => {
     if (paso === ronda.length - 1) {
       trackComplete()
-      onGameCompleted({ aciertos, total: ronda.length })
+      // La pantalla "Lección completada" lee `ejercicios` y `accuracy` (0-100).
+      onGameCompleted({
+        ejercicios: ronda.length,
+        correctas: aciertos,
+        accuracy: Math.round((aciertos / ronda.length) * 100),
+      })
       setTerminado(true)
       return
     }

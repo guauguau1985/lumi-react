@@ -32,7 +32,7 @@ export default function RepasoFichas() {
       const todas = FICHAS.every((f) => nuevas[f.id])
       if (todas && !localStorage.getItem(CLAVE_PREMIO)) {
         localStorage.setItem(CLAVE_PREMIO, '1')
-        onGameCompleted()
+        onGameCompleted({ ejercicios: FICHAS.length, correctas: FICHAS.length, accuracy: 100 })
       }
     } catch {
       // Sin almacenamiento: el repaso funciona igual, solo no se recuerda.
