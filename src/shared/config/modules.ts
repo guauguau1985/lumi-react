@@ -7,4 +7,5 @@ export const modules = {
   ai: true,
   tarea: true,
   historia: true,
+  lenguaje: true,
 } as const;

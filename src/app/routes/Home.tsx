@@ -68,6 +68,13 @@ const MODULES = [
     colors: 'border-rose-200 bg-rose-50 text-rose-700',
   },
   {
+    to: '/lenguaje',
+    title: 'Lenguaje',
+    description: 'Tildes y ortografía: estudia jugando',
+    icon: IconBook2,
+    colors: 'border-teal-200 bg-teal-50 text-teal-700',
+  },
+  {
     to: '/coder',
     title: 'Programación',
     description: 'Crea soluciones paso a paso',

@@ -5,7 +5,8 @@ export type ModuleId =
   | "historiasLumi"
   | "educacionAmbiental"
   | "tareas"
-  | "historia";
+  | "historia"
+  | "lenguaje";
 
 export type GameEventType =
   | "CORRECT_ANSWER"

@@ -108,6 +108,22 @@ export const gamificationConfig: GamificationConfig = {
     },
   },
 
+  lenguaje: {
+    "repaso-lenguaje": {
+      GAME_COMPLETED: { xp: 30, coins: 4, badge: "lenguaje_fichas_tildes" },
+    },
+    "ensayo-lenguaje": {
+      CORRECT_ANSWER: { xp: 10, coins: 1 },
+      WRONG_ANSWER: { xp: 0, coins: 0 },
+      GAME_COMPLETED: { xp: 30, coins: 5, badge: "lenguaje_ensayo_tildes" },
+    },
+    "practica-lenguaje": {
+      CORRECT_ANSWER: { xp: 6, coins: 1 },
+      WRONG_ANSWER: { xp: 0, coins: 0 },
+      GAME_COMPLETED: { xp: 20, coins: 3 },
+    },
+  },
+
   tareas: {
     "tutor-tareas": {
       CORRECT_ANSWER: { xp: 4, coins: 0 },

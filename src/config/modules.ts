@@ -10,7 +10,8 @@ export type ModuleVariant =
   | "english"
   | "ai"
   | "tarea"
-  | "historia";
+  | "historia"
+  | "lenguaje";
 
 export interface ModuleConfig {
   id: string;
@@ -57,6 +58,15 @@ export const MODULE_LIST: ModuleConfig[] = [
     path: "/historia",
     emoji: "🏛️",
     variant: "historia",
+    enabled: true,
+  },
+  {
+    id: "lenguaje",
+    name: "Lenguaje",
+    description: "Acentuación, tildes y uso de C, S y Z",
+    path: "/lenguaje",
+    emoji: "📝",
+    variant: "lenguaje",
     enabled: true,
   },
   {

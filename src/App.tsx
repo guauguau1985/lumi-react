@@ -14,6 +14,7 @@ const CoderModule = lazy(() => import('@/modules/coder/pages/CoderHome'))
 const AIModule = lazy(() => import('@/modules/ai/AIShell'))
 const TareaModule = lazy(() => import('@/modules/tarea/pages/TareaShell'))
 const HistoriaModule = lazy(() => import('@/modules/historia/pages/HistoriaShell'))
+const LenguajeModule = lazy(() => import('@/modules/lenguaje/pages/LenguajeShell'))
 const ParentReport = lazy(() => import('@/modules/ai/pages/ParentReportPage'))
 const AccessPage = lazy(() => import('@/features/auth/pages/AccessPage'))
 const ParentGateway = lazy(() => import('@/features/auth/pages/ParentGateway'))
@@ -122,6 +123,14 @@ export default function App() {
                 <StudentRoute>
                   <HistoriaModule />
                 </StudentRoute>
+              }
+            />
+          )}
+          {modules.lenguaje && (
+            <Route
+              path="/lenguaje/*"
+              element={
+                  <LenguajeModule />
               }
             />
           )}
