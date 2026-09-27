@@ -130,7 +130,9 @@ export default function App() {
             <Route
               path="/lenguaje/*"
               element={
+                <StudentRoute>
                   <LenguajeModule />
+                </StudentRoute>
               }
             />
           )}
