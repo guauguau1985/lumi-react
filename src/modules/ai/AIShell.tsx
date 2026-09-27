@@ -13,7 +13,18 @@ interface Message {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
-async function callTutor(text: string): Promise<string> {
+// Últimos mensajes de la conversación, para que Lumi siga el hilo. Se excluyen
+// el saludo inicial y los mensajes de error, que no los escribió el modelo.
+const HISTORY_LIMIT = 10;
+
+function buildHistory(messages: Message[]) {
+  return messages
+    .filter((m) => m.id !== "welcome" && !m.id.startsWith("e-"))
+    .slice(-HISTORY_LIMIT)
+    .map((m) => ({ role: m.role === "user" ? "user" : "assistant", content: m.text }));
+}
+
+async function callTutor(text: string, history: Message[]): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error("Sin sesión");
 
@@ -23,7 +34,7 @@ async function callTutor(text: string): Promise<string> {
       Authorization: `Bearer ${session.access_token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ message: text }),
+    body: JSON.stringify({ message: text, history: buildHistory(history) }),
   });
 
   if (!res.ok) throw new Error(`Error ${res.status}`);
@@ -64,6 +75,7 @@ export default function AIShell() {
     if (!text || loading || offline) return;
 
     setInput("");
+    const previous = messages;
     setMessages((prev) => [
       ...prev,
       { id: `u-${Date.now()}`, role: "user", text },
@@ -71,7 +83,7 @@ export default function AIShell() {
     setLoading(true);
 
     try {
-      const reply = await callTutor(text);
+      const reply = await callTutor(text, previous);
       setMessages((prev) => [
         ...prev,
         { id: `m-${Date.now()}`, role: "model", text: reply },

@@ -19,10 +19,22 @@ export interface TutorContext {
   attempts?: number
 }
 
+const ERROR_TEXT = '¡Ups! Algo salió mal. Intenta de nuevo. 🔧'
+const HISTORY_LIMIT = 10
+
+// Últimos mensajes para que Lumi siga el hilo (sin los mensajes de error locales).
+function buildHistory(messages: TutorMessage[]) {
+  return messages
+    .filter(m => m.text !== ERROR_TEXT)
+    .slice(-HISTORY_LIMIT)
+    .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }))
+}
+
 async function fetchTutorReply(
   message: string,
   triggerType: TutorTriggerType,
-  context: TutorContext
+  context: TutorContext,
+  history: TutorMessage[]
 ): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession()
 
@@ -41,6 +53,7 @@ async function fetchTutorReply(
       level: context.level,
       mistakes: context.mistakes,
       attempts: context.attempts,
+      history: buildHistory(history),
     }),
   })
 
@@ -70,13 +83,13 @@ export function useTutorIA(context: TutorContext) {
     setMessages(prev => [...prev, { id: `${role}-${Date.now()}`, role, text }])
   }
 
-  const callTutor = async (text: string, triggerType: TutorTriggerType) => {
+  const callTutor = async (text: string, triggerType: TutorTriggerType, history: TutorMessage[]) => {
     setIsLoading(true)
     try {
-      const reply = await fetchTutorReply(text, triggerType, context)
+      const reply = await fetchTutorReply(text, triggerType, context, history)
       addMsg('tutor', reply)
     } catch {
-      addMsg('tutor', '¡Ups! Algo salió mal. Intenta de nuevo. 🔧')
+      addMsg('tutor', ERROR_TEXT)
     } finally {
       setIsLoading(false)
     }
@@ -94,7 +107,7 @@ export function useTutorIA(context: TutorContext) {
     if (messages.length === 0) {
       const userText = `Necesito ayuda con ${context.topic}`
       setMessages([{ id: `user-${Date.now()}`, role: 'user', text: userText }])
-      await callTutor(userText, 'error_seguido')
+      await callTutor(userText, 'error_seguido', [])
     }
   }
 
@@ -102,8 +115,9 @@ export function useTutorIA(context: TutorContext) {
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading || offline) return
+    const previous = messages
     addMsg('user', text)
-    await callTutor(text, 'solicitud_niño')
+    await callTutor(text, 'solicitud_niño', previous)
   }
 
   return { isOpen, messages, isLoading, offline, openFromButton, openFromError, close, sendMessage }

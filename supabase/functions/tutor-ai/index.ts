@@ -21,6 +21,28 @@ Reglas:
 - Escribe texto simple, sin Markdown, asteriscos, tablas ni títulos con símbolos.
 - Usa como referencia la orientación curricular chilena entregada, pero no limites preguntas interdisciplinarias, robótica o tecnología actual.
 - Sé concreta: normalmente entre 80 y 180 palabras.
+
+Sobre ti misma (úsalo solo si el estudiante pregunta quién te creó, quién te hizo o de dónde vienes):
+Lumi fue creada por Katerine Padilla, una emprendedora chilena y mamá de trillizos.
+La idea nació de una necesidad muy cercana: encontrar mejores formas de apoyar el aprendizaje
+de sus propios hijos, entendiendo que no todos los niños aprenden de la misma manera ni al mismo ritmo.
+Con el tiempo, esa experiencia se transformó en una idea más amplia: crear una herramienta que
+también pudiera apoyar a otros niños y a sus familias, haciendo que aprender sea más claro,
+entretenido y adaptado a cada estudiante.
+Katerine definió el propósito de Lumi, su enfoque educativo, sus contenidos y sus principales
+funciones, apoyándose en inteligencia artificial para desarrollar y mejorar la aplicación.
+Cómo responder a esa pregunta:
+- Responde corto, en 2 o 3 oraciones simples y cálidas, y ofrece contar más si el estudiante quiere saber.
+- Aclara con naturalidad que eres una inteligencia artificial, no una persona, y que Katerine no está
+  escribiendo tus respuestas.
+- No inventes otros creadores, empresas o equipos, ni detalles que no estén aquí.
+- Después vuelve con suavidad a lo que el estudiante estaba estudiando.`;
+
+// Reglas que solo aplican cuando el estudiante subió una tarea. En el chat libre
+// no hay tarea, y si el modelo las recibe igual termina diciendo cosas como
+// "no veo ninguna tarea en lo que subiste".
+const TASK_RULES = `
+Reglas para trabajar con la tarea subida:
 - Ya tienes en "Instrucciones o material de la tarea" el enunciado (y a veces el avance del
   estudiante) extraído de lo que subió. Úsalo siempre como fuente de verdad: nunca le pidas
   al estudiante que te cuente de qué trata la tarea, que indique la materia o que transcriba
@@ -43,6 +65,29 @@ Reglas:
   estudiante no calza con lo que esperarías y podría deberse a un error de lectura,
   dilo con naturalidad y pídele que la confirme o la escriba, en vez de darla por
   incorrecta de inmediato.`;
+
+const FREE_CHAT_RULES = `
+Esta es una conversación libre: el estudiante no subió ninguna tarea. No menciones tareas
+subidas ni digas que no ves una tarea. Sigue el hilo de la conversación anterior: si hiciste
+una pregunta y el estudiante responde, conecta su respuesta con esa pregunta. No vuelvas a
+saludar ni a presentarte si la conversación ya empezó. Si el mensaje del estudiante tiene
+errores de tipeo, interpreta lo más probable según la conversación.`;
+
+// Historial que manda el frontend en el chat libre. Viene del cliente, así que
+// lo limitamos en cantidad, largo y roles permitidos.
+const MAX_HISTORY = 10;
+
+function parseHistory(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .slice(-MAX_HISTORY)
+    .map((item) => {
+      const role = item?.role === "assistant" ? ("assistant" as const) : item?.role === "user" ? ("user" as const) : null;
+      const content = clip(item?.content, 1500);
+      return role && content ? { role, content } : null;
+    })
+    .filter((item): item is { role: "user" | "assistant"; content: string } => item !== null);
+}
 
 const TOOL_INSTRUCTIONS: Record<string, string> = {
   explain:
@@ -190,12 +235,16 @@ serve(async (req) => {
     // pedimos al modelo que la infiera del contenido en vez de repetirle
     // literalmente la palabra "otra".
     const rawSubject = subject || task?.subject || "";
+    const resolvedContext = taskContext || task?.extracted_text || "";
+    const hasTask = Boolean(task || resolvedContext);
     const resolvedSubject =
       rawSubject && rawSubject !== "otra"
         ? rawSubject
-        : "no indicada por el estudiante: infiérela tú misma a partir del contenido de la tarea y dila con naturalidad";
-    const resolvedContext = taskContext || task?.extracted_text || "";
+        : hasTask
+          ? "no indicada por el estudiante: infiérela tú misma a partir del contenido de la tarea y dila con naturalidad"
+          : "no indicada: dedúcela de la conversación si hace falta";
     const contextualPrompt = `${BASE_PROMPT}
+${hasTask ? TASK_RULES : FREE_CHAT_RULES}
 
 Contexto actual:
 - Curso: ${resolvedGrade}
@@ -245,12 +294,18 @@ La checklist debe tener entre 2 y 8 elementos y reflejar solo requisitos visible
       try {
         parsed = JSON.parse(raw);
       } catch {
-        parsed = {
-          title: task.title,
-          summary: raw,
-          checklist: [],
-          reply: "Ya organicé la tarea. Podemos comenzar por la primera parte.",
-        };
+        // El modelo a veces no devuelve JSON limpio (lo envuelve en ```json,
+        // le agrega texto alrededor, o se corta a mitad de camino). Intentamos
+        // rescatar el objeto JSON del medio del texto; si tampoco se puede,
+        // usamos los valores por defecto de abajo. Nunca mostramos `raw` tal
+        // cual, porque es texto crudo con formato JSON que un niño no debe ver.
+        const start = raw.indexOf("{");
+        const end = raw.lastIndexOf("}");
+        try {
+          parsed = start !== -1 && end > start ? JSON.parse(raw.slice(start, end + 1)) : {};
+        } catch {
+          parsed = {};
+        }
       }
 
       const title = clip(parsed.title, 120) || task.title;
@@ -347,6 +402,7 @@ ${TOOL_INSTRUCTIONS[mode === "review_work" ? "review" : tool] ?? TOOL_INSTRUCTIO
           role: "system",
           content: `${contextualPrompt}\nTema: ${topic || "no informado"}.${extra}`,
         },
+        ...parseHistory(body?.history),
         { role: "user", content: message },
       ])
     );
