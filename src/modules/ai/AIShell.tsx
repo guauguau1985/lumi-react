@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from "react";
+import { SpeakButton } from "@/shared/components/voice/SpeakButton";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { LumiAvatar } from "@/shared/components/lumi/LumiAvatar";
@@ -169,6 +170,9 @@ export default function AIShell() {
               `}
             >
               {msg.text}
+              {msg.role === "model" && (
+                <SpeakButton text={msg.text} context="explanation" className="mt-2" />
+              )}
             </div>
           </div>
         ))}

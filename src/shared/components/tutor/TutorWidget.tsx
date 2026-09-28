@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { LumiAvatar } from '@/shared/components/lumi/LumiAvatar'
 import { useTutorIA } from '@/shared/hooks/useTutorIA'
+import { SpeakButton } from '@/shared/components/voice/SpeakButton'
 
 interface TutorWidgetProps {
   topic: string
@@ -142,6 +143,9 @@ export default function TutorWidget({
                     `}
                   >
                     {msg.text}
+                    {msg.role === 'tutor' && (
+                      <SpeakButton text={msg.text} context="explanation" className="mt-2" />
+                    )}
                   </div>
                 </div>
               ))}
