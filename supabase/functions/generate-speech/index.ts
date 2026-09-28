@@ -6,23 +6,23 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Voz cálida y pausada para una tutora escolar chilena. El estilo base se
-// combina con una variante corta según el `context` que mande el frontend
-// (ver src/shared/config/voice.ts, que debe mantenerse coherente con esto).
+// Voz dulce y cercana para una tutora escolar chilena que acompaña a niños
+// y niñas de 9 a 12 años. El estilo base se combina con una variante corta
+// según el `context` que mande el frontend (ver src/shared/config/voice.ts,
+// que debe mantenerse coherente con esto).
 const BASE_VOICE_STYLE =
-  "Habla en español de Chile, con un tono cálido, amable y cercano, como una " +
-  "tutora joven a la que realmente le importa que a este niño o niña le vaya " +
-  "bien. Usa un ritmo natural y ligeramente pausado, con pequeñas variaciones " +
-  "de entonación y pausas breves entre ideas. Es muy paciente y está " +
-  "acostumbrada a trabajar con niños y niñas que necesitan más tiempo o apoyo " +
-  "para aprender. Cuando el texto reconoce un logro, un intento o un avance " +
-  "del niño, dilo con calidez genuina y refuerzo positivo real —que se note " +
-  "que estás contenta con su esfuerzo, no solo con el resultado—, sin sonar " +
-  "exagerada ni artificial. Transmite motivación, seguridad y gusto por " +
-  "enseñar. No hables como locutora. No uses tono infantilizado, " +
-  "condescendiente ni exageradamente alegre. Evita mantener la misma " +
-  "entonación en todas las frases. Pronuncia con claridad y termina las " +
-  "oraciones de manera natural.";
+  "Habla en español de Chile como una profesora de básica muy cariñosa, dulce " +
+  "y cercana, que les habla a niños y niñas de 9 a 12 años. Tu voz es suave, " +
+  "tierna y luminosa, con una sonrisa que se escucha al hablar. Habla con " +
+  "calma, un poco más lento que una conversación normal, con pausas breves " +
+  "entre ideas para que el niño alcance a pensar. Varía la entonación de forma " +
+  "natural y expresiva, como cuando le explicas algo con cariño a alguien que " +
+  "quieres. Eres muy paciente: transmite que equivocarse está bien y que estás " +
+  "ahí para ayudar. Cuando el texto reconoce un logro, un intento o un avance, " +
+  "dilo con alegría y ternura genuinas, celebrando el esfuerzo. Suena " +
+  "acogedora y motivadora, nunca seria, fría ni de locutora. Sé dulce sin " +
+  "hablarle como a un bebé: nada de voz aniñada, chillona ni exagerada. " +
+  "Pronuncia con claridad y termina las oraciones de forma suave y natural.";
 
 const CONTEXT_STYLE: Record<string, string> = {
   explanation:
@@ -30,8 +30,8 @@ const CONTEXT_STYLE: Record<string, string> = {
     "ligeramente la transición entre cada paso, como si dieras tiempo para pensar.",
   encouragement:
     "Este texto es una frase de ánimo, felicitación o refuerzo positivo: dilo " +
-    "con calidez genuina y alegría real por el esfuerzo o el logro del niño, " +
-    "breve y auténtico, sin sonar ensayado ni exagerado.",
+    "con ternura y alegría real por el esfuerzo o el logro del niño, como " +
+    "una sonrisa grande, breve y auténtico, sin sonar ensayado.",
   instruction:
     "Este texto es una instrucción directa: dilo amable pero directo, sin rodeos.",
   story:
@@ -54,7 +54,7 @@ const ALLOWED_VOICES = new Set([
   "marin",
   "cedar",
 ]);
-const DEFAULT_VOICE = "nova";
+const DEFAULT_VOICE = "coral";
 // Ritmo base: levemente más lento que el 1.0 por defecto de OpenAI, para que
 // suene pausada sin arrastrar las palabras. El botón "Lenta" del frontend
 // multiplica esto todavía más vía audio.playbackRate, sin generar audio nuevo.
