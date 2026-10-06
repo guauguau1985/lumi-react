@@ -20,6 +20,8 @@ const AccessPage = lazy(() => import('@/features/auth/pages/AccessPage'))
 const ParentGateway = lazy(() => import('@/features/auth/pages/ParentGateway'))
 const LeaguePage = lazy(() => import('@/modules/liga/LeaguePage'))
 const VoicePlayground = lazy(() => import('@/app/routes/VoicePlayground'))
+// Lumi Pro: aprendizaje de IA para adultos (solo cuentas con role = 'parent').
+const ProModule = lazy(() => import('@/modules/pro/pages/ProShell'))
 
 function StudentRoute({ children }: { children: ReactNode }) {
   return <ProtectedRoute role="student">{children}</ProtectedRoute>
@@ -157,6 +159,14 @@ export default function App() {
             element={
               <ProtectedRoute role="parent">
                 <ParentReport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pro/*"
+            element={
+              <ProtectedRoute role="parent">
+                <ProModule />
               </ProtectedRoute>
             }
           />

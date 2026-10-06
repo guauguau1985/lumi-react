@@ -408,6 +408,108 @@ export type Database = {
         }
         Relationships: []
       }
+      pro_activity_days: {
+        Row: {
+          day: string
+          minutes: number
+          user_id: string
+        }
+        Insert: {
+          day?: string
+          minutes?: number
+          user_id: string
+        }
+        Update: {
+          day?: string
+          minutes?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pro_lesson_progress: {
+        Row: {
+          completed_at: string
+          lesson_id: string
+          mini_task_reported: string | null
+          minutes_saved: number | null
+          practice_text: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          lesson_id: string
+          mini_task_reported?: string | null
+          minutes_saved?: number | null
+          practice_text?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          lesson_id?: string
+          mini_task_reported?: string | null
+          minutes_saved?: number | null
+          practice_text?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pro_reviews: {
+        Row: {
+          box: number
+          correct_count: number
+          due_on: string
+          last_answered_at: string
+          lesson_id: string
+          question_id: string
+          user_id: string
+          wrong_count: number
+        }
+        Insert: {
+          box?: number
+          correct_count?: number
+          due_on?: string
+          last_answered_at?: string
+          lesson_id: string
+          question_id: string
+          user_id: string
+          wrong_count?: number
+        }
+        Update: {
+          box?: number
+          correct_count?: number
+          due_on?: string
+          last_answered_at?: string
+          lesson_id?: string
+          question_id?: string
+          user_id?: string
+          wrong_count?: number
+        }
+        Relationships: []
+      }
+      pro_settings: {
+        Row: {
+          area: string
+          created_at: string
+          plan_cuando: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          area?: string
+          created_at?: string
+          plan_cuando?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          plan_cuando?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_key: 'girl' | 'boy' | null

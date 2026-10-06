@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   IconAlertTriangle,
   IconBrain,
@@ -267,6 +268,12 @@ export default function ParentReportPage() {
               </span>
               <span className="block text-xs text-slate-400">{parentProfile?.email}</span>
             </span>
+            <Link
+              to="/pro"
+              className="inline-flex items-center gap-2 rounded-2xl bg-pro-accent px-3 py-2 text-xs font-black text-pro-accent-ink hover:bg-pro-accent-hover"
+            >
+              <IconSparkles size={17} /> Lumi Pro
+            </Link>
             <button
               type="button"
               onClick={() => void signOut()}

@@ -38,6 +38,23 @@
   --color-ai-dot: hsl(287 85% 58%);
   --color-ai-text: hsl(288 75% 45%);
 
+  /* Lumi Pro (adultos): sobrio, tinta oscura y un acento verde azulado */
+  --color-pro-bg: hsl(40 30% 97%);
+  --color-pro-surface: #ffffff;
+  --color-pro-ink: hsl(222 35% 16%);
+  --color-pro-muted: hsl(220 12% 40%);
+  --color-pro-border: hsl(220 16% 88%);
+  --color-pro-accent: hsl(173 70% 26%);
+  --color-pro-accent-hover: hsl(173 70% 21%);
+  --color-pro-accent-soft: hsl(170 45% 93%);
+  --color-pro-accent-ink: #ffffff;
+  --color-pro-good: hsl(150 60% 28%);
+  --color-pro-good-soft: hsl(145 50% 93%);
+  --color-pro-bad: hsl(0 65% 42%);
+  --color-pro-bad-soft: hsl(0 80% 96%);
+  --color-pro-warn: hsl(32 90% 34%);
+  --color-pro-warn-soft: hsl(38 90% 94%);
+
   /* Radios y fuente */
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
