@@ -163,6 +163,9 @@ export default function TareaShell() {
   const [recentTasks, setRecentTasks] = useState<HomeworkTask[]>([])
   const [messages, setMessages] = useState<HomeworkMessage[]>([])
   const [input, setInput] = useState('')
+  // Mensaje del niño que se está enviando: se muestra al tiro en el chat para
+  // que no parezca que "se borró" mientras Lumi responde.
+  const [pendingMessage, setPendingMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState('')
@@ -387,7 +390,10 @@ export default function TareaShell() {
 
     setBusy(true)
     setError('')
-    if (usesChatInput) setInput('')
+    if (usesChatInput) {
+      setInput('')
+      setPendingMessage(message)
+    }
     try {
       await callTutor({
         mode: tool === 'review' ? 'review_work' : 'homework_chat',
@@ -417,8 +423,12 @@ export default function TareaShell() {
       if (updated) setTask(updated)
       await refreshMessages(task.id)
     } catch (caught) {
+      // Si Lumi no alcanzó a responder, devolvemos lo escrito a la caja de
+      // texto para que el niño no tenga que escribirlo de nuevo.
+      if (usesChatInput) setInput((current) => current || message)
       setError(caught instanceof Error ? caught.message : 'Lumi no pudo responder.')
     } finally {
+      setPendingMessage('')
       setBusy(false)
     }
   }
@@ -821,6 +831,18 @@ export default function TareaShell() {
                             </div>
                           )
                         })}
+                      {pendingMessage && (
+                        <div className="flex justify-end gap-2">
+                          <div className="max-w-[85%] rounded-2xl rounded-br-md bg-amber-50 px-4 py-3 text-sm leading-6 text-slate-800 opacity-80">
+                            <p className="whitespace-pre-line">{pendingMessage}</p>
+                          </div>
+                          <img
+                            src={avatar}
+                            alt=""
+                            className="h-8 w-8 shrink-0 rounded-full object-cover"
+                          />
+                        </div>
+                      )}
                       {busy && task && (
                         <div className="flex items-center gap-2 text-xs font-bold text-violet-600">
                           <IconPointFilled className="animate-pulse" size={18} />

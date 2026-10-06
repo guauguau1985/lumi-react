@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react'
@@ -43,6 +44,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<LumiProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  // Usuario de la sesión actual, para distinguir un cambio real de usuario de
+  // una simple renovación de token (ver onAuthStateChange más abajo).
+  const currentUserIdRef = useRef<string | null>(null)
 
   const refreshProfile = useCallback(async () => {
     const {
@@ -64,6 +68,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const bootstrap = async () => {
       const { data } = await supabase.auth.getSession()
       if (!active) return
+      currentUserIdRef.current = data.session?.user.id ?? null
       setSession(data.session)
       if (data.session?.user.id) {
         try {
@@ -82,7 +87,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, nextSession) => {
         if (!active) return
+        // Supabase avisa muchos eventos que NO cambian de usuario: renovación
+        // del token (TOKEN_REFRESHED) y un SIGNED_IN cada vez que la pestaña
+        // vuelve a estar visible (por ejemplo, al volver de elegir una foto o
+        // un PDF). Si en esos casos marcamos isLoading, ProtectedRoute muestra
+        // la pantalla de carga, desmonta la página y el niño pierde todo lo que
+        // había escrito o subido. Solo mostramos carga si cambió el usuario.
+        const previousUserId = currentUserIdRef.current
+        const nextUserId = nextSession?.user.id ?? null
+        currentUserIdRef.current = nextUserId
         setSession(nextSession)
+        if (previousUserId === nextUserId) return
         setIsLoading(true)
 
         // Supabase holds an internal auth lock while this callback runs. Defer all
