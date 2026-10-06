@@ -21,6 +21,15 @@ export function localDate(offsetDays = 0) {
   return `${y}-${m}-${d}`
 }
 
+/** Convierte una marca de tiempo (UTC) a la fecha local YYYY-MM-DD. */
+export function toLocalDate(timestamp: string) {
+  const date = new Date(timestamp)
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 export async function loadSettings(userId: string) {
   const { data, error } = await supabase
     .from('pro_settings')
@@ -76,14 +85,11 @@ export async function completeLesson(params: {
   answers: Array<{ questionId: string; correct: boolean }>
 }) {
   const { userId, lessonId, practiceText, answers } = params
-  const { error: progressError } = await supabase.from('pro_lesson_progress').upsert({
-    user_id: userId,
-    lesson_id: lessonId,
-    practice_text: practiceText || null,
-    completed_at: new Date().toISOString(),
-  })
-  if (progressError) throw progressError
 
+  // Primero las preguntas del repaso y después la marca de lección terminada.
+  // Si la conexión se corta entre ambos pasos, la lección no queda como
+  // terminada sin repasos: al reintentar, el repaso no se duplica
+  // (ignoreDuplicates) y se guarda el avance.
   const tomorrow = localDate(1)
   const rows = answers.map((answer) => ({
     user_id: userId,
@@ -103,6 +109,14 @@ export async function completeLesson(params: {
       .upsert(rows, { onConflict: 'user_id,question_id', ignoreDuplicates: true })
     if (error) throw error
   }
+
+  const { error: progressError } = await supabase.from('pro_lesson_progress').upsert({
+    user_id: userId,
+    lesson_id: lessonId,
+    practice_text: practiceText || null,
+    completed_at: new Date().toISOString(),
+  })
+  if (progressError) throw progressError
 }
 
 /** Registra una respuesta de repaso y programa la próxima fecha. */

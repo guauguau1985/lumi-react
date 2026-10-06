@@ -9,7 +9,7 @@ import {
   IconRepeat,
 } from '@tabler/icons-react'
 import { PRO_LESSONS, PRO_WEEKS, getLesson } from '@/modules/pro/data/rutaRapida'
-import { localDate, reportMiniTask } from '@/modules/pro/lib/proStore'
+import { localDate, reportMiniTask, toLocalDate } from '@/modules/pro/lib/proStore'
 import { usePro } from '@/modules/pro/lib/ProContext'
 
 export default function ProHome() {
@@ -21,7 +21,7 @@ export default function ProHome() {
   // sin minutos ahorrados registrados.
   const today = localDate()
   const pendingReport = [...progress]
-    .filter((row) => row.minutes_saved === null && row.completed_at.slice(0, 10) < today)
+    .filter((row) => row.minutes_saved === null && toLocalDate(row.completed_at) < today)
     .sort((a, b) => b.completed_at.localeCompare(a.completed_at))
     .at(0)
 
