@@ -13,6 +13,7 @@ Reglas:
 - Guía el razonamiento; no hagas una tarea completa para que el estudiante solo la copie.
 - Divide problemas complejos, formula preguntas breves y ofrece ejemplos equivalentes.
 - Adapta vocabulario, profundidad y extensión al curso y a la materia.
+- Si el estudiante responde mal, no le des la respuesta: dale una pista corta que lo haga pensar.
 - Si el estudiante se equivoca dos veces, explica de otra manera y baja temporalmente la dificultad.
 - Puedes tratar contenidos históricos, científicos, sociales, religiosos o tecnológicos cuando sean educativos, con neutralidad y cuidado.
 - Nunca pidas ni repitas datos personales, enlaces privados, direcciones o teléfonos.
@@ -64,7 +65,13 @@ Reglas para trabajar con la tarea subida:
   palabra marcada con "(?)" significa que no se leyó con certeza. Si una respuesta del
   estudiante no calza con lo que esperarías y podría deberse a un error de lectura,
   dilo con naturalidad y pídele que la confirme o la escriba, en vez de darla por
-  incorrecta de inmediato.`;
+  incorrecta de inmediato.
+- Ve al punto: el estudiante tiene entre 9 y 12 años y debe estar resolviendo algo en segundos.
+  No hagas resúmenes largos ni preguntes si prefiere que expliques el tema o que empiecen;
+  propone directamente un ejercicio concreto y corto adecuado a su curso.
+- Cuando el estudiante responda un ejercicio: si está bien, felicítalo en una frase y propone
+  el siguiente ejercicio corto; si está mal, dale una pista breve, nunca la respuesta.
+- Nunca escribas la tarea por el estudiante.`;
 
 const FREE_CHAT_RULES = `
 Esta es una conversación libre: el estudiante no subió ninguna tarea. No menciones tareas
@@ -94,8 +101,12 @@ const TOOL_INSTRUCTIONS: Record<string, string> = {
     "Explica primero el concepto central con lenguaje simple, un ejemplo distinto a la tarea y una pregunta de comprobación.",
   guide:
     "Entrega una guía numerada. Da solo el primer paso con detalle y deja una pregunta para que el estudiante continúe.",
-  draft:
-    "Ofrece una estructura o borrador inicial incompleto y claramente rotulado. Deja espacios o decisiones para el estudiante.",
+  start:
+    "Propón de inmediato el PRIMER ejercicio concreto y corto de la tarea, adecuado al curso. Sin pedir permiso, sin preguntar si prefiere una explicación y sin resumen: como máximo una frase de contexto y luego el ejercicio. Máximo 60 palabras.",
+  hint:
+    "Da UNA pista corta (1 o 2 frases) para el paso o ejercicio en que van ahora. No des la respuesta ni escribas la tarea por el estudiante. Termina invitándolo a intentarlo.",
+  final:
+    "Resume en máximo 3 frases cortas y simples lo que el estudiante aprendió en esta tarea. Sin listas y sin preguntas al final.",
   review: `Vas a revisar el avance del estudiante siguiendo este protocolo, un paso a la vez,
 sin adelantarte a los siguientes turnos:
 1. Si la materia no fue indicada, dila con naturalidad a partir del contenido (ej: "Creo que
@@ -118,13 +129,15 @@ sin adelantarte a los siguientes turnos:
 8. Si todo el avance revisado ya está correcto, felicita brevemente y dile con qué punto
    puede seguir. Nunca corrijas más de un punto por respuesta.`,
   question:
-    "Responde la duda usando el contexto que ya tienes; no pidas que te describan la tarea de nuevo. Termina con una pregunta corta que compruebe comprensión.",
+    "Responde la duda usando el contexto que ya tienes; no pidas que te describan la tarea de nuevo. Si el mensaje es la respuesta a un ejercicio, corrígela: si está bien, felicita en una frase y propone el siguiente ejercicio corto; si está mal, da una pista breve sin revelar la respuesta. Sé breve: máximo 80 palabras.",
 };
 
 const TOOL_REQUESTS: Record<string, string> = {
   explain: "Explícame primero el tema de esta tarea.",
   guide: "Guíame paso a paso para comenzar.",
-  draft: "Ayúdame a crear un borrador inicial que yo pueda completar y mejorar.",
+  start: "Empecemos con el primer ejercicio.",
+  hint: "Dame una pista.",
+  final: "Terminé. Resume lo que aprendí.",
   review: "Revisa mi avance y dime cómo mejorarlo.",
   question: "Tengo una pregunta sobre esta tarea.",
 };
@@ -274,11 +287,13 @@ ${resolvedContext ? `- Instrucciones o material de la tarea:\n${resolvedContext}
 Analiza las instrucciones sin resolver el trabajo. Responde únicamente JSON válido:
 {
   "title": "título corto y claro",
-  "summary": "explicación amable de qué pide la tarea, en 2 a 4 oraciones",
-  "checklist": ["paso o requisito 1", "paso o requisito 2"],
-  "reply": "mensaje breve que invita al estudiante a elegir por dónde comenzar"
+  "summary": "qué pide la tarea, en máximo 2 frases cortas",
+  "checklist": ["paso corto 1", "paso corto 2"],
+  "reply": "una frase corta y alegre para comenzar, sin preguntas"
 }
-La checklist debe tener entre 2 y 8 elementos y reflejar solo requisitos visibles o razonablemente inferibles.`,
+La checklist debe tener entre 2 y 4 pasos cortos (máximo 12 palabras cada uno) y reflejar solo
+requisitos visibles o razonablemente inferibles. No preguntes si el estudiante quiere una
+explicación o comenzar: después de esto se le propondrá directamente un ejercicio.`,
           },
           { role: "user", content: "Lee y organiza esta tarea." },
         ],
@@ -313,14 +328,13 @@ La checklist debe tener entre 2 y 8 elementos y reflejar solo requisitos visible
       // por lo que debe leerse como una instrucción para el estudiante, no como algo
       // que Lumi ya hizo (evita frases tipo "Ya revisé las instrucciones.").
       const summary =
-        clip(parsed.summary, 1800) ||
+        clip(parsed.summary, 320) ||
         "leer con calma tu documento y contarme qué parte no entiendes para ayudarte paso a paso.";
       const checklist = Array.isArray(parsed.checklist)
-        ? parsed.checklist.map((item) => clip(item, 260)).filter(Boolean).slice(0, 8)
+        ? parsed.checklist.map((item) => clip(item, 120)).filter(Boolean).slice(0, 4)
         : [];
       const reply =
-        clip(parsed.reply, 1200) ||
-        "Ya organicé la tarea. ¿Quieres que te explique el tema o comenzamos con el primer paso?";
+        clip(parsed.reply, 200) || "¡Listo! Empecemos con un primer ejercicio.";
 
       await service.from("homework_messages").insert({
         task_id: task.id,
@@ -354,7 +368,7 @@ La checklist debe tener entre 2 y 8 elementos y reflejar solo requisitos visible
         child_id: user.id,
         role: "student",
         content: prompt,
-        message_kind: mode === "review_work" ? "review" : tool === "draft" ? "draft" : "chat",
+        message_kind: mode === "review_work" ? "review" : "chat",
       });
 
       const reply = nonEmptyReply(
@@ -381,7 +395,9 @@ ${TOOL_INSTRUCTIONS[mode === "review_work" ? "review" : tool] ?? TOOL_INSTRUCTIO
         child_id: user.id,
         role: "tutor",
         content: reply,
-        message_kind: mode === "review_work" ? "review" : tool === "draft" ? "draft" : "chat",
+        // homework_messages solo admite chat, summary, draft, review y system;
+        // el resumen final (tool final) se guarda como chat hasta ampliar el esquema.
+        message_kind: mode === "review_work" ? "review" : "chat",
       });
       return json({ reply });
     }

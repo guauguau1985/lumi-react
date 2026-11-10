@@ -12,7 +12,7 @@ import {
   IconHelpCircle,
   IconHistory,
   IconHome,
-  IconPencil,
+  IconBulb,
   IconPlayerPlay,
   IconPointFilled,
   IconRosetteDiscountCheck,
@@ -43,13 +43,14 @@ import {
 
 type HomeworkTask = Tables<'homework_tasks'>
 type HomeworkMessage = Tables<'homework_messages'>
-type TutorTool = 'explain' | 'guide' | 'draft' | 'review' | 'question'
+type TutorTool = 'explain' | 'guide' | 'hint' | 'review' | 'question' | 'start' | 'final'
+type Grade = HomeworkTask['grade']
 
 const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tutor-ai`
 const MAX_ATTACHMENTS = 6
 
 const OPTIONAL_SUBJECTS = [
-  { value: 'otra', label: 'No estoy seguro/a' },
+  { value: 'otra', label: 'No sé' },
   ...SUBJECTS.filter((item) => item.value !== 'otra'),
 ] as Array<{ value: HomeworkSubject; label: string }>
 
@@ -72,10 +73,10 @@ const TOOLS: Array<{
     icon: IconPlayerPlay,
   },
   {
-    id: 'draft',
-    title: 'Generar borrador',
-    description: 'Crea un inicio para que lo mejores',
-    icon: IconPencil,
+    id: 'hint',
+    title: 'Dame una pista',
+    description: 'Una ayudita corta, sin darte la respuesta',
+    icon: IconBulb,
   },
   {
     id: 'review',
@@ -91,9 +92,65 @@ const TOOLS: Array<{
   },
 ]
 
+// Límites de pantalla: aunque la Edge Function desplegada sea antigua y mande
+// resúmenes largos o muchos pasos, el niño ve siempre algo corto.
+const MAX_SUMMARY_SENTENCES = 2
+const MAX_PLAN_STEPS = 4
+const MAX_FINAL_SENTENCES = 3
+
+// Inicio rápido: curso, materia y tema se recuerdan desde la vez anterior.
+const QUICK_START_KEY = 'lumi_tarea_inicio'
+type QuickStart = { grade?: Grade; subject?: HomeworkSubject; topic?: string }
+
+function readQuickStart(): QuickStart {
+  try {
+    const raw = JSON.parse(localStorage.getItem(QUICK_START_KEY) ?? '{}') as QuickStart
+    return {
+      grade: GRADES.some((item) => item.value === raw.grade) ? raw.grade : undefined,
+      subject: SUBJECTS.some((item) => item.value === raw.subject) ? raw.subject : undefined,
+      topic: typeof raw.topic === 'string' ? raw.topic.slice(0, 80) : undefined,
+    }
+  } catch {
+    return {}
+  }
+}
+
+function saveQuickStart(value: QuickStart) {
+  try {
+    localStorage.setItem(QUICK_START_KEY, JSON.stringify(value))
+  } catch {
+    // Sin almacenamiento disponible: simplemente no se recuerda.
+  }
+}
+
+// Instrucciones internas para Lumi que viajan dentro del mensaje del niño.
+// Funcionan con cualquier versión de tutor-ai y en pantalla solo se ve la
+// parte anterior a la marca.
+const LUMI_NOTE = '[Para Lumi]'
+
+function withNote(visible: string, note: string) {
+  return `${visible}\n\n${LUMI_NOTE} ${note}`
+}
+
+function visibleContent(content: string) {
+  const index = content.indexOf(LUMI_NOTE)
+  return (index >= 0 ? content.slice(0, index) : content).replace(/\*\*/g, '').trim()
+}
+
+function firstSentences(text: string, max: number) {
+  const clean = text.replace(/\*\*/g, '').replace(/\s+/g, ' ').trim()
+  const parts = clean.match(/[^.!?…]+[.!?…]+["»”)]*|[^.!?…]+$/g) ?? [clean]
+  return parts
+    .slice(0, max)
+    .map((part) => part.trim())
+    .join(' ')
+}
+
 function checklistFrom(value: Json): string[] {
   if (!Array.isArray(value)) return []
-  return value.filter((item): item is string => typeof item === 'string')
+  return value
+    .filter((item): item is string => typeof item === 'string')
+    .slice(0, MAX_PLAN_STEPS)
 }
 
 function displayTime(value: string) {
@@ -150,13 +207,19 @@ export default function TareaShell() {
   const { session, profile } = useAuth()
   const rewards = useGameRewards('tareas', 'tutor-tareas')
   const userId = session?.user.id
+  const remembered = useMemo(readQuickStart, [])
   const [subject, setSubject] = useState<HomeworkSubject>(() => {
     const requested = searchParams.get('subject')
     return SUBJECTS.some((item) => item.value === requested)
       ? (requested as HomeworkSubject)
-      : 'otra'
+      : remembered.subject ?? 'otra'
   })
-  const [grade, setGrade] = useState(profile?.grade ?? '5-basico')
+  const [grade, setGrade] = useState<Grade>(
+    remembered.grade ?? profile?.grade ?? '5-basico'
+  )
+  const [topic, setTopic] = useState(remembered.topic ?? '')
+  const [showPlan, setShowPlan] = useState(false)
+  const [finalSummary, setFinalSummary] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [pastedText, setPastedText] = useState('')
   const [task, setTask] = useState<HomeworkTask | null>(null)
@@ -182,6 +245,14 @@ export default function TareaShell() {
       : SUBJECTS.find((item) => item.value === subject)?.label ?? 'Materia'
   const checklist = useMemo(() => checklistFrom(task?.checklist ?? []), [task?.checklist])
   const currentStage = task?.current_stage ?? 1
+  const shortSummary = task?.instructions_summary
+    ? firstSentences(task.instructions_summary, MAX_SUMMARY_SENTENCES)
+    : ''
+
+  // Si no hay curso recordado, usamos el del perfil apenas carga.
+  useEffect(() => {
+    if (!remembered.grade && profile?.grade) setGrade(profile.grade)
+  }, [profile?.grade, remembered.grade])
 
   useEffect(() => {
     const handleOnline = () => setOffline(false)
@@ -266,20 +337,24 @@ export default function TareaShell() {
     setSubject(selected.subject)
     setGrade(selected.grade)
     setShowHistory(false)
+    setShowPlan(false)
+    setFinalSummary('')
     setError('')
     await refreshMessages(selected.id)
   }
 
   const startTask = async () => {
     if (!userId || busy || offline) return
-    if (!pastedText.trim() && files.length === 0) {
-      setError('Cuéntale a Lumi qué necesitas, o adjunta un documento.')
+    const cleanTopic = topic.trim()
+    if (!pastedText.trim() && !cleanTopic && files.length === 0) {
+      setError('Escribe el tema, cuéntale a Lumi qué necesitas o adjunta un documento.')
       return
     }
 
     setBusy(true)
     setError('')
     setUploadProgress(files.length > 0 ? 1 : 100)
+    saveQuickStart({ grade, subject, topic: cleanTopic })
 
     try {
       const extractedParts: string[] = []
@@ -294,7 +369,13 @@ export default function TareaShell() {
         )
         pageCount += extracted.pageCount ?? 0
       }
-      const extractedText = [pastedText.trim(), ...extractedParts].filter(Boolean).join('\n\n')
+      const extractedText = [
+        cleanTopic ? `Tema indicado por el estudiante: ${cleanTopic}` : '',
+        pastedText.trim(),
+        ...extractedParts,
+      ]
+        .filter(Boolean)
+        .join('\n\n')
       if (extractedText.length < 8) {
         throw new Error(
           'No encontramos texto legible. Cuéntale a Lumi con más detalle qué necesitas, o prueba con otra imagen.'
@@ -302,7 +383,9 @@ export default function TareaShell() {
       }
 
       const firstFile = files[0]
-      const initialTitle = pastedText.trim()
+      const initialTitle = cleanTopic
+        ? cleanTopic.slice(0, 90)
+        : pastedText.trim()
         ? pastedText.trim().slice(0, 90)
         : firstFile
           ? firstFile.name.replace(/\.[^.]+$/, '').slice(0, 90)
@@ -313,7 +396,7 @@ export default function TareaShell() {
           child_id: userId,
           title: initialTitle,
           subject,
-          grade: grade as HomeworkTask['grade'],
+          grade,
           extracted_text: extractedText,
           file_name: firstFile?.name ?? null,
           file_type: firstFile?.type ?? null,
@@ -358,8 +441,11 @@ export default function TareaShell() {
         .from('homework_tasks')
         .update({
           title: analysis.title?.slice(0, 120) || nextTask.title,
-          instructions_summary: analysis.summary || analysis.reply,
-          checklist: analysis.checklist ?? [],
+          instructions_summary: firstSentences(
+            analysis.summary || analysis.reply || '',
+            MAX_SUMMARY_SENTENCES
+          ),
+          checklist: (analysis.checklist ?? []).slice(0, MAX_PLAN_STEPS),
           current_stage: 2,
         })
         .eq('id', created.id)
@@ -368,9 +454,31 @@ export default function TareaShell() {
       if (analysisUpdateError) throw analysisUpdateError
 
       setTask(analyzed)
+      setShowPlan(false)
+      setFinalSummary('')
       setRecentTasks((items) => [analyzed, ...items.filter((item) => item.id !== analyzed.id)])
-      await refreshMessages(analyzed.id)
       rewards.onLevelCompleted({ stage: 'understand', taskId: analyzed.id })
+
+      // Partimos de inmediato: Lumi propone el primer ejercicio sin preguntar.
+      try {
+        await askTutor(
+          analyzed,
+          'start',
+          withNote(
+            cleanTopic ? `¡Empecemos con ${cleanTopic}!` : '¡Empecemos!',
+            `Propón ahora mismo el PRIMER ejercicio concreto y corto de esta tarea, adecuado a ${
+              GRADES.find((item) => item.value === analyzed.grade)?.label ?? analyzed.grade
+            }. No me pidas permiso ni me preguntes si prefiero que expliques el tema o que empecemos. Como máximo una frase de contexto y luego el ejercicio, terminando con la pregunta del ejercicio. Si después respondo mal, dame una pista corta, no la respuesta.`
+          )
+        )
+      } catch (caught) {
+        await refreshMessages(analyzed.id).catch(() => undefined)
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : 'Lumi no alcanzó a proponer el primer ejercicio. Escríbele para comenzar.'
+        )
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'No pudimos preparar tu tarea.')
     } finally {
@@ -378,10 +486,57 @@ export default function TareaShell() {
     }
   }
 
+  // Llamada base al chat de la tarea (modo homework_chat o review_work).
+  // No revisa busy: quien la llama se encarga.
+  const askTutor = async (
+    currentTask: HomeworkTask,
+    tool: TutorTool,
+    message: string,
+    refresh = true
+  ) => {
+    const result = await callTutor({
+      mode: tool === 'review' ? 'review_work' : 'homework_chat',
+      tool,
+      task_id: currentTask.id,
+      message,
+      student_work: tool === 'review' ? message : undefined,
+      subject: currentTask.subject,
+      grade: currentTask.grade,
+      task_context: currentTask.extracted_text,
+      curriculum_context: curriculumContext(
+        currentTask.subject,
+        currentTask.grade,
+        [visibleContent(message), currentTask.extracted_text].filter(Boolean).join('\n')
+      ),
+    })
+    if (tool === 'review') {
+      rewards.onCorrect({ taskId: currentTask.id, action: 'review' })
+    }
+    const nextStage = tool === 'review' ? 4 : Math.max(currentTask.current_stage, 3)
+    if (nextStage !== currentTask.current_stage) {
+      const { data: updated } = await supabase
+        .from('homework_tasks')
+        .update({ current_stage: nextStage })
+        .eq('id', currentTask.id)
+        .select('*')
+        .single()
+      if (updated) setTask(updated)
+    }
+    if (refresh) await refreshMessages(currentTask.id)
+    return result.reply ?? ''
+  }
+
   const sendTutorMessage = async (tool: TutorTool = 'question') => {
     if (!task || !userId || busy || offline) return
     const usesChatInput = tool === 'question' || tool === 'review'
-    const message = usesChatInput ? input.trim() : ''
+    const message = usesChatInput
+      ? input.trim()
+      : tool === 'hint'
+        ? withNote(
+            'Dame una pista',
+            'Dame UNA pista corta (1 o 2 frases) para el paso o ejercicio en el que vamos ahora. No me des la respuesta ni escribas la tarea por mí. Termina invitándome a intentarlo.'
+          )
+        : ''
     if (tool === 'question' && !message) return
     if (tool === 'review' && message.length < 15) {
       setError('Escribe o pega tu avance en el chat para que Lumi lo revise.')
@@ -395,33 +550,7 @@ export default function TareaShell() {
       setPendingMessage(message)
     }
     try {
-      await callTutor({
-        mode: tool === 'review' ? 'review_work' : 'homework_chat',
-        tool,
-        task_id: task.id,
-        message,
-        student_work: tool === 'review' ? message : undefined,
-        subject: task.subject,
-        grade: task.grade,
-        task_context: task.extracted_text,
-        curriculum_context: curriculumContext(
-          task.subject,
-          task.grade,
-          [message, task.extracted_text].filter(Boolean).join('\n')
-        ),
-      })
-      if (tool === 'review') {
-        rewards.onCorrect({ taskId: task.id, action: 'review' })
-      }
-      const nextStage = tool === 'review' ? 4 : Math.max(task.current_stage, 3)
-      const { data: updated } = await supabase
-        .from('homework_tasks')
-        .update({ current_stage: nextStage })
-        .eq('id', task.id)
-        .select('*')
-        .single()
-      if (updated) setTask(updated)
-      await refreshMessages(task.id)
+      await askTutor(task, tool, message)
     } catch (caught) {
       // Si Lumi no alcanzó a responder, devolvemos lo escrito a la caja de
       // texto para que el niño no tenga que escribirlo de nuevo.
@@ -433,10 +562,29 @@ export default function TareaShell() {
     }
   }
 
-  const completeTask = async () => {
+  // Terminar: Lumi resume lo aprendido (máx. 3 frases) y la tarea se marca
+  // como completada. El esquema actual de homework_messages no admite
+  // message_kind final_summary, así que el resumen se muestra en una tarjeta.
+  const finishTask = async () => {
     if (!task || !userId || task.status === 'completed' || busy) return
     setBusy(true)
     setError('')
+    if (!offline) {
+      try {
+        const reply = await askTutor(
+          task,
+          'final',
+          withNote(
+            'Terminé',
+            'Resume en máximo 3 frases cortas y simples lo que aprendí hoy con esta tarea. Sin listas y sin preguntas al final.'
+          ),
+          false
+        )
+        setFinalSummary(firstSentences(reply, MAX_FINAL_SENTENCES))
+      } catch {
+        // Si el resumen falla, igual dejamos terminar la tarea.
+      }
+    }
     try {
       const completedAt = new Date().toISOString()
       const { data: completed, error: updateError } = await supabase
@@ -495,6 +643,8 @@ export default function TareaShell() {
     setMessages([])
     setFiles([])
     setPastedText('')
+    setShowPlan(false)
+    setFinalSummary('')
     setUploadProgress(0)
     setError('')
   }
@@ -679,27 +829,45 @@ export default function TareaShell() {
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <SelectField
+                    <div className="order-first space-y-3 lg:order-none">
+                      <ChipGroup
+                        icon={IconSchool}
+                        label="Curso"
+                        value={grade}
+                        onChange={(value) => setGrade(value as Grade)}
+                        options={GRADES}
+                      />
+                      <ChipGroup
                         icon={IconBook2}
-                        label="Materia (si sabes cuál es)"
+                        label="Materia"
                         value={subject}
                         onChange={(value) => setSubject(value as HomeworkSubject)}
                         options={OPTIONAL_SUBJECTS}
                       />
-                      <div className="rounded-2xl border border-violet-100 bg-violet-50/60 px-4 py-3">
-                        <span className="flex items-center gap-2 text-xs font-black text-slate-600">
-                          <IconSchool size={17} className="text-violet-600" /> Curso
+                      <label className="block">
+                        <span className="mb-1.5 flex items-center gap-2 text-xs font-black text-slate-600">
+                          <IconSparkles size={17} className="text-violet-600" /> Tema
                         </span>
-                        <p className="mt-1 text-sm font-bold text-violet-800">{gradeLabel}</p>
-                      </div>
+                        <input
+                          value={topic}
+                          onChange={(event) => setTopic(event.target.value.slice(0, 80))}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault()
+                              void startTask()
+                            }
+                          }}
+                          placeholder="Ej: fracciones, el cuento, los volcanes"
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-bold outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100 sm:text-sm"
+                        />
+                      </label>
                       <button
                         type="button"
                         onClick={() => void startTask()}
                         disabled={busy || offline}
                         className="flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {busy ? `Preparando ${uploadProgress}%` : 'Continuar'}
+                        {busy ? `Preparando ${uploadProgress}%` : '¡Empezar!'}
                         {!busy && <IconArrowRight size={19} />}
                       </button>
                     </div>
@@ -730,7 +898,7 @@ export default function TareaShell() {
               {task && (
                 <div className="mt-3 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
                   <section className="min-w-0 rounded-3xl border border-violet-100 bg-white p-3 shadow-sm sm:p-5">
-                    {task.instructions_summary && (
+                    {shortSummary && (
                       <div className="flex gap-3">
                         <img
                           src="/img/lumi/face.png"
@@ -742,10 +910,13 @@ export default function TareaShell() {
                             ¡Listo! Ya leí tu tarea. Esto es lo que debes hacer:
                           </p>
                           <p className="mt-2 text-sm leading-6 text-slate-700">
-                            {task.instructions_summary}
+                            {shortSummary}
                           </p>
-                          {checklist.length > 0 && (
-                            <ol className="mt-3 space-y-1 rounded-2xl bg-white/70 p-3 text-sm text-slate-700">
+                          {checklist.length > 0 && showPlan && (
+                            <ol
+                              id="plan-tarea"
+                              className="mt-3 space-y-1 rounded-2xl bg-white/70 p-3 text-sm text-slate-700"
+                            >
                               {checklist.map((item, index) => (
                                 <li key={`${item}-${index}`} className="flex gap-2">
                                   <span className="font-black text-violet-600">
@@ -756,18 +927,23 @@ export default function TareaShell() {
                               ))}
                             </ol>
                           )}
-                          <div className="mt-3">
-                            <SpeakButton
-                              text={[
-                                task.instructions_summary,
-                                checklist.length > 0
-                                  ? `Pasos a seguir: ${checklist.join('. ')}.`
-                                  : '',
-                              ]
-                                .filter(Boolean)
-                                .join(' ')}
-                              context="explanation"
-                            />
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <SpeakButton text={shortSummary} context="explanation" />
+                            {checklist.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setShowPlan((value) => !value)}
+                                aria-expanded={showPlan}
+                                aria-controls="plan-tarea"
+                                className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-black text-violet-700 shadow-sm hover:bg-violet-100"
+                              >
+                                {showPlan ? 'Ocultar el plan' : 'Ver el plan'}
+                                <IconChevronDown
+                                  size={15}
+                                  className={`transition ${showPlan ? 'rotate-180' : ''}`}
+                                />
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -780,7 +956,7 @@ export default function TareaShell() {
                       {messages
                         .filter((message) => message.message_kind !== 'summary')
                         .map((message) => {
-                          const cleanContent = message.content.replace(/\*\*/g, '').trim()
+                          const cleanContent = visibleContent(message.content)
                           // Lumi siempre debe poder leerse y escucharse a la vez. Si por algún
                           // problema (por ejemplo una respuesta vacía del modelo) no hay texto,
                           // mostramos un aviso en vez de dejar la burbuja en blanco con solo el
@@ -851,6 +1027,18 @@ export default function TareaShell() {
                       )}
                       <div ref={chatEndRef} />
                     </div>
+
+                    {finalSummary && (
+                      <div className="mt-4 rounded-3xl border border-emerald-100 bg-emerald-50 p-4">
+                        <p className="flex items-center gap-2 text-sm font-black text-emerald-900">
+                          <IconTrophy size={18} /> Lo que aprendiste hoy
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-emerald-900">{finalSummary}</p>
+                        <div className="mt-2">
+                          <SpeakButton text={finalSummary} context="explanation" />
+                        </div>
+                      </div>
+                    )}
 
                     <form
                       onSubmit={(event: FormEvent) => {
@@ -930,12 +1118,12 @@ export default function TareaShell() {
 
                     <button
                       type="button"
-                      onClick={() => void completeTask()}
+                      onClick={() => void finishTask()}
                       disabled={busy || task.status === 'completed'}
                       className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-emerald-200 disabled:opacity-55"
                     >
                       <IconCircleCheck size={20} />
-                      {task.status === 'completed' ? 'Tarea completada' : 'Terminé mi tarea'}
+                      {task.status === 'completed' ? 'Tarea completada' : 'Terminar'}
                     </button>
                   </aside>
                 </div>
@@ -973,7 +1161,7 @@ function SideLink({
   )
 }
 
-function SelectField({
+function ChipGroup({
   icon: Icon,
   label,
   value,
@@ -987,28 +1175,31 @@ function SelectField({
   options: ReadonlyArray<{ value: string; label: string }>
 }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 flex items-center gap-2 text-xs font-black text-slate-600">
+    <fieldset>
+      <legend className="mb-1.5 flex items-center gap-2 text-xs font-black text-slate-600">
         <Icon size={17} className="text-violet-600" /> {label}
-      </span>
-      <span className="relative block">
-        <select
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="w-full appearance-none rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-9 text-sm font-bold outline-none focus:border-violet-400"
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
+      </legend>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((option) => {
+          const selected = option.value === value
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onChange(option.value)}
+              aria-pressed={selected}
+              className={`rounded-full px-3 py-2 text-xs font-black transition sm:py-1.5 ${
+                selected
+                  ? 'bg-violet-600 text-white shadow-sm shadow-violet-200'
+                  : 'border border-violet-100 bg-white text-violet-700 hover:bg-violet-50'
+              }`}
+            >
               {option.label}
-            </option>
-          ))}
-        </select>
-        <IconChevronDown
-          size={17}
-          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
-        />
-      </span>
-    </label>
+            </button>
+          )
+        })}
+      </div>
+    </fieldset>
   )
 }
 
