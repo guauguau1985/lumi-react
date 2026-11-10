@@ -267,7 +267,12 @@ function AguaDulceSaladaLesson({
     "naturales-agua-dulce-salada"
   );
   const { state: adaptive, trackAnswer, trackComplete } =
-    useLearningTracker({ modulo: "naturales", tipoEjercicio: "texto" });
+    useLearningTracker({
+      modulo: "naturales",
+      tipoEjercicio: "texto",
+      subject: "ciencias_naturales",
+      topic: "agua_dulce_y_salada",
+    });
   const { feedback, markCorrect, markWrong } = useFeedback();
 
   const current = QUESTIONS[step];

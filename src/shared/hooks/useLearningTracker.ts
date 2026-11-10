@@ -4,7 +4,7 @@ import {
   type AdaptiveLearningRuleConfig,
 } from '@/adaptiveLearning/hook/useAdaptiveLearning'
 import { supabase } from '@/shared/lib/supabaseClient'
-import { getDeviceId, getSessionId } from '@/shared/lib/deviceId'
+import { getActiveChildId, getDeviceId, getSessionId } from '@/shared/lib/deviceId'
 import type { TablesInsert } from '@/shared/lib/database.types'
 import { useAuth } from '@/features/auth/AuthContext'
 
@@ -26,18 +26,29 @@ interface UseLearningTrackerOptions {
   tipoEjercicio?: TipoEjercicio
   initialLevel?: number
   customRules?: Partial<AdaptiveLearningRuleConfig>
-  topic?: string
+  /** Asignatura escolar, ej. 'matematicas', 'ciencias_naturales' (si el juego la conoce) */
   subject?: string
+  /** Tema concreto del ejercicio, ej. 'divisiones', 'fracciones' */
+  topic?: string
+  /** Id de la tarea escolar asociada (flujo de tareas), si existe */
   taskId?: string
 }
 
+/**
+ * Inserta el evento (fire-and-forget). El user_id viene de la sesión de Supabase Auth
+ * (cuenta del niño); child_id solo se agrega si hay un perfil de niño activo válido,
+ * para no enviar la columna cuando la migración de historial aún no está aplicada.
+ */
 function insertEvent(event: TablesInsert<'learning_events'>) {
-  void supabase
-    .from('learning_events')
-    .insert(event)
-    .then(({ error }) => {
-      if (error) console.error('[Lumi] learning_event insert error:', error.message)
-    })
+  const childId = getActiveChildId()
+  void (async () => {
+    const { error } = await supabase
+      .from('learning_events')
+      .insert(childId ? { ...event, child_id: childId } : event)
+    if (error) console.error('[Lumi] learning_event insert error:', error.message)
+  })().catch((err: unknown) => {
+    console.error('[Lumi] learning_event insert error:', err)
+  })
 }
 
 /**
@@ -50,8 +61,8 @@ export function useLearningTracker({
   tipoEjercicio,
   initialLevel = 1,
   customRules,
-  topic,
   subject,
+  topic,
   taskId,
 }: UseLearningTrackerOptions) {
   const { session } = useAuth()
@@ -80,6 +91,9 @@ export function useLearningTracker({
           session_id: getSessionId(),
           modulo,
           tipo_ejercicio: tipoEjercicio ?? null,
+          subject: subject ?? null,
+          topic: topic ?? null,
+          task_id: taskId ?? null,
           hora_uso: new Date().getHours(),
           accuracy: stateRef.current.accuracy,
           attempts: stateRef.current.totalAnswers,
@@ -89,13 +103,10 @@ export function useLearningTracker({
           tiempo_sesion: Math.round((Date.now() - startTimeRef.current) / 1000),
           completado: false,
           abandono: true,
-          topic: topic ?? null,
-          subject: subject ?? null,
-          task_id: taskId ?? null,
         })
       }
     }
-    // Intentional empty deps: captures modulo/tipoEjercicio at mount (stable values),
+    // Intentional empty deps: captures modulo/tipoEjercicio/subject/topic/taskId at mount (stable values),
     // reads live data via refs to avoid stale closures.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -122,6 +133,9 @@ export function useLearningTracker({
       session_id: getSessionId(),
       modulo,
       tipo_ejercicio: tipoEjercicio ?? null,
+      subject: subject ?? null,
+      topic: topic ?? null,
+      task_id: taskId ?? null,
       hora_uso: new Date().getHours(),
       accuracy: finalAccuracy ?? stateRef.current.accuracy,
       attempts: stateRef.current.totalAnswers,
@@ -131,9 +145,6 @@ export function useLearningTracker({
       tiempo_sesion: Math.round((Date.now() - startTimeRef.current) / 1000),
       completado: true,
       abandono: false,
-      topic: topic ?? null,
-      subject: subject ?? null,
-      task_id: taskId ?? null,
     })
   }
 

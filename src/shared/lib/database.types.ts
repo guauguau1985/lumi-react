@@ -83,6 +83,7 @@ export type Database = {
           abandono: boolean
           accuracy: number | null
           attempts: number
+          child_id: string | null
           completado: boolean
           created_at: string
           device_id: string
@@ -104,6 +105,7 @@ export type Database = {
           abandono?: boolean
           accuracy?: number | null
           attempts?: number
+          child_id?: string | null
           completado?: boolean
           created_at?: string
           device_id: string
@@ -125,6 +127,7 @@ export type Database = {
           abandono?: boolean
           accuracy?: number | null
           attempts?: number
+          child_id?: string | null
           completado?: boolean
           created_at?: string
           device_id?: string
@@ -148,6 +151,7 @@ export type Database = {
         Row: {
           best_time_range: string | null
           bloqueo_detectado: string[]
+          child_id: string | null
           data_confidence: 'baja' | 'media' | 'alta'
           device_id: string
           difficulties: string[]
@@ -163,6 +167,7 @@ export type Database = {
         Insert: {
           best_time_range?: string | null
           bloqueo_detectado?: string[]
+          child_id?: string | null
           data_confidence?: 'baja' | 'media' | 'alta'
           device_id: string
           difficulties?: string[]
@@ -178,6 +183,7 @@ export type Database = {
         Update: {
           best_time_range?: string | null
           bloqueo_detectado?: string[]
+          child_id?: string | null
           data_confidence?: 'baja' | 'media' | 'alta'
           device_id?: string
           difficulties?: string[]

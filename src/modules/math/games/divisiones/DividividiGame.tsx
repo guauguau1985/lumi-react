@@ -37,7 +37,12 @@ const DividividiGame: React.FC<DiviDiviDiGameProps> = ({
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const { state: adaptive, trackAnswer, trackComplete, resetTracker } =
-    useLearningTracker({ modulo: "math", tipoEjercicio: "interactivo" });
+    useLearningTracker({
+      modulo: "math",
+      tipoEjercicio: "interactivo",
+      subject: "matematicas",
+      topic: "divisiones",
+    });
   const { feedback, markCorrect, markWrong } = useFeedback();
 
   const options: number[] = useMemo(() => {

@@ -29,3 +29,19 @@ export function isProfileEnabled(): boolean {
 export function setProfileEnabled(enabled: boolean): void {
   localStorage.setItem(CONSENT_KEY, enabled ? 'true' : 'false')
 }
+
+// Perfil de niño activo (tabla child_profiles). La app todavía no tiene selector
+// de niño: cuando exista, debe guardar aquí el id con setActiveChildId().
+const ACTIVE_CHILD_KEY = 'lumi_active_child_id'
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** Retorna el id del niño activo o null si no hay uno válido. */
+export function getActiveChildId(): string | null {
+  const id = localStorage.getItem(ACTIVE_CHILD_KEY)
+  return id && UUID_RE.test(id) ? id : null
+}
+
+export function setActiveChildId(id: string | null): void {
+  if (id) localStorage.setItem(ACTIVE_CHILD_KEY, id)
+  else localStorage.removeItem(ACTIVE_CHILD_KEY)
+}

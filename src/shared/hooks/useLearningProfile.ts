@@ -1,11 +1,54 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/shared/lib/supabaseClient'
-import { getDeviceId, setProfileEnabled } from '@/shared/lib/deviceId'
+import {
+  getActiveChildId,
+  getDeviceId,
+  isProfileEnabled,
+  setProfileEnabled,
+} from '@/shared/lib/deviceId'
 import type { Tables, TablesInsert } from '@/shared/lib/database.types'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string
 
 export type StoredProfile = Tables<'learning_profile'>
+
+/** Identidad actual: usuario de Supabase Auth (si hay sesión) + niño activo + dispositivo. */
+async function getIdentity() {
+  const { data: { session } } = await supabase.auth.getSession()
+  return {
+    session,
+    userId: session?.user.id ?? null,
+    childId: getActiveChildId(),
+    deviceId: getDeviceId(),
+  }
+}
+
+/**
+ * Busca la fila de learning_profile que corresponde a la identidad actual.
+ * Con sesión: por child_id (si hay niño activo) o user_id. Respaldo: device_id.
+ */
+async function fetchProfileRow(): Promise<StoredProfile | null> {
+  const { userId, childId, deviceId } = await getIdentity()
+
+  if (userId) {
+    let query = supabase.from('learning_profile').select('*')
+    query = childId ? query.eq('child_id', childId) : query.eq('user_id', userId)
+    const { data, error } = await query
+      .order('last_updated', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (error) throw error
+    if (data) return data as StoredProfile
+  }
+
+  const { data, error } = await supabase
+    .from('learning_profile')
+    .select('*')
+    .eq('device_id', deviceId)
+    .maybeSingle()
+  if (error) throw error
+  return (data as StoredProfile | null) ?? null
+}
 
 export interface LearningProfileResult {
   profile: StoredProfile | null
@@ -17,6 +60,7 @@ export interface LearningProfileResult {
   error: string | null
   loadFromDB: () => Promise<void>
   compute: () => Promise<boolean>
+  /** Retorna true si el consentimiento quedó guardado en la base. */
   enable: () => Promise<boolean>
   disable: () => Promise<void>
   deleteProfile: () => Promise<void>
@@ -35,25 +79,22 @@ export function useLearningProfile(): LearningProfileResult {
     setIsLoading(true)
     setError(null)
     try {
-      const { data: rawData, error: dbError } = await supabase
-        .from('learning_profile')
-        .select('*')
-        .eq('device_id', getDeviceId())
-        .maybeSingle()
-      const data = rawData as StoredProfile | null
-
-      if (dbError) throw dbError
+      const data = await fetchProfileRow()
 
       if (!data) {
-        setProfileEnabled(false)
-        setIsEnabled(false)
+        // Sin fila todavía: NO se toca lumi_perfil_habilitado. Se usa localStorage como respaldo.
+        const local = isProfileEnabled()
+        setIsEnabled(local)
         setProfile(null)
       } else {
+        // La base manda: sincroniza el respaldo local con lo guardado.
         setProfileEnabled(data.perfil_habilitado)
         setIsEnabled(data.perfil_habilitado)
         setProfile(data.perfil_habilitado ? data : null)
       }
     } catch (err) {
+      // Error de red/RLS: se mantiene el valor local sin modificarlo.
+      setIsEnabled(isProfileEnabled())
       setError(err instanceof Error ? err.message : 'Error al cargar el perfil')
     } finally {
       setIsLoading(false)
@@ -68,14 +109,14 @@ export function useLearningProfile(): LearningProfileResult {
     setIsComputing(true)
     setError(null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const { session } = await getIdentity()
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
       if (session) headers['Authorization'] = `Bearer ${session.access_token}`
 
       const res = await fetch(`${SUPABASE_URL}/functions/v1/compute-profile`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ device_id: getDeviceId() }),
+        body: JSON.stringify({ device_id: getDeviceId(), child_id: getActiveChildId() }),
       })
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -104,12 +145,16 @@ export function useLearningProfile(): LearningProfileResult {
     }
   }, [])
 
-  const enable = useCallback(async () => {
+  const enable = useCallback(async (): Promise<boolean> => {
     setIsLoading(true)
     setError(null)
     try {
+      const { userId, childId, deviceId } = await getIdentity()
       const enablePayload: TablesInsert<'learning_profile'> = {
-        device_id: getDeviceId(),
+        device_id: deviceId,
+        // Solo se envían si existen, para no desasociar una fila ya ligada a un usuario
+        ...(userId ? { user_id: userId } : {}),
+        ...(childId ? { child_id: childId } : {}),
         perfil_habilitado: true,
         data_confidence: 'baja',
         bloqueo_detectado: [],
@@ -130,7 +175,12 @@ export function useLearningProfile(): LearningProfileResult {
       setIsEnabled(true)
       return true
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al activar el perfil')
+      // No se marca el consentimiento como guardado: el usuario ve el error y puede reintentar.
+      setError(
+        err instanceof Error
+          ? `No pudimos activar el perfil: ${err.message}`
+          : 'No pudimos activar el perfil. Intenta de nuevo.'
+      )
       return false
     } finally {
       setIsLoading(false)
@@ -140,8 +190,12 @@ export function useLearningProfile(): LearningProfileResult {
   const disable = useCallback(async () => {
     setError(null)
     try {
+      const { userId, childId, deviceId } = await getIdentity()
       const disablePayload: TablesInsert<'learning_profile'> = {
-        device_id: getDeviceId(),
+        device_id: deviceId,
+        // Solo se envían si existen, para no desasociar una fila ya ligada a un usuario
+        ...(userId ? { user_id: userId } : {}),
+        ...(childId ? { child_id: childId } : {}),
         perfil_habilitado: false,
         last_updated: new Date().toISOString(),
       }

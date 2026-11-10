@@ -9,17 +9,21 @@ interface ConsentModalProps {
 
 export function ConsentModal({ onClose }: ConsentModalProps) {
   const { enable, compute, error } = useLearningProfile()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveFailed, setSaveFailed] = useState(false)
 
   async function handleAccept() {
-    setIsSubmitting(true)
-    const enabled = await enable()
-    if (!enabled) {
-      setIsSubmitting(false)
+    setIsSaving(true)
+    setSaveFailed(false)
+    const ok = await enable()
+    if (!ok) {
+      // El consentimiento no se guardó: se mantiene el modal abierto con el error visible.
+      setSaveFailed(true)
+      setIsSaving(false)
       return
     }
     await compute()
-    setIsSubmitting(false)
+    setIsSaving(false)
     onClose()
   }
 
@@ -65,10 +69,13 @@ export function ConsentModal({ onClose }: ConsentModalProps) {
           <li>❌ Sin nombre, sin correo, sin ubicación</li>
         </ul>
 
-        {/* Error */}
-        {error && (
-          <p className="mb-4 rounded-xl bg-red-50 px-4 py-2 text-center text-sm text-red-700">
-            No se pudo activar el perfil. Revisa tu conexión a internet e inténtalo de nuevo.
+        {/* Error al guardar el consentimiento */}
+        {saveFailed && (
+          <p
+            role="alert"
+            className="mb-4 rounded-xl border border-[var(--color-card-border)] bg-[var(--color-muted)] px-4 py-3 text-center text-sm font-semibold text-[var(--color-error-text)]"
+          >
+            {error ?? 'No pudimos activar el perfil. Intenta de nuevo.'}
           </p>
         )}
 
@@ -76,14 +83,14 @@ export function ConsentModal({ onClose }: ConsentModalProps) {
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <button
             onClick={handleAccept}
-            disabled={isSubmitting}
+            disabled={isSaving}
             className="w-full rounded-2xl bg-[var(--color-primary)] px-6 py-3 text-base font-bold text-[var(--color-primary-foreground)] transition-opacity hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
-            {isSubmitting ? 'Guardando…' : 'Sí, activar perfil'}
+            {isSaving ? 'Guardando…' : saveFailed ? 'Reintentar' : 'Sí, activar perfil'}
           </button>
           <button
             onClick={handleDecline}
-            disabled={isSubmitting}
+            disabled={isSaving}
             className="w-full rounded-2xl border border-[var(--color-card-border)] bg-[var(--color-card)] px-6 py-3 text-base font-semibold text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-muted)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
             No por ahora
